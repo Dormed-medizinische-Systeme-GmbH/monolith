@@ -23,6 +23,59 @@ PostgreSQL-Datenbank und Identity-Provider. Details zur geplanten Auth-Architekt
 4. `php artisan migrate` ausführen.
 5. `php artisan serve` starten und `http://127.0.0.1:8000` öffnen.
 
+## Lokale Entwicklung mit Docker (docker-compose.dev.yml)
+
+`docker-compose.dev.yml` ist ein Duplikat von `docker-compose.yml` für lokale Entwicklung:
+Host-Ports veröffentlicht (Prod läuft ohne — Coolify routet anders) und ein Laravel-Sail-
+Container (`laravel.test`) im selben Docker-Netzwerk wie der Supabase-Stack.
+
+Coolifys `SERVICE_*`-Magic-Variablen werden nur beim Deploy in Coolify selbst generiert —
+lokal übernimmt das `volumes/generate-dev-env.sh`:
+
+```sh
+./volumes/generate-dev-env.sh      # schreibt .env.supabase (gitignored), einmalig
+```
+
+Danach `.env` (Laravel) anlegen mit:
+
+```
+DB_CONNECTION=pgsql
+DB_URL=postgresql://supabase_admin:<SERVICE_PASSWORD_POSTGRES aus .env.supabase>@supabase-supavisor:5432/postgres
+DB_SCHEMA=laravel
+```
+
+Stack starten, Schema anlegen, migrieren:
+
+```sh
+docker compose -f docker-compose.dev.yml --env-file .env.supabase up -d
+docker compose -f docker-compose.dev.yml --env-file .env.supabase exec supabase-db \
+    psql -U supabase_admin -d postgres -c 'CREATE SCHEMA IF NOT EXISTS "laravel";'
+docker compose -f docker-compose.dev.yml --env-file .env.supabase exec laravel.test \
+    php artisan migrate
+```
+
+Erreichbar unter:
+- Laravel: http://localhost (Port über `APP_PORT` änderbar)
+- Supabase Kong/API/Studio: http://localhost:8000 (Studio-Login: `SERVICE_USER_ADMIN`/`SERVICE_PASSWORD_ADMIN` aus `.env.supabase`)
+- Postgres direkt (z. B. GUI-Client): `127.0.0.1:54322` (Session Pooler), `127.0.0.1:54329` (Transaction Pooler) — bewusst nicht `5432`, um keinen bereits lokal laufenden Postgres zu blockieren
+
+**Nicht in dieser Sandbox getestet:** Der Docker-Daemon lässt sich in dieser Umgebung nicht
+starten (fehlende Rechte im Remote-Container), daher konnte ich nur `docker compose ... config`
+(reine Struktur-/Syntaxvalidierung, kein echter Build/Start) laufen lassen — das ist sauber
+durchgelaufen, aber ein echter `docker compose -f docker-compose.dev.yml up` wurde nicht
+verifiziert. Bitte auf einer Maschine mit funktionierendem Docker gegentesten, bevor darauf
+verlassen wird.
+
+Beim Bau von `docker-compose.dev.yml` wurden zwei Bugs im ursprünglichen `docker-compose.yml`
+gefunden und nur in der Dev-Datei gefixt (Details in `.ai/rules`):
+- `exclude_from_hc` ist kein gültiger Compose-Spec-Schlüssel (Coolify-eigene Erweiterung) und
+  lässt reinen `docker compose` mit einem Schema-Fehler abbrechen — in der Dev-Datei zu
+  `x-exclude_from_hc` umbenannt (spec-konforme Extension, no-op).
+- Drei benannte Volumes (`deno-cache`, `supabase-db-data`, `supabase-db-config`) werden
+  verwendet, aber nirgends unter einem Top-Level-`volumes:`-Key deklariert — Coolify scheint
+  das intern zu tolerieren, reiner `docker compose` bricht mit "refers to undefined volume"
+  ab. In der Dev-Datei ergänzt.
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

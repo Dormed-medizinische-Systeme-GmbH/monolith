@@ -4,4 +4,4 @@ Before planning or editing, find the row whose globs match the file's path and r
 
 | Applies to | Rule file |
 | --- | --- |
-| docker-compose.yml | .ai/rules/general.md |
+| docker-compose.yml, docker-compose.dev.yml | .ai/rules/general.md |
