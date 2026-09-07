@@ -5,8 +5,11 @@ PostgreSQL-Datenbank und Identity-Provider. Details zur geplanten Auth-Architekt
 `ARCHITECTURE.md`. Es wird bewusst **keine** Supabase-Cloud-Instanz verwendet.
 
 1. Den Stack aus `docker-compose.yml` deployen (z. B. via Coolify). Coolify generiert dabei die
-   `SERVICE_PASSWORD_*`-Secrets und die erreichbare Host/Port-Kombination für den
-   `supabase-supavisor`-Service (Transaction Pooler).
+   `SERVICE_PASSWORD_*`/`SERVICE_URL_*`-Werte automatisch (siehe `.env.supabase.example` für die
+   vollständige, dokumentierte Liste aller vom Compose-File genutzten Variablen inkl. der
+   erreichbaren Host/Port-Kombination für den `supabase-supavisor`-Service/Transaction Pooler).
+   Die echte, befüllte Variante gehört in `.env.supabase` (gitignored), niemals in
+   `.env.supabase.example`.
 2. `.env` aus `.env.example` erstellen und `DB_URL` mit dem echten Pooler-Connection-String
    sowie den generierten Zugangsdaten befüllen. `DB_SCHEMA` legt fest, in welchem
    PostgreSQL-Schema (Standard: `laravel`) Laravel arbeitet, statt `public` zu benutzen
