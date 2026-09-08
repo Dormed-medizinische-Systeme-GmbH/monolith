@@ -144,3 +144,53 @@ Lieferanten/Einkauf = **benannter Entscheidungspunkt in der ROADMAP**.
 - Die Sage-KHK-Buchhaltungsanbindung bleibt bestehen. Der Sync-**Mechanismus**
   selbst = Bereich Integrationen; die **Felder** leben ab jetzt auf Company.
 - Feldnamen bewusst „Debitor…" (nicht „Deb./Kred.") — Kreditor-Pendant kommt mit D-008.
+
+### D-010 — Kommunikationskanäle: eigene Tabelle `contact_channels`, `label` = fester Enum
+
+**Status:** entschieden (Enum-Werte offen) · **Datum:** 2026-09-08
+
+Ersetzt die ~30 nummerierten Legacy-Slots (Telefon×10, Fax×5, Mail×5, Web×5, IM×3).
+
+- Tabelle `contact_channels`: `channel_type` (enum: `phone` · `mobile` · `fax` ·
+  `email` · `web`), `label` (**fester Enum**, auswertbar), `value`, polymorpher
+  Besitzer (Company **oder** Person), `is_primary` (je Typ).
+- **Offen:** die `label`-Enum-Werte. Legacy-Kandidaten verdichtet:
+  `geschaeftlich` · `praxis` · `zentrale` · `durchwahl` · `rechnungsversand` ·
+  `privat` · `mobil_persoenlich` · `mobil_arzt` · `homepage` · `sonstige`.
+- IM/Skype-Felder → `web`-Typ oder verwerfen (Entscheidung im Cluster-Durchlauf).
+
+### D-011 — Marketing-/Fremdsystem-Blöcke komplett verwerfen
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+`EV*` (Evalanche, ~22 Felder), `FANPORTFOLIO` (fan!), `SunlightStatus`, `EBID*`
+(EBIDINFO/NUMBER/STATUS), `EVLASTSYNC` → **verwerfen**. Marketing-Automation ist
+nicht im Zielsystem. Eine spätere Anbindung würde eigenständig spezifiziert
+(Bereich Integrationen) — **kein** ROADMAP-Platzhalter nötig.
+
+### D-012 — Mitarbeiter- und Helpdesk-Online-Felder raus aus Adressen-Scope
+
+**Status:** vertagt (eigene Bereiche) · **Datum:** 2026-09-08
+
+- **Identity/Employee:** `gwIsEmployee`, `gwIsContact`, `gwIsCompany`
+  (Typ-Diskriminatoren), `EmpRecruitmentDate`, `EmpSeparationDate`, `EmpStatus`,
+  `gwPersonnelNumber`, `GWISEXTERNALEMPLOYEE`, `gwCostCenter` → Bereich **Identity**.
+- **Portal:** `GWHDOACCESSTYPE`, `GWSSERVICEPASSWORDSET`, `GWSSTATUS`, `GWSTYPE`,
+  `HDBLOCKEDFORSUPPORT` → Bereich **Portal** (das neue Portal ersetzt „Helpdesk online").
+- Keins dieser Felder wird ein Company-/Person-Feld. Migration entsprechend gefiltert.
+- **Kollision:** `GWSSTATUS`/`GWSTYPE` existieren auch in `Tickets.xml` — dort
+  eigene Bedeutung (Ticket-Status/-Typ). Nicht verwechseln.
+
+### D-013 — DSGVO-Einwilligungen: historisiertes `consent`-Log
+
+**Status:** entschieden (Detail offen) · **Datum:** 2026-09-08
+
+- Tabelle `consents`: `person_id`, `channel` (enum: `fax` · `mail` · `post` ·
+  `sms` · `telefon`), `status` (`erteilt` · `widerrufen`), `granted_at` /
+  `revoked_at`, `source` (Formular / mündlich / Import / …).
+- Historisierbar (Nachweis wann/wodurch erteilt bzw. widerrufen) — nicht als Flags.
+- `AVV` (Auftragsverarbeitungsvertrag) ist **kein** Kanal-Consent → separates
+  **Company**-Attribut (Vorschlag: `avv_signed_at` / `avv_status`).
+- `DSGVO` (Flag „Datenschutzgrundverordnung") → vermutlich „DSGVO-Info erteilt";
+  im Cluster-Durchlauf gegen das Consent-Log prüfen.
+- Betrifft die Person-Spec → gehört in `docs/04-domain/`.
