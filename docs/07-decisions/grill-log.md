@@ -471,3 +471,28 @@ Kein separates `Employee`-Modell. Mitarbeiter-Attribute leben auf `users`.
   Config-Katalog; Dependency-Freigabe vermieden).
 - **Offen:** endgültige Rollen-Liste. Vorschlag: `management` · `backoffice` ·
   `sales` · `service` · `accounting` · `it` · `readonly`.
+
+### D-031 — Rollen (Interim): 6
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+`management` · `backoffice` · `sales` · `service` · `accounting` · `it`.
+Kein `readonly` (wer Zugang hat, hat ≥ 1 Fach-Rolle).
+Service **nicht** in Innen-/Außendienst gesplittet — mögliche spätere Verfeinerung.
+
+### D-032 — Kein Self-Service: keine Registrierung, kein Passwort-Reset
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- Breeze-**Registrierung** + **Passwort-vergessen/-Reset** Routen **entfernen**.
+- Nur **Login** bleibt. Passwort-Reset läuft über IT/Admin.
+- User anlegen = Admin-Funktion (Name, E-Mail, Rollen) + Einladungs-Mail zum
+  Passwort-Setzen (signierte URL).
+- Maximal geschlossen bis SSO (D-029) kommt.
+
+### D-033 — `users` minimal
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+Zusatzfelder: nur `first_name` · `last_name` · `is_active`. **Weg:** Personalnummer,
+Kostenstelle, Ein-/Austrittsdatum, extern-Flag (HR-System, nicht CRM).
