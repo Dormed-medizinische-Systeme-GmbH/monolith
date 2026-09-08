@@ -603,3 +603,13 @@ versehentlich als Wartung behandelt werden").
 Zuerst online-only (server-gerenderte/API-Formulare). Offline-Erfassung
 (PWA/lokaler Speicher/Sync/Konfliktbehandlung) = eigener benannter ROADMAP-Slice.
 Legacy `ISOFFLINE` / `ISOFFLINE_BEARBEITUNG` → verworfen (kein Zielfeld).
+
+### D-042 — Vertrags-Details Mehrfachwartung / Einrichtungsgebühr / Preisanpassungs-Flags: verworfen
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+Keins der drei wird in der Zielstruktur gebraucht:
+- `MEHRFACHWARTUNG` → verworfen (Kadenz komplett über `maintenance_interval_months`, D-037).
+- Einrichtungsgebühr / `KOSTEN_*_EINMAL` → verworfen (kein `setup_fee`).
+- `PREISANPASSUNG` / `PREISANPASSUNG2025` (Ankündigungs-Flags) → verworfen
+  (Preis = nur `current_price`, D-036; Anpassung überschreibt).
