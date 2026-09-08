@@ -15,6 +15,15 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @if (($applicationContext ?? null) === \App\Support\ApplicationContext::Crm)
+                        <x-nav-link :href="route('crm.companies.index')" :active="request()->routeIs('crm.companies.*')">
+                            {{ __('Companies') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('crm.people.index')" :active="request()->routeIs('crm.people.*')">
+                            {{ __('Personen') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
