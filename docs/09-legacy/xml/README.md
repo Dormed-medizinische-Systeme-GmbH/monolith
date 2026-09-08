@@ -6,13 +6,17 @@ Rohe `gwconnect`-Objektdefinitionen aus dem aktuell produktiven CRM
 
 ## Dateien
 
-| Datei | Objekt | Tablesign | Spalten | Neues Zielkonzept (grob) |
+| Roh-XML | Feld-Inventar | Objekt | Spalten (Custom) | Neues Zielkonzept (grob) |
 | --- | --- | --- | --- | --- |
-| [`Adressen.xml`](Adressen.xml) | `Address` | `ADR` | 356 | Company / Person / CompanyContact / Address / Location |
-| [`Servicevertraege-NEU.xml`](Servicevertraege-NEU.xml) | `SV` | `SV` | 83 | ServiceContract / Device / DeviceConfiguration / Maintenance |
-| [`Tickets.xml`](Tickets.xml) | `TICKETS` | `TICK` | 112 | ServiceCase / Maintenance / Serviceposition / Diagnose … |
-| [`Termine.xml`](Termine.xml) | `APPOINTMENT` | `APP` | 25 | Appointment (Scheduling, getrennt von Fachvorgang) |
-| [`Verkaufschancen.xml`](Verkaufschancen.xml) | `GWOPPORTUNITY` | `GWOP` | 34 | SalesOpportunity |
+| [`Adressen.xml`](Adressen.xml) | [`Adressen-Felder.md`](Adressen-Felder.md) | `Address` (ADR) | 356 (176) | Company / Person / CompanyContact / Address / Location |
+| [`Servicevertraege-NEU.xml`](Servicevertraege-NEU.xml) | [`Servicevertraege-NEU-Felder.md`](Servicevertraege-NEU-Felder.md) | `SV` (SV) | 83 (83) | ServiceContract / Device / DeviceConfiguration / Maintenance |
+| [`Tickets.xml`](Tickets.xml) | [`Tickets-Felder.md`](Tickets-Felder.md) | `TICKETS` (TICK) | 112 (112) | ServiceCase / Maintenance / Serviceposition / Diagnose … |
+| [`Termine.xml`](Termine.xml) | [`Termine-Felder.md`](Termine-Felder.md) | `APPOINTMENT` (APP) | 25 (1) | Appointment (Scheduling, getrennt von Fachvorgang) |
+| [`Verkaufschancen.xml`](Verkaufschancen.xml) | [`Verkaufschancen-Felder.md`](Verkaufschancen-Felder.md) | `GWOPPORTUNITY` (GWOP) | 34 (9) | SalesOpportunity |
+
+Die `*-Felder.md` sind die **lesbare Vorverdauung** (Feld, Typ, Label, Custom-Flag,
+Cluster nach Namenspräfix). Die Spalte `Entscheidung` steht auf `offen` und wird
+in `/grill-me` gefüllt (`übernehmen` → Zielmodell/-feld · `verwerfen` · `offen`).
 
 Details der Zerlegung: [`../../04-domain/LEGACY_MAPPING.md`](../../04-domain/LEGACY_MAPPING.md).
 
