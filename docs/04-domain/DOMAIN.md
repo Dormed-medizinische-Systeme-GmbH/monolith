@@ -14,7 +14,8 @@ haben ein eigenes autoritatives Dokument (Feldform, Enums, Regeln):
 | Core: Company / Person / Adresse | [`CORE.md`](CORE.md) | **spezifiziert** (D-001 – D-025) |
 | Service: Device / Vertrag / Wartung / Servicefall | [`SERVICE.md`](SERVICE.md) | **spezifiziert** (D-034 – D-045; einige Enum-Werte offen) |
 | Scheduling: Termine | [`SCHEDULING.md`](SCHEDULING.md) | **spezifiziert** (D-046 – D-050) |
-| Sales, Dokumente, Billing, Portal, Inventory | dieses Dokument | Discovery |
+| Sales: Verkaufschancen | [`SALES.md`](SALES.md) | **spezifiziert** (D-051 – D-055) |
+| Billing, Dokumente, Inventory, Portal, Shop | dieses Dokument | Discovery |
 
 ## Core
 

@@ -730,6 +730,9 @@ Graph = benannter späterer Slice (bündelt mit SSO/Entra, D-029).
 
 ## Bereich: Domäne — Sales (Verkaufschancen / Opportunity)
 
+> **Status: synthetisiert (2026-09-08).** → [`../04-domain/SALES.md`](../04-domain/SALES.md).
+> Offen: stage-/lead_source-Enum-Werte, `DORMEDABTEILUNG`, Item-Detailfelder.
+
 Legacy `Verkaufschancen.xml` (34 F.). Standard-Opportunity.
 
 ### D-051 — Pipeline: eine Achse `stage` (inkl. Endzustände)
