@@ -555,3 +555,51 @@ Legacy: `Servicevertraege-NEU.xml` (83 F.), `Tickets.xml` (112 F.), `Termine.xml
 - Legacy `ERSTEWARTUNG` (Label „letzte Wartung", fehlbenannt), `NAECHSTEWARTUNG`
   → aus Maintenance-Historie abgeleitet, nicht als Vertragsfelder übernommen.
 - **Offen:** `MEHRFACHWARTUNG` — Intervall < 12 oder eigener Mechanismus? Runde 2.
+
+### D-038 — Checklisten: versionierte Templates + Report-Instanz
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `checklist_templates`: Sektionen (Sichtkontrolle · Funktionskontrolle ·
+  Wartungsarbeiten · …), Items, **Version**.
+- `maintenance_report`: friert die genutzte Template-Version ein; je Item ein
+  Ergebnis (`ok` · `nicht_ok` · `na` + Notiz).
+- Neue/geänderte Prüfpunkte = **neue Template-Version**; bestehende Berichte bleiben
+  unverändert (Nachweisintegrität, SERVICE.md „strukturiert und versionierbar").
+- Legacy `TICKET_SICHTKONTROLLE_1..10`, `_FUNKTIONSKONTROLLE_1..13`,
+  `_WARTUNGSARBEITEN_1..8`, `_ABSCHLUSS_*` → Template-Items bzw. Report-Ergebnisse.
+
+### D-039 — Maintenance und ServiceCase sind vollständig getrennt
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+Kein gemeinsames „Visit/Einsatz"-Basismodell. `Maintenance` und `ServiceCase`
+haben **je eigene** Terminplanung, eigenen Bericht, eigene Positionen, eigenen
+Workflow. Bewusst mehr Duplikation für klarere Grenzen (SERVICE.md: „darf nicht
+versehentlich als Wartung behandelt werden").
+
+- `Maintenance` ← Wartungszyklus eines `ServiceContract` (D-037).
+- `ServiceCase` ← Störungsmeldung; `reported_by` → `CompanyContact` (Pflicht, s. CORE.md).
+
+### D-040 — Positionen am Einsatz → Rechnungsentwurf im Billing (Empfehlung, zu bestätigen)
+
+**Status:** offen (Nutzer unsicher „1 oder 3") — **Empfehlung: Variante 1**
+
+- `Maintenance` / `ServiceCase` tragen je `line_items` (Teile, Arbeitszeit,
+  Anfahrt — Bezeichnung, Menge, Einzelpreis). Erfassung durch Techniker/Innendienst.
+- Bei Abschluss + Freigabe → **`Invoice` im Billing-Bereich**, die die Positionen +
+  Rechnungsempfänger + Adresse **zum Zeitpunkt einfriert** (ADR-006, Billing-Historie).
+- Bis zur Rechnungsstellung sind die `line_items` am Einsatz editierbar; die
+  `Invoice` ist danach unveränderlich.
+- Begründung gegen Variante 3: Billing braucht ohnehin eine echte Invoice-Entität
+  (Historisierung, e-Rechnung D-006, KHK/Sage-Sync). Doppelte Summenlogik am
+  Einsatz wäre eine zweite Wahrheit.
+- **→ Nutzer bestätigt Variante 1?**
+
+### D-041 — Offline-Wartungsbericht: späterer ROADMAP-Slice
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+Zuerst online-only (server-gerenderte/API-Formulare). Offline-Erfassung
+(PWA/lokaler Speicher/Sync/Konfliktbehandlung) = eigener benannter ROADMAP-Slice.
+Legacy `ISOFFLINE` / `ISOFFLINE_BEARBEITUNG` → verworfen (kein Zielfeld).
