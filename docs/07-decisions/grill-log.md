@@ -725,3 +725,66 @@ Graph = benannter späterer Slice (bündelt mit SSO/Entra, D-029).
   `APP_ACCEPTABLEREGISTRATIONS`, `APP_GROUP`, `Category`, `CBStatus`, `Keyword`,
   `NOTES2` (Dublette), `Alarm`/`PERIODALARM*` (→ ersetzt durch `reminder_minutes_before`).
 - Veranstaltungs-/Event-Management → **nicht** im Zielsystem.
+
+---
+
+## Bereich: Domäne — Sales (Verkaufschancen / Opportunity)
+
+Legacy `Verkaufschancen.xml` (34 F.). Standard-Opportunity.
+
+### D-051 — Pipeline: eine Achse `stage` (inkl. Endzustände)
+
+**Status:** entschieden (Werte offen) · **Datum:** 2026-09-08
+
+- `Opportunity.stage` (enum): `lead` · `qualifiziert` · `angebot` · `verhandlung`
+  · `gewonnen` · `verloren` (Werte final offen).
+- Kein separates `status`. Bei `verloren` → `lost_reason` (Text/Enum).
+- Legacy `DistributionPhase` + `Status` → beides in `stage`.
+
+### D-052 — Die Opportunity IST das Angebot; strukturierte `opportunity_items`
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- **Kein** separates Quote-Objekt. Die Verkaufschance hält die Angebotspositionen.
+- `opportunity_items`: `product_id` (→ Produktkatalog/Inventory, später) / `description`,
+  `quantity`, `unit_price`, `discount` (?), `unit_cost` (?) für Deckungsbeitrag.
+- **Abgeleitet, nicht gespeichert:** `OppTotalAmount` (Summe), `RelativeAmount`
+  (Summe × `probability`), `MARGINALRETURN` (Deckungsbeitrag),
+  `MARGINALRETURNWEIGHTED`. Legacy-Betragsfelder → verworfen.
+- Angebots-PDF → Bereich Dokumente.
+
+### D-053 — Gewinnen: kein Automatismus; `DO_SV_VORGANSSART` verworfen
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `DO_SV_VORGANSSART` gehört zur toten `DO_SV*`-Familie (D-001) — versehentlich in
+  den Verkaufschancen gelandet. → **verwerfen**.
+- `stage = gewonnen` setzt nur den Status. Ein `ServiceContract` (+ Device) wird
+  danach **manuell** angelegt, mit Rückverweis auf die Opportunity
+  (`service_contracts.opportunity_id` nullable). Kein Auto-Erzeugen (ADR-010).
+- Kann revidiert werden, wenn der reale Vertriebs→Service-Übergabeprozess klar ist.
+
+### D-054 — Verantwortung: nur `owner_id`
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `Opportunity.owner_id` → `users` (nullable). Legacy `PersonInCharge` /
+  `VENDORINFORMATION` (1) → hierauf; `VENDORINFORMATION2/3`, `AttorneyInFact`
+  (Stellvertreter) → **verworfen**.
+- **Kein** Territory-Modell. `VCAWKZ` (AWKZ/PLZ/Tour) → verworfen; Zuständigkeit
+  über Abteilung (`AUTHORIZATION.md`).
+
+### D-055 — Sales: übrige Felder
+
+**Status:** entschieden (Enums/2 Flags offen) · **Datum:** 2026-09-08
+
+- **Behalten:** `company_id` (← `AccountInformation`) · `number` (← `OPPORTUNITYNUMBER`) ·
+  `probability` (%, ← `Probability`) · `customer_budget` (currency, nullable, ← `BUDGET`) ·
+  `payment_terms` (← `ZAHLUNGKONDITIONEN`) · `lead_source` (enum/Lookup — Werte offen,
+  ← `Source`) · `opened_at` (← `Start_dt`) · `expected_close_at` (← `end_dt`) ·
+  `notes` (← `Keyword`/`Notes2`) · `competitor` + `competitor_note` (Strings,
+  ← `Competitors`/`CompetitorNotes` bzw. DORMED-Dubletten) · `cooperation_type` +
+  `cooperation_partner` (Strings, ← `KOOPERATION`/`KOOPERATIONSPARTNER`).
+- **Verworfen:** `CurrencyNat` (nur EUR), `Alarm` (→ Appointment D-046),
+  `LASTCONTACTINSALESPROCESS` (abgeleitet), Betragsfelder (D-052), `DORMEDABTEILUNG`
+  **offen** (Produktbereich vs. Abteilung — Rückfrage), `ProductPositionsDisplay` (→ items).
