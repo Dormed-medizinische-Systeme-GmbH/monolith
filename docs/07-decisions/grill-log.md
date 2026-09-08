@@ -659,3 +659,13 @@ DIN EN 62353 ist regulatorisch standardisiert → **nicht** Template-getrieben.
 - Qualifizierte elektronische Signatur → eigener späterer Slice, nur falls
   fachlich/legal erforderlich (SERVICE.md).
 - Legacy `BESTAETIGUNG` → hierauf; `ATMOSPHERE` (Stimmung Kunde) → verworfen.
+
+---
+
+## Bereich: Domäne — Scheduling (Termine)
+
+Legacy `Termine.xml` (25 F., fast Standard-CAS + 1 Dormed-Feld
+`DORMEDLOGISTIKERFORDERLICH`). Prinzip (LEGACY_MAPPING): `Appointment` als
+Scheduling-Objekt **getrennt** vom fachlichen Vorgang. Klärt Service-Restfrage
+(Terminplanung Maintenance/ServiceCase).
+
