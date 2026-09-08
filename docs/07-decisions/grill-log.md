@@ -10,6 +10,13 @@ Status je Eintrag: `entschieden` · `offen (Rückfrage)` · `Entscheidungspunkt 
 
 ## Bereich: Domäne — Adressen-Zerlegung
 
+> **Status: abgeschlossen & synthetisiert (2026-09-08).** Ergebnis:
+> [`../04-domain/CORE.md`](../04-domain/CORE.md) (autoritative Spec) +
+> [`../09-legacy/xml/Adressen-Zuordnung.md`](../09-legacy/xml/Adressen-Zuordnung.md)
+> (356 Felder klassifiziert). Alle „Offene Fachfragen" zu Core aus `DOMAIN.md`
+> beantwortet. Rest-Offen (in `CORE.md` gelistet): 2 Nutzer-Rückfragen (Hdin/USVE,
+> Auto-Hauptstandort), Rest an Bereich Service/Integrationen/ROADMAP übergeben.
+
 ### D-001 — Legacy-Adressfelder `DO_SV*` / `DO_SVV*` (Servicevertrags-Slots)
 
 **Status:** entschieden (Rand offen, s. u.)
@@ -304,3 +311,52 @@ Wie Vor-/Nachname, aber für Firmen: `Company.name` (← `CompName`) +
   gefaltet (andere Achse als die Rolle aus D-005).
 - `Birthday` + `gwBirthPlace` + `gwDenomination` + `gwNationality` +
   `BirthdayGreetings` + `ChristmasGreetings` → **verworfen** (keine betriebliche Relevanz).
+
+### D-023 — Soft-Delete: Löschen + Papierkorb nur Management/Backoffice
+
+**Status:** entschieden · **Datum:** 2026-09-08 · verfeinert D-018
+
+- **Löschen** (Soft-Delete) eines Datensatzes ist eine **privilegierte Aktion** —
+  nur Abteilung **Management / Backoffice**.
+- **Papierkorb ansehen + Wiederherstellen** ist auf dieselbe Abteilung gescoped
+  (eigene Berechtigung, nicht jeder eingeloggte User).
+- Gilt für **alle** Domänenmodelle inkl. Pivots (`company_contacts` …).
+- Retention **30 Tage** fix, danach `model:prune`.
+- Verbindet D-018 mit dem RBAC-Bereich: die `delete`/`restore`/`forceDelete`
+  Policy-Abilities werden nur der Management/Backoffice-Abteilung erteilt.
+
+### D-024 — `Address`: Geocoding bleibt (wichtig)
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `Address`: `latitude` · `longitude` (nullable decimal), `geocode_status`
+  (enum: `pending` · `ok` · `failed` · `manual`).
+- Adress-Prüfung getrennt davon: `verified_at` · `verified_by` (← Legacy
+  „Geprüft am/durch").
+- **Wichtig** — Grundlage der **Fahrtzone** (D-020) / Techniker-Routing.
+- Geocoding-**Mechanismus** (Provider, Trigger) → Bereich Integrationen; die
+  Felder leben auf `Address`.
+- `GEOCODESTATUS`, `GWEXTERNALADDRESSDATE`, `GWEXTERNALADDRESSNAME` → hierauf gemappt.
+
+### D-025 — `Address`- und `Person`-Feldform final
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- **`Address` (Sitz + Location):** `street` · `house_number` (separat, nullable) ·
+  `postal_code` · `city` · `district` (Teilort, nullable) · `country_code`
+  (default `DE` — aktuell nur DE-Kunden) · `state` (Staat/Region, nullable) ·
+  `po_box` · `po_box_postal_code` · `po_box_city` (alle nullable) · +
+  Geocoding/Prüfung aus D-024.
+- **`Person`:** `first_name` · `last_name` · `name_suffix` (Namenszusatz, nullable,
+  z. B. „Dr. med.") · `title` (nullable — kann mit `name_suffix` verschmelzen,
+  vorerst beide) · `gender` (enum: `maennlich` · `weiblich` · `divers` ·
+  `unbekannt`) · `locale` (default `de`).
+
+### Bereich-Übergabe → Service
+
+- **„Melder"**: kein freistehender Melder. Ein Servicefall hat `reported_by`
+  → **CompanyContact** (Pflicht, muss ein bestehender Kontakt der Company sein).
+  Detail im Service-Bereich.
+- **Device / Praxis-IT** (`DO_SVV_PRAXISSW*`, `SERVER_*`, `SONOGDT*`,
+  `DO_SVV_PRAXIS_ASP` — 19 Felder) → Device-/ServiceContract-Spec.
+- **Fahrtzone** (D-020): Company-Attribut, Zonen-/Preismodell im Service-Bereich.

@@ -6,44 +6,30 @@ Das neue Modell ist fachlich strukturiert.
 
 Es ersetzt nicht einfach die Legacy-Tabellen.
 
+Dieses Dokument ist die **Discovery-Übersicht**. Fertig ausspezifizierte Bereiche
+haben ein eigenes autoritatives Dokument (Feldform, Enums, Regeln):
+
+| Bereich | Spec | Status |
+| --- | --- | --- |
+| Core: Company / Person / Adresse | [`CORE.md`](CORE.md) | **spezifiziert** (D-001 – D-025) |
+| Service, Sales, Dokumente, Billing | dieses Dokument | Discovery |
+
 ## Core
 
-### Company
+**→ Vollständige Spec: [`CORE.md`](CORE.md).** Kurzfassung:
 
-Repräsentiert eine juristische oder organisatorische Kunden-/Geschäftseinheit.
-
-Eine Company kann mehrere Locations besitzen.
-
-### Person
-
-Repräsentiert eine reale Person.
-
-Eine Person ist nicht automatisch genau einer Company zugeordnet.
-
-### CompanyContact
-
-Explizite Beziehung zwischen Person und Company.
-
-Eine Person kann in seltenen Fällen Kontaktperson mehrerer Companies sein.
-
-Mögliche spätere Attribute:
-
-- Rolle/Funktion
-- primärer Kontakt
-- Gültigkeitszeitraum
-- Kommunikationspräferenzen
-
-### Address
-
-Adresse als wiederverwendbare Adressinformation.
-
-Sie ist nicht gleichzeitig das fachliche Objekt „Company“ oder „Person“.
-
-### Location
-
-Reale Betriebs-/Service-/Standortstruktur einer Company.
-
-Eine Company kann mehrere Locations haben.
+- **Company** ist der zentrale Ankerpunkt. Aktuell nur Kunden, flach (keine
+  Hierarchie außer abweichendem Rechnungsempfänger).
+- **Person** existiert nie eigenständig — immer über `CompanyContact` an ≥ 1 Company.
+  Keine eigene Adresse.
+- **CompanyContact**: genau eine `role` (Vorschlagsliste + Freitext), `department`,
+  `is_primary`.
+- **Address**: polymorph, genau eine je `Company` (Sitz) und je `Location`.
+  Geocoding ist fester Bestandteil.
+- **Location**: physischer Standort, ≥ 1 je Company; Device/ServiceContract hängen
+  an der Location.
+- Zusätzlich: `ContactChannel` (Kommunikationskanäle), `Consent` (DSGVO,
+  historisiert), `MedicalSpecialty` (Lookup „Fachrichtung").
 
 ## Service
 
@@ -116,8 +102,21 @@ Ob der Rechnungsempfänger immer dieselbe Company ist, ist als Fachfrage noch of
 
 ## Offene Fachfragen
 
-- Kann eine Managementgesellschaft Rechnungen für mehrere unabhängige Praxen erhalten?
-- Ist die Managementgesellschaft dann eine eigene Company?
-- Kann Service-/Leistungsempfänger A und Rechnungsempfänger B unterschiedliche Companies sein?
-- Welche Rollen benötigt `CompanyContact`?
-- Welche Adresse gehört fachlich zur Company, welche zur Location?
+### Core — geklärt (siehe `CORE.md` / `../07-decisions/grill-log.md`)
+
+- ✅ Managementgesellschaft erhält Rechnungen für mehrere Praxen → **ja** (D-004).
+- ✅ Managementgesellschaft ist eine eigene Company; die Praxen zeigen mit
+  `billing_company_id` auf sie (D-004).
+- ✅ Leistungsempfänger ≠ Rechnungsempfänger möglich → **ja**, eigene Beziehung (D-004).
+- ✅ `CompanyContact`-Rollen → **eine** freie `role` (String) mit Vorschlagsliste,
+  nicht auswertungsrelevant (D-005).
+- ✅ Adresse Company vs. Location → Company hat **eine** Sitzadresse; jede
+  Location hat ihre eigene Adresse (Gerätestandort). Lieferadresse = eine
+  Location (D-003 / D-007 / D-014).
+
+### Service / Sales / Billing — noch offen
+
+- Kann ein Rechnungsempfänger auch eine freistehende Adresse ohne Company sein?
+  (Annahme aktuell: immer Company.)
+- Fahrtzonen-Modell (Zonen, Preise) — Bereich Service.
+- „Melder" eines Servicefalls — Bereich Service (`ServiceCase.reported_by` → CompanyContact).
