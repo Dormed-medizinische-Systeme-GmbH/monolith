@@ -613,3 +613,43 @@ Keins der drei wird in der Zielstruktur gebraucht:
 - Einrichtungsgebühr / `KOSTEN_*_EINMAL` → verworfen (kein `setup_fee`).
 - `PREISANPASSUNG` / `PREISANPASSUNG2025` (Ankündigungs-Flags) → verworfen
   (Preis = nur `current_price`, D-036; Anpassung überschreibt).
+
+### D-043 — Abrechnungsgrenze: line_items am Einsatz, Rechnungslogik im Billing-Bereich
+
+**Status:** entschieden (meine Entscheidung — Veto möglich) · **Datum:** 2026-09-08
+
+- `Maintenance` und `ServiceCase` tragen je `line_items` (Teile, Arbeitszeit,
+  Anfahrt: `description`, `quantity`, `unit_price`, `unit`). Erfassung am Einsatz.
+- Bei Abschluss + Freigabe des Einsatzes → **Rechnungsentwurf im Billing-Bereich**.
+  Die `Invoice` friert Positionen + Empfänger + Adresse ein (ADR-006).
+- **Der genaue Übergabe-Mechanismus** (Invoice-Modell, Nummernkreis, Sammelrechnung
+  ja/nein, e-Rechnung, KHK-Sync) wird im **Billing-Bereich** final entschieden.
+- Keine eigene Summen-/Steuerlogik am Einsatz (zweite Wahrheit vermeiden).
+- Legacy `TICKET_POS1..7_*`, `TICKET_LEISTUNG_POS1_*`, `TICKET_GESAMT_*`,
+  `TICKET_MWST` → `line_items` bzw. abgeleitet/Billing.
+
+### D-044 — STK-Messprotokoll: eigenes `measurement_protocol`, feste Struktur
+
+**Status:** entschieden (meine Entscheidung — Veto möglich) · **Datum:** 2026-09-08
+
+DIN EN 62353 ist regulatorisch standardisiert → **nicht** Template-getrieben.
+
+- `measurement_protocol` 1:1 zu `Maintenance` (bzw. `ServiceCase` bei Bedarf).
+- Felder: `protection_class` (SK1/SK2), `test_equipment` (Prüfmittel),
+  `test_method` (Messverfahren), Messwerte je Schutzklasse: `iega` · `iepa` ·
+  `iga` · `ipa` · `rsl` · `uln` (DECIMAL), `evaluation` (`ok` · `nicht_ok`),
+  `is_constancy_test` (Konstanzprüfung für KV — `TICKET_ABSCHLUSS_KP`).
+- Legacy `TICKET_MESSWERTE_*` (Art, Prüfmittel, Schutzklasse, SK1_*/SK2_*) → hierauf.
+
+### D-045 — Kundenbestätigung: einfache Signatur als Workflow-Gate (jetzt)
+
+**Status:** entschieden (meine Entscheidung — Veto möglich) · **Datum:** 2026-09-08
+
+- Einfache Touch-Unterschrift beim Einsatzabschluss: `signature_image`,
+  `signer_name`, `signed_at`, `confirmed_report_version` (welcher Berichtsstand).
+- **Workflow-Gate**: ohne Bestätigung kein Status `abgeschlossen` → nicht
+  rechnungsfähig. Ausnahme mit Vermerk möglich (niemand vor Ort) — `signed_at` null,
+  `unconfirmed_reason` gesetzt.
+- Qualifizierte elektronische Signatur → eigener späterer Slice, nur falls
+  fachlich/legal erforderlich (SERVICE.md).
+- Legacy `BESTAETIGUNG` → hierauf; `ATMOSPHERE` (Stimmung Kunde) → verworfen.
