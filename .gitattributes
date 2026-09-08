@@ -9,3 +9,6 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+
+# Legacy schema exports: keep verbatim (CRLF, no diff churn)
+docs/09-legacy/xml/*.xml -text -diff
