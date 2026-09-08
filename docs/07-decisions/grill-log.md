@@ -664,6 +664,9 @@ DIN EN 62353 ist regulatorisch standardisiert → **nicht** Template-getrieben.
 
 ## Bereich: Domäne — Scheduling (Termine)
 
+> **Status: synthetisiert (2026-09-08).** → [`../04-domain/SCHEDULING.md`](../04-domain/SCHEDULING.md).
+> Offen: type/status-Enum-Werte, Serien-Umsetzungsdetail, Outlook-Sync (ROADMAP).
+
 Legacy `Termine.xml` (25 F., fast Standard-CAS + 1 Dormed-Feld
 `DORMEDLOGISTIKERFORDERLICH`). Prinzip (LEGACY_MAPPING): `Appointment` als
 Scheduling-Objekt **getrennt** vom fachlichen Vorgang. Klärt Service-Restfrage
