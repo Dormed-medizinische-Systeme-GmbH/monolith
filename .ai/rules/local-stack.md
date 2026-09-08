@@ -40,7 +40,21 @@ Eine Quelle: der `DB_*`-Block in `.env`. `pgsql` bekommt `POSTGRES_*` per
 gegen `localhost` laufen (die `.env` hat `SESSION_DOMAIN=.dormed.test` für die
 geteilte Subdomain-Session). Kontext-Route-Tests mit voller URL aufrufen.
 
-## compose.prod.yaml
+## compose.prod.yaml (Coolify Test/Staging)
 
-Vom Nutzer angelegte Kopie, aktuell inhaltlich der frühere `compose.yaml`-Stand
-(lokaler Dev-Stack, nicht prod-tauglich) – nicht als Referenz behandeln, bis geklärt.
+Eigener Stack für das Coolify-Deployment, gebaut aus `docker/app-prod/Dockerfile`
+(Multi-Stage: composer `--no-dev` → `npm run build` → `php:8.4-cli` + `pdo_pgsql`).
+Nicht mit `compose.yaml` (Dev) vermischen.
+
+- Runtime ist `php artisan serve` – nur test-tauglich; für echten Traffic auf
+  FrankenPHP / php-fpm+nginx wechseln.
+- `pgsql` hat ein Named Volume `pgsql-data` (Coolify persistiert das), keinen `ports:`-Eintrag.
+- Migrationen laufen im Container-Start-CMD (`migrate --force`), plus `package:discover`.
+- Secrets/Domains kommen aus der Coolify-UI (Environment Variables), **nicht** aus
+  einer committeten Datei. Pflicht: `APP_KEY`, `APP_URL`, `DOMAIN_CRM/PORTAL/SHOP`,
+  `SESSION_DOMAIN`, `DB_PASSWORD`.
+- Subdomains: alle drei `https://dormed-{crm,portal,shop}.everding.it` in Coolify
+  beim `app`-Service als Domains eintragen (nutzt das Server-Wildcard `*.everding.it`).
+- `bootstrap/app.php` hat `trustProxies(at: '*')` – nötig hinter Coolifys Traefik,
+  damit HTTPS/Secure-Cookies erkannt werden.
+- `.dockerignore` hält `.env`, `vendor`, `node_modules`, `tests`, `docs` aus dem Build-Kontext.

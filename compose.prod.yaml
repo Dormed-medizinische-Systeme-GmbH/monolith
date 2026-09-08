@@ -1,0 +1,73 @@
+# Coolify deployment stack (test / staging). Point Coolify's
+# "Docker Compose Location" at /compose.prod.yaml.
+#
+# Set these in the Coolify UI (Environment Variables), NOT in a committed file:
+#   APP_KEY            base64:...  (php artisan key:generate --show)
+#   APP_URL            https://dormed-crm.everding.it
+#   DOMAIN_CRM         dormed-crm.everding.it
+#   DOMAIN_PORTAL      dormed-portal.everding.it
+#   DOMAIN_SHOP        dormed-shop.everding.it
+#   SESSION_DOMAIN     .everding.it
+#   DB_PASSWORD        <random>
+#   APP_DEBUG          true   (fine while testing)
+# And add all three https://dormed-{crm,portal,shop}.everding.it domains to the
+# `app` service under Coolify → the service → Domains.
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app-prod/Dockerfile
+    restart: unless-stopped
+    expose:
+      - "8000"
+    environment:
+      APP_NAME: "${APP_NAME:-Dormed}"
+      APP_ENV: production
+      APP_DEBUG: "${APP_DEBUG:-false}"
+      APP_KEY: "${APP_KEY}"
+      APP_URL: "${APP_URL}"
+      DOMAIN_CRM: "${DOMAIN_CRM}"
+      DOMAIN_PORTAL: "${DOMAIN_PORTAL}"
+      DOMAIN_SHOP: "${DOMAIN_SHOP}"
+      SESSION_DRIVER: database
+      SESSION_DOMAIN: "${SESSION_DOMAIN}"
+      SESSION_SECURE_COOKIE: "true"
+      CACHE_STORE: database
+      QUEUE_CONNECTION: database
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      DB_CONNECTION: pgsql
+      DB_HOST: pgsql
+      DB_PORT: "5432"
+      DB_DATABASE: "${DB_DATABASE:-dormed}"
+      DB_USERNAME: "${DB_USERNAME:-dormed}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_SCHEMA: public
+      DB_SSLMODE: disable
+    depends_on:
+      pgsql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit((int) ! @file_get_contents('http://127.0.0.1:8000/up'));"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 45s
+
+  pgsql:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${DB_DATABASE:-dormed}"
+      POSTGRES_USER: "${DB_USERNAME:-dormed}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - pgsql-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgsql-data:

@@ -26,6 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind Coolify's Traefik proxy: honour X-Forwarded-* so the app knows
+        // the request is HTTPS (correct scheme in redirects, secure cookies).
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             ResolveApplicationContext::class,
         ]);
