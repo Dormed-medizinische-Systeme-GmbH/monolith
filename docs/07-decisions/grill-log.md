@@ -983,3 +983,31 @@ Vorschlag Struktur:
 - ADR-008 bleibt: der Vertrag ist nicht das Device-Objekt.
 - **Offen:** wie kommt ein vertragsloses Device ins System (Verkauf ohne Vertrag /
   Erfassung bei erstem ServiceCase)? → Runde Device-Erfassung.
+
+### D-065 — Wartungspauschale bleibt am Vertrag (fixiert); Preisliste nur für neue Verträge/Angebote — revidiert D-062/D-063
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `ServiceContract.maintenance_price` **existiert** — der Vertrag ist auf **einen
+  Preis fixiert**, festgelegt bei Vertragserstellung (nach angenommenem Angebot /
+  Auftragseingang) aus der Preisliste zu diesem Zeitpunkt. Spätere
+  Preislistenänderungen wirken **nicht** auf bestehende Verträge.
+- **Preisliste** (`service_prices`, Wartungspauschalen je Geräteklasse × Tarif):
+  ausschließlich für (a) das Erstellen **neuer Angebote** (Opportunity-Positionen,
+  D-052) und (b) das **Fixieren eines neuen Vertrags** auf einen Preis.
+  **Manuell** gepflegt. Keine Wirkung auf bestehende Verträge.
+- Bei einem `Maintenance`-Einsatz: **Snapshot** von `contract.maintenance_price`
+  → `maintenance_device.maintenance_fee_snapshot`.
+- **Fahrtzone ist komplett getrennt** — `travel_zones.flat_fee` je Zone, **nicht**
+  Teil der Preisliste, Preisliste hat **keine** Wirkung darauf (D-063 bleibt hier gültig).
+- Stundensatz (ServiceCase-Arbeitszeit): bleibt preislisten-getrieben zum
+  Zeitpunkt des Falls, Tarifstufe nach Vertragsstatus des Geräts (D-063,
+  **nicht** am Vertrag fixiert — nur die Wartungspauschale wird fixiert).
+
+Flow:
+```
+service_prices (manuell) → Angebot (Opportunity) → angenommen/Auftrag
+   → ServiceContract.maintenance_price := Preislisten-Wert (fixiert)
+   → Maintenance → maintenance_device.maintenance_fee_snapshot := contract.maintenance_price
+   → Rechnung
+```
