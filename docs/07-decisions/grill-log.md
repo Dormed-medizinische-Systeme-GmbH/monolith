@@ -101,3 +101,46 @@ Company bekommt eine **„Rechnung an"-Beziehung** — von Anfang an im Modell.
 - Deckt sich mit dem bestehenden CRM-Slice (`role` nullable string, `is_primary` bool).
 - **Offen:** konkrete Vorschlagswerte (Praxismanager, Einkauf, IT, Buchhaltung,
   Ärztliche Leitung, Technik …) → in der Synthese festzurren.
+
+### D-006 — Keine Company-Hierarchie
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+Companies sind flach. Die **einzige** Company↔Company-Beziehung ist der abweichende
+Rechnungsempfänger (D-004). Verbünde / Konzern / MVZ-Struktur werden erst
+modelliert, wenn ein realer Fall es verlangt (ADR-010-Ausnahme greift nicht — hier
+bewusst NICHT vorwegnehmen). → benannter Nicht-Scope.
+
+### D-007 — Location = physischer Standort; Device/ServiceContract hängt an Location
+
+**Status:** entschieden (Detail offen) · **Datum:** 2026-09-08
+
+- Location = realer Ort (Praxisadresse, Nebenstelle, Zentrallager).
+- **Jede Company hat ≥ 1 Location.** Einzelpraxis = 1 Location = Sitzadresse.
+- **Device / ServiceContract referenzieren die Location**, an der das Gerät steht —
+  nicht die Company.
+- **Detail (D-003 × D-007):** Vorschlag — `Company.address` = Sitz (juristisch,
+  Korrespondenz, Basis Rechnungsadresse); `Location.address` = physischer
+  Gerätestandort. Bei Neuanlage einer Company wird automatisch eine Location
+  „Hauptstandort" mit Kopie der Sitzadresse erzeugt (danach unabhängig editierbar).
+  → **zu bestätigen.**
+- **Slice-Konsequenz:** bestehender CRM-Slice hat `Company hasMany Location` +
+  `Location morphOne Address` — passt. Auto-Hauptstandort fehlt noch.
+
+### D-008 — Company ist (vorerst) nur Kunde; Lieferant = späterer Bereich
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+Zielmodell startet kundenzentriert. Kein `ist_lieferant`-Flag jetzt. Legacy-
+Lieferantenadressen werden **nicht** als Company migriert (Migrations-Filter).
+Lieferanten/Einkauf = **benannter Entscheidungspunkt in der ROADMAP**.
+
+### D-009 — Company trägt Debitorennummer + KHK-Matchcode (Sage-KHK-Bridge bleibt)
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `AdrNumber` („Deb./Kred. Konto") → `Company.debitor_number`
+- `ADRKHKMATCHCODE` → `Company.khk_matchcode`
+- Die Sage-KHK-Buchhaltungsanbindung bleibt bestehen. Der Sync-**Mechanismus**
+  selbst = Bereich Integrationen; die **Felder** leben ab jetzt auf Company.
+- Feldnamen bewusst „Debitor…" (nicht „Deb./Kred.") — Kreditor-Pendant kommt mit D-008.
