@@ -286,7 +286,7 @@ Es gibt **kein** „archiviert/inaktiv"-Zustand. Ein Datensatz ist **aktiv** ode
 
 ### D-020 — Fahrtzone ist ein Company-Attribut (Detail: Bereich Service)
 
-**Status:** entschieden (Modell offen) · **Datum:** 2026-09-08
+**Status:** entschieden · **revidiert D-059/D-063** (`Company.travel_zone_id` → `travel_zones`; einmal je Anfahrt) · **Datum:** 2026-09-08
 
 - Eine **Fahrtzone** gehört zur Company (Grundlage der Service-Anfahrtskosten).
   `Company.travel_zone` (bzw. `travel_zone_id`) — Feld lebt auf Company.
@@ -529,7 +529,7 @@ Legacy: `Servicevertraege-NEU.xml` (83 F.), `Tickets.xml` (112 F.), `Termine.xml
 
 ### D-035 — Device existiert nur über einen ServiceContract (1:1, Pflicht)
 
-**Status:** entschieden · **Datum:** 2026-09-08
+**Status:** ~~entschieden~~ **REVIDIERT durch D-064** — `service_contract_id` ist jetzt nullable · **Datum:** 2026-09-08
 
 - Kein vertragsloses Device im System. `Device.service_contract_id` **required**,
   unique (1 Device ↔ 1 ServiceContract, DOMAIN.md / ADR-008).
@@ -540,7 +540,7 @@ Legacy: `Servicevertraege-NEU.xml` (83 F.), `Tickets.xml` (112 F.), `Termine.xml
 
 ### D-036 — Vertragspreis: nur `current_price` (kein Historien-Modell)
 
-**Status:** entschieden · **Datum:** 2026-09-08
+**Status:** ~~entschieden~~ **REVIDIERT durch D-062/D-063** — keine Preise am Vertrag, Preisliste `service_prices` · **Datum:** 2026-09-08
 
 - `ServiceContract`: `maintenance_price` (aktuell, wiederkehrend je Wartung) +
   `travel_flat_rate` (Fahrtzonenpauschale aktuell). Anpassung **überschreibt**.

@@ -15,33 +15,39 @@ Vertrag + Gerät + Komponenten + Netzwerk-Config + Wartungszyklus + Wartungs-
 Checkliste + Messprotokoll + Rechnungspositionen. Zerlegung:
 
 ```
-ServiceContract 1──1 Device 1──n DeviceComponent
-       │                │
-       │ 1              │ 1
-       n                n
-   Maintenance      (ServiceCase n, unabhängig)
-       │ 1
-       1
-  MaintenanceReport ──> ChecklistTemplate (version-pinned)
-       │
-       0..1
-  MeasurementProtocol
+Company 1──n Location 1──n Device ──0..1── ServiceContract
+                              │ 1
+                              │ n
+                        DeviceComponent
+
+Maintenance (= Anfahrt, 1 Company/Location)
+   └─ 1..n MaintenanceDevice ──1── Device (Gerät MIT Vertrag)
+             ├─ 1  MaintenanceReport ──> ChecklistTemplate (version-pinned)
+             ├─ 0..1 MeasurementProtocol
+             └─ n  line_items
+   ⇒ 1 Rechnung je Maintenance (Fahrtzone 1× + Σ Geräte)
+
+ServiceCase (unabhängig, 0..n Geräte, keine Vertragskosten)
+   ├─ n  line_items
+   └─ 0..1 MeasurementProtocol
 ```
 
 **Wartung ≠ Servicefall** — vollständig getrennte Modelle, getrennte Workflows
 (D-039). Der Ursprung bestimmt den zulässigen Prozess.
+**`Maintenance` = die Anfahrt** und bündelt mehrere Geräte/Verträge einer Praxis
+(D-059) — die Fahrtzone wird so **einmal je Anfahrt** berechnet.
 
 ---
 
 ## Device
 
-Das medizintechnische System (Ultraschallgerät …). **Existiert nur über einen
-ServiceContract** (D-035): `service_contract_id` required + unique (1:1).
-Steht an einer `Location` (D-007).
+Das medizintechnische System (Ultraschallgerät …). Steht an einer `Location`
+(D-007). Kann **mit oder ohne** Servicevertrag existieren (D-064).
 
 | Feld | Typ | Null | Notiz |
 | --- | --- | :-: | --- |
-| `service_contract_id` | FK → `service_contracts` | – | unique (1:1) |
+| `service_contract_id` | FK → `service_contracts` | ✓ | nullable, unique (D-064). Gesetzt ⇒ Tarifstufe `contract` |
+| `device_class` | enum `1` \| `2` | – | Geräteklasse, bestimmt Wartungspauschale (D-063). Namen offen |
 | `location_id` | FK → `locations` | – | Gerätestandort |
 | `manufacturer` | string | – | ← `SYSTEM_HERSTELLER` |
 | `model_name` | string | ✓ | Kategorie/Bezeichnung ← `SYSTEM_BEZEICHNUNG` |
@@ -101,9 +107,7 @@ Die Servicevereinbarung für genau ein Device.
 | `cancelled_at` | date | ✓ | Kündigungsdatum |
 | `full_service_ends_at` | date | ✓ | ← `VERTRAG_FS_ENDE` |
 | `maintenance_interval_months` | smallint | – | 12 / 6 / 4 / 3 … (D-037; deckt „Mehrfachwartung", D-042) |
-| `next_due_at` | date | ✓ | **abgeleitet**, neu berechnet bei Wartungsabschluss (D-037) |
-| `maintenance_price` | decimal(10,2) | ✓ | nur aktuell (D-036) |
-| `travel_flat_rate` | decimal(10,2) | ✓ | Fahrtzonenpauschale, aktuell (D-036/D-020) |
+| `next_due_at` | date | ✓ | **abgeleitet** aus letztem `maintenance_devices.performed_at` + Intervall (D-037/D-059) |
 | `payment_terms` | string | ✓ | ← `VERTRAG_ZAHLUNGSKONDITIONEN` |
 | `billing_company_id` | FK → `companies` | ✓ | abw. Rechnungsempfänger (← `ABWEICHENDE_RECHNUNG`, D-004) |
 | `warranty_manufacturer_until` | date | ✓ | ← `GARANTIE_HERSTELLER` |
@@ -116,36 +120,102 @@ Die Servicevereinbarung für genau ein Device.
 | `leasing_where` | string | ✓ | ← `VERTRAG_LEASING_WO` |
 | `notes` | text | ✓ | ← `KEYWORD` / `NOTES2` |
 
-**Verworfen** (D-036/D-037/D-042): `KOSTEN_*_VERTRAG` / `_EINMAL`, `PREISANPASSUNG*`,
-`ERSTEWARTUNG`, `NAECHSTEWARTUNG`, `MONAT`, `MEHRFACHWARTUNG`. Adress-/Firmen-
-Dubletten (`FIRMA`, `ORT`, `PLZ`, `DEBITORENNUMMER`, `VERANTWORTLICHER_SERVICE`)
-→ leben auf `Company`.
+**Keine Preisfelder** am Vertrag (D-062). Der Vertrag wirkt nur als **Gate**:
+Device mit Vertrag ⇒ Tarifstufe `contract`, sonst `standard`.
+
+**Verworfen** (D-036/D-037/D-042/D-059/D-062): `KOSTEN_*` (alle),
+`PREISANPASSUNG*`, `ERSTEWARTUNG`, `NAECHSTEWARTUNG`, `MONAT`, `MEHRFACHWARTUNG`.
+Adress-/Firmen-Dubletten (`FIRMA`, `ORT`, `PLZ`, `DEBITORENNUMMER`,
+`VERANTWORTLICHER_SERVICE`) → leben auf `Company`.
 
 ---
 
-## Maintenance
+## Preise — `service_prices` + `travel_zones` (D-062/D-063)
 
-Eine einzelne Wartungsinstanz aus dem Zyklus eines `ServiceContract`.
+**Eine** Preisliste für alle Serviceleistungen. Ersatzteile **nicht** darin
+(per Kostenvoranschlag, Freitext-Position). Kein Zeitversionieren — **Snapshot
+bei Eintragung** auf die Position (spätere Preislistenänderung ändert bestehende
+Positionen/Rechnungen nicht).
+
+`service_prices`:
+
+| Feld | Typ | Notiz |
+| --- | --- | --- |
+| `item` | enum `maintenance_flat` \| `hourly_rate` \| … | |
+| `device_class` | enum `1` \| `2` (nullable) | nur bei `maintenance_flat` |
+| `tier` | enum `contract` \| `standard` | |
+| `amount` | decimal(10,2) | z. B. `hourly_rate/contract` = 25 €, `/standard` = 30 € |
+
+`travel_zones`: `name`, `flat_fee` (decimal, **ein** Wert je Zone — identisch für
+`contract` und `standard`, D-063), `is_active`. Zonen-Definition (PLZ-Bereiche
+vs. manuell je Company) → **offen**.
+
+`Company.travel_zone_id` → `travel_zones` (nullable FK, **in CORE.md nachzutragen**).
+Fahrtzonenpauschale wird bei der Abrechnung **einmal je Anfahrt** aus der Company
+abgeleitet — **nicht** je Gerät, **nicht** vom Vertrag (D-059).
+
+**Tarifstufe** je Position = `device.service_contract_id ? 'contract' : 'standard'`.
+
+---
+
+## Maintenance — der Einsatz / die Anfahrt (D-059)
+
+**`Maintenance` ist der Vor-Ort-Einsatz**, gebunden an genau **eine** `Company` +
+`Location`, und bündelt **1..n** Serviceverträge/Geräte, die in **einer Anfahrt**
+gewartet werden. Zwei bewusst getrennte Anfahrten = zwei `Maintenance`.
+**Keine Auto-Erkennung** — die Bündelung ist eine explizite Planungsentscheidung.
 
 | Feld | Typ | Null | Notiz |
 | --- | --- | :-: | --- |
-| `service_contract_id` | FK | – | |
+| `company_id` | FK → `companies` | – | eine Praxis je Einsatz |
+| `location_id` | FK → `locations` | – | ein Standort je Einsatz |
 | `number` | string | – | Nummernkreis |
 | `status` | enum | – | State-Machine (s. u.) |
-| `planned_due_at` | date | – | fachlich ≠ performed (SERVICE.md) |
-| `performed_at` | datetime | ✓ | tatsächliche Durchführung — Basis `next_due_at` (D-037) |
+| `scheduled_date` | date | ✓ | geplanter Anfahrtstag |
+| `performed_at` | datetime | ✓ | tatsächliche Durchführung |
 | `finalized_at` | datetime | ✓ | ← `TICKET_DATUM_GESCHLOSSEN` |
-| `assigned_technician_id` | FK → `users` | ✓ | ← `TICKET_TICKETUSERNAME` |
-| `work_performed` | text | ✓ | ← `TICKET_DURCHGEFUEHRTEARBEITEN` |
+| `assigned_technician_id` | FK → `users` | ✓ | |
+| `visit_aborted` | boolean | – | ganze Praxis kein Zugang (D-061) |
 | `notes` | text | ✓ | |
+
+**Beziehungen:** `devices()` `hasMany` `MaintenanceDevice`; `appointments()`
+`morphMany` (n einzelne Termine je Gerät, D-046/D-059); `invoice()` — 1 Rechnung
+je Einsatz.
+
+### MaintenanceDevice
+
+Ein Eintrag je gebündeltem Gerät im Einsatz.
+
+| Feld | Typ | Null | Notiz |
+| --- | --- | :-: | --- |
+| `maintenance_id` | FK | – | |
+| `device_id` | FK → `devices` | – | Gerät **muss** einen `service_contract_id` haben (D-064) |
+| `planned_due_at` | date | – | Fälligkeit dieses Geräts (kann je Gerät abweichen) |
+| `performed_at` | datetime | ✓ | Basis `next_due_at` **dieses** Vertrags (D-037) |
+| `status` | enum `durchgefuehrt` \| `nicht_durchgefuehrt` | – | D-061 |
+| `maintenance_fee_snapshot` | decimal(10,2) | ✓ | eingefrorener Preislisten-Wert (`maintenance_flat`, `device.device_class`, Tarifstufe), D-063 |
+| `work_performed` | text | ✓ | ← `TICKET_DURCHGEFUEHRTEARBEITEN` |
 
 **Beziehungen:** `report()` `hasOne` `MaintenanceReport`, `measurementProtocol()`
 `hasOne` `MeasurementProtocol`, `lineItems()` `morphMany`.
 
-**State-Machine** (Werte offen — Vorschlag): `geplant → zugewiesen → in_durchfuehrung
-→ kunde_bestaetigt → abgeschlossen → rechnung_freigegeben`. Übergänge server-seitig
-erzwungen; kein Sprung `geplant → rechnung_freigegeben` (SERVICE.md, IDENTITY_RBAC
-„Business-Workflow").
+### Abrechnung eines Maintenance-Einsatzes (D-059/D-061/D-063)
+
+```
+Rechnung = Fahrtzone (Company.travel_zone.flat_fee, Snapshot) × 1
+         + Σ  je maintenance_device (fee = maintenance_fee_snapshot):
+              status = durchgefuehrt       → 100 % fee + line_items
+              status = nicht_durchgefuehrt →  50 % fee
+```
+
+`visit_aborted = true` ⇒ **alle** `maintenance_devices` gelten als
+`nicht_durchgefuehrt` (50 %) **+ volle Fahrtzone** (D-061).
+
+### State-Machine (Werte offen — Vorschlag)
+
+`geplant → zugewiesen → in_durchfuehrung → kunde_bestaetigt → abgeschlossen →
+rechnung_freigegeben`. Übergänge server-seitig erzwungen; kein Sprung
+`geplant → rechnung_freigegeben` (IDENTITY_RBAC „Business-Workflow").
 
 ---
 
@@ -155,7 +225,7 @@ Der strukturierte Wartungsbericht (D-038). **Kein** `visual_check_1..N`.
 
 | Feld | Typ | Null | Notiz |
 | --- | --- | :-: | --- |
-| `maintenance_id` | FK | – | 1:1 |
+| `maintenance_device_id` | FK → `maintenance_devices` | – | 1:1 — **ein Bericht je Gerät** (D-059) |
 | `checklist_template_id` | FK → `checklist_templates` | – | version-gepinnt |
 | `checklist_template_version` | integer | – | eingefroren |
 | `outcome` | enum `keine_maengel` \| `maengel` \| `maengel_gefahr` \| `ausserbetriebnahme` | – | ← `TICKET_ABSCHLUSS_1..4` |
@@ -192,11 +262,11 @@ Versionierte Prüfkatalog-Vorlage (D-038).
 ## MeasurementProtocol
 
 STK / Konstanzprüfung nach **DIN EN 62353** — feste Struktur, nicht Template-
-getrieben (D-044). 0..1 je `Maintenance` (bei Bedarf auch `ServiceCase`).
+getrieben (D-044). 0..1 je `maintenance_device` (bei Bedarf auch `ServiceCase`).
 
 | Feld | Typ | Null | Notiz |
 | --- | --- | :-: | --- |
-| `maintenance_id` | FK | – | |
+| `maintenance_device_id` | FK → `maintenance_devices` | – | |
 | `protection_class` | enum `sk1` \| `sk2` | – | ← `TICKET_MESSWERTE_SCHUTZKLASSE` |
 | `test_method` | string | ✓ | ← `_ART` |
 | `test_equipment` | string | ✓ | ← `_PRUEFMITTEL` |
@@ -209,11 +279,19 @@ getrieben (D-044). 0..1 je `Maintenance` (bei Bedarf auch `ServiceCase`).
 
 ## ServiceCase
 
-Störung / Serviceeinsatz — **nicht** aus dem Wartungszyklus (D-039).
+Störung / Serviceeinsatz — **nicht** aus dem Wartungszyklus (D-039). Betrifft
+**0..n Geräte** (D-060) über Pivot `service_case_devices` (`service_case_id`,
+`device_id`); Geräte können mit **oder ohne** Vertrag sein.
+
+**Keine Kostenableitung aus dem Vertrag** (D-060). Alle Positionen ad-hoc
+(Teile per Kostenvoranschlag, Arbeitszeit `hourly_rate` nach Tarifstufe des
+jeweiligen Geräts). Fahrtzone: aus `Company`, einmal je Anfahrt (**zu bestätigen**).
+Kein Bündeln von Verträgen wie bei `Maintenance`.
 
 | Feld | Typ | Null | Notiz |
 | --- | --- | :-: | --- |
-| `device_id` | FK → `devices` | – | betroffenes Gerät (← `TICKET_SYSTEM`) |
+| `company_id` | FK → `companies` | – | |
+| `location_id` | FK → `locations` | ✓ | |
 | `number` | string | – | Nummernkreis |
 | `reported_by` | FK → `company_contacts` | – | **Pflicht**, Melder muss bestehender Kontakt sein (CORE.md) |
 | `type` | enum | – | ← `GWSTYPE` — Werte **offen** |
