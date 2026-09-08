@@ -800,3 +800,45 @@ Greenfield (kein Legacy-XML). Hängt an: Service (D-043 line_items → Invoice),
 Core (D-004 Rechnungsempfänger, D-009 Debitor/KHK), ADR-006 (strukturierte Daten
 = Wahrheit, PDF = Repräsentation), DOMAIN.md (Rechnungen historisieren).
 
+### D-056 — KHK/Sage wird abgelöst; Billing-Modul = vorerst Fakturierung + Debitoren
+
+**Status:** Richtung entschieden (Scope-Detail offen) · **Datum:** 2026-09-08
+
+- Die Sage-KHK soll **langfristig vollständig durch den Monolithen abgelöst**
+  werden. Der KHK-Sync (D-009) ist eine **Übergangsbrücke**, kein Dauerzustand.
+- **Vorerst** = `Billing`-Modul deckt: Rechnungserstellung + Nummernkreis +
+  Historisierung + Versand + Debitoren/offene Posten. Zahlungseingang/Mahnwesen
+  zunächst noch Sage, Status-Rücksync ins CRM.
+- **Offene strategische Frage:** vollwertige Buchhaltung (Kontenrahmen, GuV/BWA,
+  DATEV/ELSTER) im Monolithen — eigenes Modul `Accounting` getrennt von CRM, oder
+  „ein unified System für Mitarbeiter". → **eigener Entscheidungspunkt** (nicht jetzt),
+  ROADMAP-Direction „Sage-Ablösung".
+
+### D-057 — Rechnungsquellen
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- **Service-Einsatz** (Maintenance / ServiceCase, D-043): abgeschlossen + bestätigt
+  → Rechnungsentwurf mit `line_items` + Vertragspreis (`maintenance_price`) + Anfahrt.
+- **Gewonnene Opportunity** (Geräteverkauf, D-052): `opportunity_items` → Verkaufsrechnung.
+- **Manuelle Rechnung** (freie Positionen) — **begrenzt**, permission-gated
+  (`billing.invoices.create_manual`), Ausnahme nicht Norm.
+- **Keine** separate wiederkehrende Vertragsgebühr-Rechnung — die Grundgebühr
+  läuft über die Wartungsrechnung mit.
+
+### D-058 — Invoice-Modell e-Rechnungs-fähig; Format-Export = früher ROADMAP-Slice
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- Das `Invoice`-Datenmodell trägt alle Pflichtfelder für **ZUGFeRD / XRechnung**
+  (Steuerkategorien, Einheiten-Codes, Zahlungsmittel, Leitweg-ID falls B2G,
+  Liefer-/Leistungszeitraum, strukturierte Positionen).
+- Der eigentliche Format-Export (ZUGFeRD-PDF/A-3, XRechnung-XML) ist ein eigener
+  Slice — **früh** in der ROADMAP (DE-Pflicht B2B gestaffelt ab 2025).
+- Empfang von Lieferanten-e-Rechnungen → später (mit Lieferanten-Bereich, D-008).
+
+### OFFEN — die „Riesen-Problematik" bei den Abrechnungen
+
+Der Nutzer hat aktuell ein großes Problem bei den Abrechnungen (Kontext:
+Sammelrechnung / Rechnungsempfänger ≠ Leistungsempfänger / Managementgesellschaften).
+**Muss vor dem Invoice-Modell verstanden werden** — offene Beschreibung durch den Nutzer.
