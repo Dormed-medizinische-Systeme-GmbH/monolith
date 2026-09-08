@@ -352,7 +352,7 @@ Wie Vor-/Nachname, aber für Firmen: `Company.name` (← `CompName`) +
   vorerst beide) · `gender` (enum: `maennlich` · `weiblich` · `divers` ·
   `unbekannt`) · `locale` (default `de`).
 
-### Bereich-Übergabe → Service
+### Bereich-Übergabe → Service (Adressen-Zerlegung)
 
 - **„Melder"**: kein freistehender Melder. Ein Servicefall hat `reported_by`
   → **CompanyContact** (Pflicht, muss ein bestehender Kontakt der Company sein).
@@ -360,3 +360,13 @@ Wie Vor-/Nachname, aber für Firmen: `Company.name` (← `CompName`) +
 - **Device / Praxis-IT** (`DO_SVV_PRAXISSW*`, `SERVER_*`, `SONOGDT*`,
   `DO_SVV_PRAXIS_ASP` — 19 Felder) → Device-/ServiceContract-Spec.
 - **Fahrtzone** (D-020): Company-Attribut, Zonen-/Preismodell im Service-Bereich.
+
+---
+
+## Bereich: Plattform — Identität / Employee / RBAC / Abteilungen
+
+Kontext: `docs/03-security/AUTHORIZATION.md` + `SECURITY.md`, `CRM.md` „Mitarbeiter"
+(`User → Employee → Department → Roles/Permissions`). Kein Permission-Package
+installiert. Blockiert: D-012 (Mitarbeiter-Felder), D-016 (`responsible_*`),
+D-023 (Papierkorb nur Management/Backoffice) und **jede Policy jedes Moduls**.
+
