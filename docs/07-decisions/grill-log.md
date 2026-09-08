@@ -370,3 +370,74 @@ Kontext: `docs/03-security/AUTHORIZATION.md` + `SECURITY.md`, `CRM.md` „Mitarb
 installiert. Blockiert: D-012 (Mitarbeiter-Felder), D-016 (`responsible_*`),
 D-023 (Papierkorb nur Management/Backoffice) und **jede Policy jedes Moduls**.
 
+### D-026 — Employee = User (ein Modell)
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+Kein separates `Employee`-Modell. Mitarbeiter-Attribute leben auf `users`.
+(CRM.md-Kette `User → Employee → …` wird zu `User → Rollen/Abteilung`.)
+
+### D-027 — Mitarbeiter-Login: SSO-only über Microsoft Entra ID
+
+**Status:** entschieden (Integration offen — großer Brocken) · **Datum:** 2026-09-08
+
+- Dormed sitzt in Azure / Entra ID. Mitarbeiter melden sich **ausschließlich per
+  SSO** an (OIDC). **Kein Login-Formular** im CRM-Bereich. Keine doppelte
+  Nutzerpflege.
+- `users` bekommt `entra_oid` (stabiler Entra-Objektschlüssel, unique) als
+  Identitäts-Anker; kein Passwort für Mitarbeiter.
+- **Offen (Azure-Admin nötig):** siehe Abschnitt „Entra-Integration — offene Punkte".
+- **Portal/Shop-Kunden** sind **nicht** in Entra → eigener Auth-Pfad, eigener
+  Bereich (Portal). `users` = Mitarbeiter; Kunden-Accounts separat.
+
+### D-028 — Bypass: `users.is_admin`-Flag nur für IT/Bootstrap
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- Ein hartes `is_admin` (bool) für 1–2 IT-/Notfall-Accounts. `Gate::before` gibt
+  `is_admin` immer `true`.
+- Bootstrap: die Entra-`oid`s der Bootstrap-Admins stehen in der Config
+  (`config('identity.bootstrap_admin_oids')`); beim ersten SSO-Login wird
+  `is_admin` gesetzt. Löst das Henne-Ei-Problem (erste Deploy, keine User).
+- Management läuft **normal** über Rollen/Permissions, **kein** impliziter Bypass.
+
+### RBAC — Empfehlung (zur Bestätigung)
+
+**Handgerollt, gespeist aus Entra App Roles** — nicht `spatie/laravel-permission`:
+
+- IT definiert in der Entra-App-Registrierung **App Roles** (`management` · `sales`
+  · `service` · `accounting` · `it` · ggf. `readonly`). IT weist Mitarbeiter/
+  Gruppen diesen Rollen zu. Entra liefert bei Login den `roles`-Claim.
+- Das CRM ist **reiner Konsument**: beim Login `roles`-Claim → `users.roles`
+  (JSON/Pivot). Kein Rollen-Management im CRM.
+- **Permission-Katalog** im Code (`module.resource.action`-Strings, je Modul
+  beigesteuert). **Rolle → Permissions**-Map in `config/authorization.php`
+  (`management` → alle; `sales` → companies/contacts/opportunities/…; `service`
+  → companies.view + service-cases/*; …).
+- `PermissionService` / `Gate::before`: `$user->can($ability)` = eine der
+  Rollen des Users gewährt `$ability` **oder** `$user->is_admin`.
+- Kein Package, weil Entra die Zuweisungs-Autorität ist — `spatie` glänzt nur bei
+  In-App-Rollenverwaltung.
+- Individuelle Overrides (`user_permission_grants`) erst bei konkretem Bedarf.
+
+### Entra-Integration — offene Punkte (brauchen Azure-Admin)
+
+1. **App Roles vs. Gruppen vs. `department`-Claim** — kann IT App Roles anlegen &
+   zuweisen (empfohlen)? Oder müssen wir bestehende Sicherheitsgruppen (GUIDs →
+   Rolle in Config mappen) konsumieren?
+2. **Rollen-/Abteilungsliste** operativ: Management · Vertrieb · Service (Innen-/
+   Außendienst getrennt?) · Buchhaltung · IT — vollständig? Techniker eigene Rolle
+   mit eingeschränktem Zugriff?
+3. **Externe Mitarbeiter** (freie Techniker) — Entra-Accounts (B2B-Gast)?
+   CRM-Zugang überhaupt, wenn ja eingeschränkt?
+4. **Provisionierung** — reicht JIT (User beim ersten Login anlegen), oder
+   nächtlicher Microsoft-Graph-Sync einer Gruppe „CRM-Users", damit
+   `responsible_*`-Dropdowns vollständig sind, bevor jemand sich eingeloggt hat?
+5. **`department`-Attribut** — wird es in Entra gepflegt / als optionaler Claim
+   ausgeliefert? (Für Anzeige + evtl. Default-Filter „meine Abteilung".)
+6. **Deaktivierung** — Austritt = in Entra deaktiviert. Graph-Sync darf CRM-User
+   auto-deaktivieren + `responsible_*`-Datensätze zur Neuzuweisung markieren?
+7. **Legacy-Mitarbeiterfelder** (`gwPersonnelNumber`, Eintritts-/Austrittsdatum,
+   `gwCostCenter`, extern-Flag) — im CRM gebraucht oder nur in Entra/HR?
+8. **App-Registrierung** — Single-Tenant? Wer besitzt sie (IT)? Redirect-URIs je
+   Subdomain (`crm.` / `portal.` / `shop.`).
