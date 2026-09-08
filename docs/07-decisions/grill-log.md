@@ -365,6 +365,10 @@ Wie Vor-/Nachname, aber für Firmen: `Company.name` (← `CompName`) +
 
 ## Bereich: Plattform — Identität / Employee / RBAC / Abteilungen
 
+> **Status: Interim synthetisiert (2026-09-08).** Ergebnis:
+> [`../03-security/IDENTITY_RBAC.md`](../03-security/IDENTITY_RBAC.md). SSO bleibt
+> offener ROADMAP-Slice (8 Azure-Admin-Fragen unten). Audit-Ausbau offen.
+
 Kontext: `docs/03-security/AUTHORIZATION.md` + `SECURITY.md`, `CRM.md` „Mitarbeiter"
 (`User → Employee → Department → Roles/Permissions`). Kein Permission-Package
 installiert. Blockiert: D-012 (Mitarbeiter-Felder), D-016 (`responsible_*`),

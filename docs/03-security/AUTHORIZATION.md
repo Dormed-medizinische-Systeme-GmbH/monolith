@@ -1,5 +1,9 @@
 # Authorization
 
+> **Konkretisiert in [`IDENTITY_RBAC.md`](IDENTITY_RBAC.md)** (autoritative Spec:
+> User=Mitarbeiter, 6 Rollen, Permission-Katalog, Interim-Auth, SSO-Zielbild).
+> Dieses Dokument bleibt als Prinzipien-Grundlage.
+
 ## Rollenmodell
 
 Das System verwendet fachliche Berechtigungen statt einer einzelnen globalen `is_super_admin`-Abkürzung.
