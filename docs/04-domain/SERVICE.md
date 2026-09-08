@@ -108,6 +108,7 @@ Die Servicevereinbarung für genau ein Device.
 | `full_service_ends_at` | date | ✓ | ← `VERTRAG_FS_ENDE` |
 | `maintenance_interval_months` | smallint | – | 12 / 6 / 4 / 3 … (D-037; deckt „Mehrfachwartung", D-042) |
 | `next_due_at` | date | ✓ | **abgeleitet** aus letztem `maintenance_devices.performed_at` + Intervall (D-037/D-059) |
+| `maintenance_price` | decimal(10,2) | – | Wartungspauschale, **auf diesen Vertrag fixiert** bei Vertragserstellung aus der Preisliste; spätere Preislistenänderung wirkt nicht (D-065) |
 | `payment_terms` | string | ✓ | ← `VERTRAG_ZAHLUNGSKONDITIONEN` |
 | `billing_company_id` | FK → `companies` | ✓ | abw. Rechnungsempfänger (← `ABWEICHENDE_RECHNUNG`, D-004) |
 | `warranty_manufacturer_until` | date | ✓ | ← `GARANTIE_HERSTELLER` |
@@ -120,24 +121,23 @@ Die Servicevereinbarung für genau ein Device.
 | `leasing_where` | string | ✓ | ← `VERTRAG_LEASING_WO` |
 | `notes` | text | ✓ | ← `KEYWORD` / `NOTES2` |
 
-**Keine Preisfelder** am Vertrag (D-062). Der Vertrag wirkt nur als **Gate**:
-Device mit Vertrag ⇒ Tarifstufe `contract`, sonst `standard`.
+Der Vertrag hat **einen fixierten** `maintenance_price` (D-065) und wirkt zusätzlich
+als **Gate** für die Tarifstufe: Device mit Vertrag ⇒ `contract`, sonst `standard`.
 
-**Verworfen** (D-036/D-037/D-042/D-059/D-062): `KOSTEN_*` (alle),
-`PREISANPASSUNG*`, `ERSTEWARTUNG`, `NAECHSTEWARTUNG`, `MONAT`, `MEHRFACHWARTUNG`.
-Adress-/Firmen-Dubletten (`FIRMA`, `ORT`, `PLZ`, `DEBITORENNUMMER`,
-`VERANTWORTLICHER_SERVICE`) → leben auf `Company`.
+**Verworfen** (D-036/D-037/D-042/D-059/D-062): `KOSTEN_*` (alle Kosten-Varianten
+außer der einen Wartungspauschale), `PREISANPASSUNG*`, `ERSTEWARTUNG`,
+`NAECHSTEWARTUNG`, `MONAT`, `MEHRFACHWARTUNG`. Adress-/Firmen-Dubletten (`FIRMA`,
+`ORT`, `PLZ`, `DEBITORENNUMMER`, `VERANTWORTLICHER_SERVICE`) → leben auf `Company`.
 
 ---
 
-## Preise — `service_prices` + `travel_zones` (D-062/D-063)
+## Preise — `service_prices` + `travel_zones` (D-062/D-063/D-065)
 
-**Eine** Preisliste für alle Serviceleistungen. Ersatzteile **nicht** darin
-(per Kostenvoranschlag, Freitext-Position). Kein Zeitversionieren — **Snapshot
-bei Eintragung** auf die Position (spätere Preislistenänderung ändert bestehende
-Positionen/Rechnungen nicht).
+### `service_prices` — nur für **neue** Verträge/Angebote (D-065)
 
-`service_prices`:
+Manuell gepflegte Liste. Wirkung **ausschließlich** beim (a) Erstellen neuer
+Angebote (Opportunity-Positionen, D-052) und (b) Fixieren eines **neuen**
+Vertrags. **Keine** Wirkung auf bestehende Verträge, **keine** Wirkung auf die Fahrtzone.
 
 | Feld | Typ | Notiz |
 | --- | --- | --- |
@@ -146,9 +146,17 @@ Positionen/Rechnungen nicht).
 | `tier` | enum `contract` \| `standard` | |
 | `amount` | decimal(10,2) | z. B. `hourly_rate/contract` = 25 €, `/standard` = 30 € |
 
-`travel_zones`: `name`, `flat_fee` (decimal, **ein** Wert je Zone — identisch für
-`contract` und `standard`, D-063), `is_active`. Zonen-Definition (PLZ-Bereiche
-vs. manuell je Company) → **offen**.
+- `maintenance_flat` → wird bei Vertragserstellung in `ServiceContract.maintenance_price`
+  **kopiert/fixiert**. Ab dann trägt der Vertrag den Preis.
+- `hourly_rate` → wird beim ServiceCase **zum Zeitpunkt** des Falls angewandt
+  (Tarifstufe nach Vertragsstatus des Geräts), auf die Position gesnapshottet.
+  **Nicht** am Vertrag fixiert.
+
+### `travel_zones` — eigenständig
+
+`name`, `flat_fee` (decimal, **ein** Wert je Zone — identisch für `contract` und
+`standard`, D-063), `is_active`. **Nicht** Teil der Preisliste. Zonen-Definition
+(PLZ-Bereiche vs. manuell je Company) → **offen**.
 
 `Company.travel_zone_id` → `travel_zones` (nullable FK, **in CORE.md nachzutragen**).
 Fahrtzonenpauschale wird bei der Abrechnung **einmal je Anfahrt** aus der Company
@@ -193,15 +201,17 @@ Ein Eintrag je gebündeltem Gerät im Einsatz.
 | `planned_due_at` | date | – | Fälligkeit dieses Geräts (kann je Gerät abweichen) |
 | `performed_at` | datetime | ✓ | Basis `next_due_at` **dieses** Vertrags (D-037) |
 | `status` | enum `durchgefuehrt` \| `nicht_durchgefuehrt` | – | D-061 |
-| `maintenance_fee_snapshot` | decimal(10,2) | ✓ | eingefrorener Preislisten-Wert (`maintenance_flat`, `device.device_class`, Tarifstufe), D-063 |
+| `maintenance_fee_snapshot` | decimal(10,2) | ✓ | Snapshot von `contract.maintenance_price` zum Einsatzzeitpunkt (D-065) |
 | `work_performed` | text | ✓ | ← `TICKET_DURCHGEFUEHRTEARBEITEN` |
 
 **Beziehungen:** `report()` `hasOne` `MaintenanceReport`, `measurementProtocol()`
 `hasOne` `MeasurementProtocol`, `lineItems()` `morphMany`.
 
-### Abrechnung eines Maintenance-Einsatzes (D-059/D-061/D-063)
+### Abrechnung eines Maintenance-Einsatzes (D-059/D-061/D-065)
 
 ```
+maintenance_device.maintenance_fee_snapshot := contract.maintenance_price   (bei Einsatz)
+
 Rechnung = Fahrtzone (Company.travel_zone.flat_fee, Snapshot) × 1
          + Σ  je maintenance_device (fee = maintenance_fee_snapshot):
               status = durchgefuehrt       → 100 % fee + line_items
