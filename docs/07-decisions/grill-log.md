@@ -669,3 +669,56 @@ Legacy `Termine.xml` (25 F., fast Standard-CAS + 1 Dormed-Feld
 Scheduling-Objekt **getrennt** vom fachlichen Vorgang. Klärt Service-Restfrage
 (Terminplanung Maintenance/ServiceCase).
 
+### D-046 — Ein geteiltes `appointments`-Modell, polymorph, n je Vorgang
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- Eine `appointments`-Tabelle. `schedulable_type` / `schedulable_id` **nullable** →
+  `Maintenance` · `ServiceCase` · `Opportunity` · `null` (freier Termin:
+  interne Besprechung, Kundenbesuch).
+- Ein Vorgang kann **mehrere** Termine haben (Diagnose-Besuch + Reparatur-Besuch).
+- Der **Workflow** bleibt pro Vorgang getrennt (D-039) — geteilt ist nur die
+  Termin-Datenstruktur + ein gemeinsamer Kalender.
+- Modul: `app/Modules/Scheduling/` (`depends_on: [Core, Service, Sales]`? — bzw.
+  polymorph ohne harte Modul-Abhängigkeit; im Boundaries-Bereich klären).
+
+### D-047 — Echte Terminserien (RRULE)
+
+**Status:** entschieden (Umsetzungstiefe offen) · **Datum:** 2026-09-08
+
+- `appointments.recurrence_rule` (RRULE/iCal), Serie + Ausnahmen/Einzel-Overrides
+  + Einzel-Absagen. `PeriodStart`/`PeriodEnd` → Serien-Zeitraum.
+- **Nur Kalender-Serien** (Team-Meeting etc.). Die **fachliche** Wiederholung
+  (Wartungszyklus) bleibt D-037 — kein RRULE.
+- **Offen:** Serien-Master + generierte Occurrences vs. Rule-Expansion beim Lesen
+  → Detail im Slice.
+
+### D-048 — Genau ein zugewiesener Techniker je Termin
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `appointments.assigned_technician_id` → `users` (nullable im Entwurf, sonst gesetzt).
+- **Kein** Mehr-Personen-/Teilnehmerstatus-Konzept. Kunden-Kontakt ist **kein**
+  Teilnehmer — der Vorgang (`schedulable`) kennt Company/Kontakt bereits.
+
+### D-049 — Outlook/M365-Kalender-Sync: späterer ROADMAP-Slice
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+CRM-Kalender ist zunächst die einzige Wahrheit. Zwei-Wege-Sync via Microsoft
+Graph = benannter späterer Slice (bündelt mit SSO/Entra, D-029).
+
+### D-050 — Termine: Feldform & verworfen
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- **Behalten:** `starts_at` · `ends_at` · `all_day` (← `DayAppointment`) ·
+  `title` · `location_text` (← `GISDescription`) · `notes` (← `AddComment`/`Notes`) ·
+  `type` (enum, freie Termine — Werte offen) · `status` (enum `geplant` ·
+  `bestaetigt` · `durchgefuehrt` · `abgesagt` — Werte offen) · `is_online_meeting`
+  (+ `meeting_url`) · `logistics_required` (bool ← `DORMEDLOGISTIKERFORDERLICH`) ·
+  `reminder_minutes_before` (nullable — einfache Erinnerung; volles Reminder-System später).
+- **Verworfen:** `CASAway`, `APP_MANDATORY`, `ISPARTOFEVENT`,
+  `APP_ACCEPTABLEREGISTRATIONS`, `APP_GROUP`, `Category`, `CBStatus`, `Keyword`,
+  `NOTES2` (Dublette), `Alarm`/`PERIODALARM*` (→ ersetzt durch `reminder_minutes_before`).
+- Veranstaltungs-/Event-Management → **nicht** im Zielsystem.
