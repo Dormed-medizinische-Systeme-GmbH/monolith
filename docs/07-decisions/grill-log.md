@@ -791,3 +791,12 @@ Legacy `Verkaufschancen.xml` (34 F.). Standard-Opportunity.
 - **Verworfen:** `CurrencyNat` (nur EUR), `Alarm` (→ Appointment D-046),
   `LASTCONTACTINSALESPROCESS` (abgeleitet), Betragsfelder (D-052), `DORMEDABTEILUNG`
   **offen** (Produktbereich vs. Abteilung — Rückfrage), `ProductPositionsDisplay` (→ items).
+
+---
+
+## Bereich: Domäne — Billing (Rechnungen)
+
+Greenfield (kein Legacy-XML). Hängt an: Service (D-043 line_items → Invoice),
+Core (D-004 Rechnungsempfänger, D-009 Debitor/KHK), ADR-006 (strukturierte Daten
+= Wahrheit, PDF = Repräsentation), DOMAIN.md (Rechnungen historisieren).
+
