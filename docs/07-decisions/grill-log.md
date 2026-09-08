@@ -505,6 +505,12 @@ Kostenstelle, Ein-/Austrittsdatum, extern-Flag (HR-System, nicht CRM).
 
 ## Bereich: Domäne — Service (Device / ServiceContract / Maintenance / ServiceCase)
 
+> **Status: synthetisiert (2026-09-08).** Ergebnis:
+> [`../04-domain/SERVICE.md`](../04-domain/SERVICE.md) +
+> `../09-legacy/xml/{Servicevertraege,Tickets}-Zuordnung.md`. Offen: Enum-Werte
+> (contract_type/status/…), `DO_SVV_PRAXISSW*`-Aufteilung, Template-Kategorien,
+> State-Machine-Übergänge → nächste Runde. Termine → Bereich Scheduling.
+
 Legacy: `Servicevertraege-NEU.xml` (83 F.), `Tickets.xml` (112 F.), `Termine.xml`
 (25 F., anteilig). Prinzipien: `docs/05-modules/SERVICE.md`. Feeds Rest-Offen aus
 `CORE.md` (Fahrtzone D-020, Melder, Device/Praxis-IT aus D-001).
