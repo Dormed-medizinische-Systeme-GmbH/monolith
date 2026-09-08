@@ -946,3 +946,40 @@ D-020: Fahrtzone Company statt Vertrag.
 3. Fahrtzonenpauschale — auch gestuft nach Vertrag, oder flat je Zone?
 4. Preisliste zeitversioniert (Preis ab Datum X) — für Preisanpassungen?
 5. Eine Preisliste, oder mehrere (Service / Produkte / Ersatzteile getrennt)?
+
+### D-063 — Eine Service-Preisliste; Wartungspauschale je Geräteklasse × Tarifstufe; Snapshot bei Eintragung
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- **Eine** Preisliste für **alle Serviceleistungen** (`service_prices`).
+  Ersatzteile **nicht** darin — die laufen **per Kostenvoranschlag** (Freitext-
+  Position mit selbst eingetragenem Preis).
+- **Wartungspauschale**: je **Geräteklasse** (genau **2** Klassen) × **Tarifstufe**
+  → 4 Werte.
+- **Stundensatz** (Arbeitszeit): 2 Werte — `contract` **25 €** / `standard` **30 €**.
+- **Tarifstufe** = hat das **angefasste Gerät** einen Servicevertrag → `contract`,
+  sonst `standard`. **Nicht** company-, nicht kundenindividuell.
+- **Fahrtzonenpauschale**: `travel_zones.flat_fee` — **ein** Wert je Zone,
+  **identisch** für Vertrags- und Nicht-Vertragskunden, unabhängig vom Vertrag.
+- **Snapshot**: im Moment der Eintragung wird der Preis auf die Position/den
+  Charge kopiert; spätere Preislistenänderungen ändern bestehende Einträge/
+  Rechnungen **nicht**. → keine zeitversionierten Preislisten-Zeilen nötig.
+  Offen: exakter Moment (bei Anlage der Position vs. bei Wartungsabschluss).
+
+Vorschlag Struktur:
+- `service_prices`: `item` (`maintenance_flat` · `hourly_rate` · …),
+  `device_class` (nullable — nur bei `maintenance_flat`), `tier`
+  (`contract` · `standard`), `amount`.
+- `travel_zones`: `name`, `flat_fee`, `is_active`.
+- `Device.device_class` (enum `1` | `2` — Namen offen).
+
+### D-064 — Device kann ohne Servicevertrag existieren — revidiert D-035
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `Device.service_contract_id` **nullable**. Ein Gerät ohne (Full-)Servicevertrag
+  ist zulässig (Standard-Tarif; ServiceCase möglich, keine Wartungs-Zyklen).
+- `Maintenance`-Bündelung (D-059) betrifft nur Geräte **mit** Vertrag.
+- ADR-008 bleibt: der Vertrag ist nicht das Device-Objekt.
+- **Offen:** wie kommt ein vertragsloses Device ins System (Verkauf ohne Vertrag /
+  Erfassung bei erstem ServiceCase)? → Runde Device-Erfassung.
