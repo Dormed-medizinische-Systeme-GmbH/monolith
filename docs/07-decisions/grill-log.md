@@ -842,3 +842,43 @@ Core (D-004 Rechnungsempfänger, D-009 Debitor/KHK), ADR-006 (strukturierte Date
 Der Nutzer hat aktuell ein großes Problem bei den Abrechnungen (Kontext:
 Sammelrechnung / Rechnungsempfänger ≠ Leistungsempfänger / Managementgesellschaften).
 **Muss vor dem Invoice-Modell verstanden werden** — offene Beschreibung durch den Nutzer.
+
+### D-059 — Maintenance = Einsatz/Anfahrt, bündelt 1..n Serviceverträge; Fahrtzone von der Company
+
+**Status:** Richtung entschieden (viele Sub-Fragen offen — Mehr-Turn-Thema) · **Datum:** 2026-09-08
+
+**Problem (heute):** Ein Ticket je Wartung je Gerät. Werden 3 Geräte einer Praxis
+in **einer Anfahrt** gewartet → 3 Einzeltickets → 3 Einzelrechnungen, und der
+Innendienst muss **manuell** sicherstellen, dass die Fahrtzone nur **einmal**
+berechnet wird. Geräte können in einer Anfahrt gemeinsam gewartet werden — oder
+bewusst nicht (unterschiedliche Fälligkeit + Kundenwunsch → 2 getrennte Anfahrten).
+
+**Lösung (Richtung):**
+- **`Maintenance` = der Vor-Ort-Einsatz / die Anfahrt**, gebunden an genau **eine**
+  `Company` + `Location`. Bündelt **1..n** `ServiceContract`s/Devices.
+- Je gebündeltem Gerät ein eigener **`MaintenanceReport`** + **`MeasurementProtocol`**
+  + eigene `line_items`; jedes Gerät steuert seinen `maintenance_price` (vom Vertrag) bei.
+- **Fahrtzone NICHT mehr am Vertrag** (revidiert D-020/D-036): `ServiceContract`
+  hat nur `maintenance_price`. Die Fahrtzone wird aus der **Company/Institution**
+  abgeleitet (`Company.travel_zone_id` → `travel_zones`-Lookup: Zone → Pauschale).
+- **Rechnung je `Maintenance`**: Fahrtzone **einmal** + Σ (je Gerät:
+  `maintenance_price` + `line_items`).
+- **Kein Auto-Erkennen** „gleiche Institution, gleicher Tag → keine 2. Fahrtzone".
+  Die Bündelung ist eine **bewusste Planungsentscheidung**: Innendienst legt EINEN
+  Einsatz an und fügt die Geräte hinzu. Zwei Anfahrten = zwei `Maintenance`.
+- **Termine bleiben einzeln** (je Gerät, back-to-back), verknüpft zum selben
+  `Maintenance` (`Appointment.schedulable` → `Maintenance`; n je Maintenance, D-046).
+
+**Revidiert:** SERVICE.md `Maintenance` (war: 1 FK `service_contract_id`) → braucht
+`company_id` + `location_id` + Pivot/Sub-Modell `maintenance_devices`
+(`maintenance_id`, `service_contract_id`, → 1 Report + 1 Protokoll je Zeile).
+D-020: Fahrtzone Company statt Vertrag.
+
+**Offene Sub-Fragen (nächste Turns):**
+1. Gilt dieselbe Bündelung für `ServiceCase` (mehrere Störungen einer Praxis in einer Anfahrt)?
+2. `next_due_at` je Gerät: aus `Maintenance.performed_at` des jeweiligen `maintenance_devices`-Eintrags — bestätigt?
+3. Darf ein Einsatz Geräte **verschiedener Verträge mit verschiedenen Intervallen** bündeln? (Ja — genau der Zweck; jedes Gerät eigene Fälligkeit.)
+4. **Sammelrechnung** (eine Rechnung für mehrere Einsätze/Praxen an eine Managementgesellschaft, D-004) = **separate Ebene** über der Einsatz-Rechnung — eigener Turn.
+5. Was, wenn Geräte in einem Einsatz unterschiedliche `billing_company_id` haben? (Sollte nicht — 1 Einsatz = 1 Company = 1 Rechnungsempfänger. Bestätigen.)
+6. Teil-Wartung: ein geplantes Gerät wird vor Ort doch nicht gewartet (kein Zugang) — wie im Einsatz/Rechnung abbilden?
+7. `travel_zones`-Lookup: Zonen-Definition (PLZ-Bereiche? manuell je Company?) + Pauschalen.
