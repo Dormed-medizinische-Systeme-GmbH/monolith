@@ -30,9 +30,18 @@ verknüpfte Entität ist (nicht Felder auf der Adresse). Die *fachlichen Inhalte
 (Sonden, Wagen, Drucker, Fahrtzone, Elektronikversicherung …) fließen in die
 Service-/Device-Spec ein, nur eben nicht aus diesen toten Adressfeldern.
 
-**Offene Randfragen:**
-1. `DO_SVV_PRAXISSW_*` (IP, Passwort, Gateway, Ports, Netzspeicher, AE-Titel …) —
-   Remote-Access-/Praxis-IT-Konfiguration, anderer Datentyp als die Kostenfelder.
-   Auch tot, oder wird das im Zielmodell woanders gebraucht (Device-Config / IT-Doku)?
-2. Nicht-`DO_`-Felder `SVV_VERTRAGS_INTERVALL`, `SVV2/3/4_VERTRAGS_INTERVALL` —
-   gehören die zum toten Block oder bleiben sie?
+**Randfragen — geklärt (2026-09-08):**
+1. `DO_SVV_PRAXISSW*` (14 Felder: Server-IP/Passwort/Gateway/Subnetz/Ports/
+   Netzspeicher, Praxis-EDV-ASP, Speicher-/Arbeitslisten-AE-Titel+Port, Bemerkung,
+   `DO_SVV_PRAXISSW` = Praxis-Software) → **bleiben.** Praxis-IT- /
+   Remote-Access-Dokumentation. Zielmodell noch offen — vermutlich am **Device**
+   oder an der **Location** (IT-/Anbindungs-Doku). → Entscheidungspunkt in der
+   Service-/Device-Spec.
+2. `SVV_VERTRAGS_INTERVALL`, `SVV2/3/4_VERTRAGS_INTERVALL` → **verwerfen** (Teil
+   des toten Slot-Blocks).
+
+**Zusammenfassung:** 142 Adressfelder verworfen, 14 behalten (`DO_SVV_PRAXISSW*`).
+
+**Noch zu bestätigen:** `DO_SVV_PRAXIS_ASP` („Praxis Ansprechpartner", allgemeiner
+Praxis-Kontakt neben `_HWASP`/`_ITASP`) — aktuell `verwerfen`; gehört semantisch
+zum behaltenen IT-ASP-Cluster. Behalten oder weg?

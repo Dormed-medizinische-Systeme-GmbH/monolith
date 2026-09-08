@@ -4,9 +4,11 @@ Quelle: [`Adressen.xml`](Adressen.xml) · 356 Spalten · 176 Custom · 0 Pflicht
 
 **Ist-Analyse (ADR-004).** `Entscheidung` wird in `/grill-me` gesetzt: `übernehmen` (in welches Zielmodell/-feld) · `verwerfen` · `offen`.
 
-> **D-001**: die 152 `DO_SV*` / `DO_SVV*`-Felder (denormalisierte Servicevertrags-Slots)
-> sind **tot** und verworfen — nur die Löschung im Altsystem steht noch aus. Bleiben
-> hier gelistet für die Migration (nicht übernehmen). Effektiv relevant: **204 Felder**.
+> **D-001**: die denormalisierten Servicevertrags-Slots auf der Adresse sind **tot**
+> und verworfen — nur die Löschung im Altsystem steht noch aus. **142 Felder**
+> verworfen (`DO_SV*` / `DO_SVV*` / `SVV*_VERTRAGS_INTERVALL`). **Ausnahme**: die
+> 14 `DO_SVV_PRAXISSW*`-Felder (Praxis-IT / Remote-Access-Doku) **bleiben** →
+> Ziel wahrsch. Device/Location. Effektiv relevant in Adressen: **214 Felder**.
 > Siehe [`../../07-decisions/grill-log.md`](../../07-decisions/grill-log.md).
 
 ## Cluster nach Namenspräfix
@@ -195,20 +197,20 @@ Quelle: [`Adressen.xml`](Adressen.xml) · 356 Spalten · 176 Custom · 0 Pflicht
 | `DO_SVV_KOSTEN_FAHRTZONE_VERTRA` | CURRENCY | SVV Kosten Fahrtzone (Vertrag) | ✓ |  | verwerfen (D-001 · tot) |
 | `DO_SVV_MAC` | STRING(50) | SVV MAC-Adresse | ✓ |  | verwerfen (D-001 · tot) |
 | `DO_SVV_PRAXIS_ASP` | STRING(50) | Praxis Ansprechpartner | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW` | STRING(50) | Praxis-Software | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_BEMERKUNG` | STRING(255) | SVV Praxis-EDV Bemerkung | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_BENUTZER` | STRING(50) | Server Benutzer | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_GATE` | STRING(50) | Server Standardgate | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_HWASP` | STRING(50) | Praxis-EDV Hardware ASP | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_IP` | STRING(50) | Server IP-Adresse | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_ITASP` | STRING(50) | Praxis-EDV IT ASP | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_NETZSPEICHER` | STRING(50) | Server Netzspeicher | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_PASSWORT` | STRING(50) | Server Passwort | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_STOR_AETITEL` | STRING(50) | Praxis AE Title Speicher | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_STOR_PORT` | STRING(50) | Praxis Port Speicher | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_SUB` | STRING(50) | Server Subnetzmaske | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_WL_PORT` | STRING(50) | Praxis Port Arbeitsliste | ✓ |  | verwerfen (D-001 · tot) |
-| `DO_SVV_PRAXISSW_WL_TITLE` | STRING(50) | Praxis AE Title Arbeitsliste | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW` | STRING(50) | Praxis-Software | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_BEMERKUNG` | STRING(255) | SVV Praxis-EDV Bemerkung | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_BENUTZER` | STRING(50) | Server Benutzer | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_GATE` | STRING(50) | Server Standardgate | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_HWASP` | STRING(50) | Praxis-EDV Hardware ASP | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_IP` | STRING(50) | Server IP-Adresse | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_ITASP` | STRING(50) | Praxis-EDV IT ASP | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_NETZSPEICHER` | STRING(50) | Server Netzspeicher | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_PASSWORT` | STRING(50) | Server Passwort | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_STOR_AETITEL` | STRING(50) | Praxis AE Title Speicher | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_STOR_PORT` | STRING(50) | Praxis Port Speicher | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_SUB` | STRING(50) | Server Subnetzmaske | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_WL_PORT` | STRING(50) | Praxis Port Arbeitsliste | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
+| `DO_SVV_PRAXISSW_WL_TITLE` | STRING(50) | Praxis AE Title Arbeitsliste | ✓ |  | **behalten** → IT-/Remote-Access-Doku (Ziel wahrsch. Device/Location; D-001) |
 | `DO_SVV_PRINER_BEZ` | STRING(50) | SVV Printer Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
 | `DO_SVV_PRINTER` | STRING(50) | SVV Printer Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
 | `DO_SVV_PRINTER_SERNR` | STRING(50) | SVV Printer Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
@@ -372,10 +374,10 @@ Quelle: [`Adressen.xml`](Adressen.xml) · 356 Spalten · 176 Custom · 0 Pflicht
 | `Suburb2` | STRING(30) | Lieferung (Teilort) |  |  | offen |
 | `Suburb3` | STRING(30) | Teilort (Privat) |  |  | offen |
 | `SunlightStatus` | STRING(30) | Sunlight Status |  |  | offen |
-| `SVV2_VERTRAGS_INTERVALL` | STRING(11) | SVV2 Vertrags-Intervall | ✓ |  | offen |
-| `SVV3_VERTRAGS_INTERVALL` | STRING(50) | SVV3 Vertrags-Intervall | ✓ |  | offen |
-| `SVV4_VERTRAGS_INTERVALL` | STRING(50) | SVV4 Vertrags-Intervall | ✓ |  | offen |
-| `SVV_VERTRAGS_INTERVALL` | STRING(50) | SVV Vertrags-Intervall | ✓ |  | offen |
+| `SVV2_VERTRAGS_INTERVALL` | STRING(11) | SVV2 Vertrags-Intervall | ✓ |  | verwerfen (D-001 · tot) |
+| `SVV3_VERTRAGS_INTERVALL` | STRING(50) | SVV3 Vertrags-Intervall | ✓ |  | verwerfen (D-001 · tot) |
+| `SVV4_VERTRAGS_INTERVALL` | STRING(50) | SVV4 Vertrags-Intervall | ✓ |  | verwerfen (D-001 · tot) |
+| `SVV_VERTRAGS_INTERVALL` | STRING(50) | SVV Vertrags-Intervall | ✓ |  | verwerfen (D-001 · tot) |
 | `TAXNUMBER` | STRING(30) | Steuernummer |  |  | offen |
 | `Title` | STRING(30) | Titel |  |  | offen |
 | `Town1` | STRING(30) | Ort |  |  | offen |
