@@ -500,3 +500,58 @@ Service **nicht** in Innen-/Außendienst gesplittet — mögliche spätere Verfe
 
 Zusatzfelder: nur `first_name` · `last_name` · `is_active`. **Weg:** Personalnummer,
 Kostenstelle, Ein-/Austrittsdatum, extern-Flag (HR-System, nicht CRM).
+
+---
+
+## Bereich: Domäne — Service (Device / ServiceContract / Maintenance / ServiceCase)
+
+Legacy: `Servicevertraege-NEU.xml` (83 F.), `Tickets.xml` (112 F.), `Termine.xml`
+(25 F., anteilig). Prinzipien: `docs/05-modules/SERVICE.md`. Feeds Rest-Offen aus
+`CORE.md` (Fahrtzone D-020, Melder, Device/Praxis-IT aus D-001).
+
+### D-034 — Entitäten-Zerlegung Service
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+| Entität | Inhalt |
+| --- | --- |
+| `Device` | Das System: Hersteller, Seriennummer, Artikelnummer, Baujahr, Auslieferungsdatum, OS/SW, Optionen. **Netzwerk-/DICOM-Config als Felder direkt auf Device** (IP, MAC, Gateway, DHCP, Storage-/Worklist-Port+Title, System-Passwort) — kein eigenes `DeviceNetworkConfig`-Modell. |
+| `DeviceComponent` | Sonden (1–5), Printer, Wagen, SonoGDT — `n` je Device, **typisiert** (`type`-Enum), je: Artikelnummer, Bezeichnung, Seriennummer. |
+| `ServiceContract` | Die Vereinbarung (Art, Datum, Intervall, Status, Kündigung, Zahlung, Versicherungen). |
+| `Maintenance` | Die einzelne Wartungsinstanz (`planned_due_at` / `performed_at` / `finalized_at`, SERVICE.md). |
+| `ServiceCase` | Störung/Serviceeinsatz — **getrennt** von Maintenance. |
+
+### D-035 — Device existiert nur über einen ServiceContract (1:1, Pflicht)
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- Kein vertragsloses Device im System. `Device.service_contract_id` **required**,
+  unique (1 Device ↔ 1 ServiceContract, DOMAIN.md / ADR-008).
+- `ServiceContract.company_id` → Company; `Device.location_id` → Location
+  (Gerätestandort, D-007). **Offen:** Company am Vertrag vs. abgeleitet über
+  `device.location.company` — in Runde 2 klären.
+- ADR-008 bleibt: ein ServiceContract ist **nicht** das vollständige Device-Objekt.
+
+### D-036 — Vertragspreis: nur `current_price` (kein Historien-Modell)
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `ServiceContract`: `maintenance_price` (aktuell, wiederkehrend je Wartung) +
+  `travel_flat_rate` (Fahrtzonenpauschale aktuell). Anpassung **überschreibt**.
+- Legacy `_VERTRAG` (Ursprung) / `_KHK` (aktuell) / `_EINMAL` → nur „aktuell".
+- Historie „wann/warum angepasst" → Audit-Log (Ausbau, s. IDENTITY_RBAC offene Punkte).
+- **Offen:** `_EINMAL` = einmalige Einrichtungsgebühr? → ggf. `setup_fee`. Runde 2.
+- `PREISANPASSUNG` / `PREISANPASSUNG2025` (Ankündigungs-Flags) → Runde 2.
+
+### D-037 — Nächste Wartung = `performed_at` + Intervall (abgeleitet)
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `ServiceContract.maintenance_interval_months` (12 / 6 / 3 …).
+- Fälligkeit der nächsten Wartung = `performed_at` der letzten Wartung + Intervall.
+  **Abgeleitet**, kein Freitextfeld. Denormalisiertes `next_due_at` am Vertrag
+  (für Planung/Query), neu berechnet bei Wartungsabschluss.
+- Legacy `MONAT` (fixer Kalendermonat) → **verworfen** (D-037 wählt rollend).
+- Legacy `ERSTEWARTUNG` (Label „letzte Wartung", fehlbenannt), `NAECHSTEWARTUNG`
+  → aus Maintenance-Historie abgeleitet, nicht als Vertragsfelder übernommen.
+- **Offen:** `MEHRFACHWARTUNG` — Intervall < 12 oder eigener Mechanismus? Runde 2.
