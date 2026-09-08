@@ -441,3 +441,33 @@ Kein separates `Employee`-Modell. Mitarbeiter-Attribute leben auf `users`.
    `gwCostCenter`, extern-Flag) — im CRM gebraucht oder nur in Entra/HR?
 8. **App-Registrierung** — Single-Tenant? Wer besitzt sie (IT)? Redirect-URIs je
    Subdomain (`crm.` / `portal.` / `shop.`).
+
+### D-029 — SSO vertagt; Interim = selbstverwaltete Identität + Rollen
+
+**Status:** entschieden · **Datum:** 2026-09-08 · ersetzt D-027 für die Interim-Phase
+
+- **Entra-SSO ist die Ziel-Lösung** (sauber), kommt aber **im Nachgang** —
+  eigener ROADMAP-Slice, wird „oben draufgesetzt".
+- **Interim:** selbstverwaltete `users` (E-Mail/Passwort, bestehende Breeze-Auth
+  bleibt) + eine eigene Rollen-Tabelle.
+- **SSO-additiv vorbereiten:** `users.entra_oid` (nullable, unique) schon jetzt
+  anlegen; der SSO-Callback synchronisiert später nur `role_user` aus dem
+  `roles`-Claim statt einer UI — Katalog + Gate-Logik bleiben unverändert.
+- D-026 (Employee = User) und D-028 (`is_admin`-Flag) bleiben.
+
+### D-030 — Interim-RBAC: `roles` + `role_user`, Katalog in Config (kein Package)
+
+**Status:** entschieden (Rollenliste zu bestätigen) · **Datum:** 2026-09-08
+
+- **Eine** Tabelle `roles` (`key` unique, `name`, `is_active`) + Pivot `role_user`
+  (n:m). **Keine** separate `departments`-Tabelle — die Rolle *ist* die
+  Abteilung/das Rechtebündel.
+- Jeder User hat ≥ 1 Rolle. Eine Rolle kann als `is_primary` für Anzeige markiert sein.
+- Permission-Katalog (`module.resource.action`) + `Rolle → Permissions`-Map in
+  `config/authorization.php`. `PermissionService::can(User, ability)`.
+- `Gate::before`: `is_admin` → true.
+- **D-023-Verknüpfung:** Papierkorb/Löschen = Rolle `management` **oder** `backoffice`.
+- `spatie/laravel-permission` **nicht** eingeführt (kein Mehrwert bei ~6 Rollen +
+  Config-Katalog; Dependency-Freigabe vermieden).
+- **Offen:** endgültige Rollen-Liste. Vorschlag: `management` · `backoffice` ·
+  `sales` · `service` · `accounting` · `it` · `readonly`.
