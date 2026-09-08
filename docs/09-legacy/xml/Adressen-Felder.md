@@ -4,6 +4,11 @@ Quelle: [`Adressen.xml`](Adressen.xml) · 356 Spalten · 176 Custom · 0 Pflicht
 
 **Ist-Analyse (ADR-004).** `Entscheidung` wird in `/grill-me` gesetzt: `übernehmen` (in welches Zielmodell/-feld) · `verwerfen` · `offen`.
 
+> **D-001**: die 152 `DO_SV*` / `DO_SVV*`-Felder (denormalisierte Servicevertrags-Slots)
+> sind **tot** und verworfen — nur die Löschung im Altsystem steht noch aus. Bleiben
+> hier gelistet für die Migration (nicht übernehmen). Effektiv relevant: **204 Felder**.
+> Siehe [`../../07-decisions/grill-log.md`](../../07-decisions/grill-log.md).
+
 ## Cluster nach Namenspräfix
 
 | Präfix | Felder |
@@ -64,158 +69,158 @@ Quelle: [`Adressen.xml`](Adressen.xml) · 356 Spalten · 176 Custom · 0 Pflicht
 | `COUNTRY3` | STRING(80) | Land (Privat) |  |  | offen |
 | `CurrencyNat` | STRING(3) | Währung |  |  | offen |
 | `Department` | STRING(30) | Abteilung |  |  | offen |
-| `DO_SV2_KOSTEN` | CURRENCY | SVV2 Kosten (Vertrag) | ✓ |  | offen |
-| `DO_SV2_KOSTEN_KHK` | CURRENCY | SVV2 Kosten (KHK) | ✓ |  | offen |
-| `DO_SV3_KOSTEN` | CURRENCY | SVV3 Kosten (Vertrag) | ✓ |  | offen |
-| `DO_SV3_KOSTEN_KHK` | CURRENCY | SVV3 Kosten (KHK) | ✓ |  | offen |
-| `DO_SV4_KOSTEN` | CURRENCY | SVV4 Kosten (Vertrag) | ✓ |  | offen |
-| `DO_SV4_KOSTEN_KHK` | CURRENCY | SVV4 Kosten (KHK) | ✓ |  | offen |
-| `DO_SV5_KOSTEN` | CURRENCY | SVV5 Kosten (Vertrag) | ✓ |  | offen |
-| `DO_SV5_KOSTEN_KHK` | CURRENCY | SVV5 Kosten (KHK) | ✓ |  | offen |
-| `DO_SV_KOSTEN` | CURRENCY | SVV Kosten (Vertrag) | ✓ |  | offen |
-| `DO_SV_KOSTEN_KHK` | CURRENCY | SVV Kosten (KHK) | ✓ |  | offen |
-| `DO_SVV2_HERSTELLER` | STRING(50) | SVV2 Hersteller | ✓ |  | offen |
-| `DO_SVV2_KOSTEN_FAHRTZONE` | CURRENCY | SVV2 Kosten Fahrtzone (KHK) | ✓ |  | offen |
-| `DO_SVV2_KOSTEN_FAHRTZONE_VERT` | CURRENCY | SVV2 Kosten Fahrtzone (Vertrag) | ✓ |  | offen |
-| `DO_SVV2_MAC` | STRING(50) | SVV2 MAC-Adresse | ✓ |  | offen |
-| `DO_SVV2_NAECHSTEWARTUNG` | DATE | SVV2 nächste Wartung | ✓ |  | offen |
-| `DO_SVV2_PRINER_BEZ` | STRING(50) | SVV2 Printer Bezeichnung | ✓ |  | offen |
-| `DO_SVV2_PRINTER_SERNR` | STRING(50) | SVV2 Printer Seriennummer | ✓ |  | offen |
-| `DO_SVV2_SONDE4_SERNR` | STRING(50) | SVV2 Sonde 4 Seriennummer | ✓ |  | offen |
-| `DO_SVV2_SYSTEM` | STRING(50) | SVV2 System Artikelnummer | ✓ |  | offen |
-| `DO_SVV2_SYSTEM_BEZ` | STRING(50) | SVV2 System Bezeichnung | ✓ |  | offen |
-| `DO_SVV2_SYSTEM_SERNR` | STRING(50) | SVV2 System Seriennummer | ✓ |  | offen |
-| `DO_SVV2_VERTRAG_ART` | STRING(50) | SVV2 Vertrag-Art | ✓ |  | offen |
-| `DO_SVV2_WAGEN` | STRING(50) | SVV2 Wagen Artikel | ✓ |  | offen |
-| `DO_SVV2_WAGEN_BEZ` | STRING(50) | SVV2 Wagen Bezeichnung | ✓ |  | offen |
-| `DO_SVV2_WAGEN_SERNR` | STRING(50) | SVV2 Wagen Seriennummer | ✓ |  | offen |
-| `DO_SVV2_ZAHLUNG` | STRING(50) | SVV2 Zahlungskonditionen | ✓ |  | offen |
-| `DO_SVV3_APPSW` | STRING(50) | SVV3 Applikation (SW) | ✓ |  | offen |
-| `DO_SVV3_BASE` | STRING(50) | SVV3 Betriebssystem (OS) | ✓ |  | offen |
-| `DO_SVV3_ELEKTRONIKVERSICHERUNG` | STRING(50) | SVV3 Elektronikversicherung | ✓ |  | offen |
-| `DO_SVV3_ERFUELLUNGSORT` | STRING(50) | SVV3 Erfüllungsort (falls abw.) | ✓ |  | offen |
-| `DO_SVV3_HERSTELLER` | STRING(50) | SVV3 Hersteller | ✓ |  | offen |
-| `DO_SVV3_KOSTEN_FAHRTZONE` | CURRENCY | SVV3 Kosten Fahrtzone (KHK) | ✓ |  | offen |
-| `DO_SVV3_KOSTEN_FAHRTZONE_VERT` | CURRENCY | SVV3 Kosten Fahrtzone (Vertrag) | ✓ |  | offen |
-| `DO_SVV3_MAC` | STRING(50) | SVV3 MAC Adresse | ✓ |  | offen |
-| `DO_SVV3_PRINER_BEZ` | STRING(50) | SVV3 Printer Bezeichnung | ✓ |  | offen |
-| `DO_SVV3_PRINTER` | STRING(50) | SVV3 Printer Artikelnummer | ✓ |  | offen |
-| `DO_SVV3_PRINTER_SERNR` | STRING(50) | SVV3 Printer Seriennummer | ✓ |  | offen |
-| `DO_SVV3_SONDE1` | STRING(50) | SVV3 Sonde 1 Artikelnummer | ✓ |  | offen |
-| `DO_SVV3_SONDE1_BEZ` | STRING(50) | SVV3 Sonde 1 Bezeichnung | ✓ |  | offen |
-| `DO_SVV3_SONDE2` | STRING(50) | SVV3 Sonde 2 Artikelnummer | ✓ |  | offen |
-| `DO_SVV3_SONDE2_BEZ` | STRING(50) | SVV3 Sonde 2 Bezeichnung | ✓ |  | offen |
-| `DO_SVV3_SONDE2_SERNR` | STRING(50) | SVV3 Sonde 2 Seriennummer | ✓ |  | offen |
-| `DO_SVV3_SONDE3` | STRING(50) | SVV3 Sonde 3 Artikelnummer | ✓ |  | offen |
-| `DO_SVV3_SONDE3_BEZ` | STRING(50) | SVV3 Sonde 3 Bezeichnung | ✓ |  | offen |
-| `DO_SVV3_SONDE4` | STRING(50) | SVV3 Sonde 4 Artikelnummer | ✓ |  | offen |
-| `DO_SVV3_SONDE4_BEZ` | STRING(50) | SVV3 Sonde 4 Bezeichnung | ✓ |  | offen |
-| `DO_SVV3_SYSTEM` | STRING(50) | SVV3 System Artikelnummer | ✓ |  | offen |
-| `DO_SVV3_SYSTEM_BEZ` | STRING(50) | SVV3 System Bezeichnung | ✓ |  | offen |
-| `DO_SVV3_SYSTEM_OPTIONEN` | STRING(255) | SVV3 System Optionen | ✓ |  | offen |
-| `DO_SVV3_SYSTEM_SERNR` | STRING(50) | SVV3 System Seriennummer | ✓ |  | offen |
-| `DO_SVV3_VERTRAG_ART` | STRING(50) | SVV3 Vertrag-Art | ✓ |  | offen |
-| `DO_SVV3_VETRAG_STATUS` | STRING(50) | SVV3 Vertrag-Status | ✓ |  | offen |
-| `DO_SVV3_VOM` | DATE | SVV3 Vertrags-Datum | ✓ |  | offen |
-| `DO_SVV3_WAGEN` | STRING(50) | SVV3 Wagen Artikel | ✓ |  | offen |
-| `DO_SVV3_WAGEN_BEZ` | STRING(50) | SVV3 Wagen Bezeichnung | ✓ |  | offen |
-| `DO_SVV3_WAGEN_SERNR` | STRING(50) | SVV3 Wagen Seriennummer | ✓ |  | offen |
-| `DO_SVV3_ZAHLUNG` | STRING(50) | SVV3 Zahlungskonditionen | ✓ |  | offen |
-| `DO_SVV4_APPSW` | STRING(50) | SVV4 Applikation (SW) | ✓ |  | offen |
-| `DO_SVV4_BASE` | STRING(50) | SVV4 Betriebssystem (OS) | ✓ |  | offen |
-| `DO_SVV4_BAUJAHR` | STRING(50) | SVV4 Baujahr (KHK) | ✓ |  | offen |
-| `DO_SVV4_ELEKTRONIKVERSICHERUNG` | STRING(50) | SVV4 Elektronikversicherung | ✓ |  | offen |
-| `DO_SVV4_ERFUELLUNGSORT` | STRING(50) | SVV4 Erfüllungsort (falls abw.) | ✓ |  | offen |
-| `DO_SVV4_HERSTELLER` | STRING(50) | SVV4 Hersteller | ✓ |  | offen |
-| `DO_SVV4_KOSTEN_FAHRTZONE` | CURRENCY | SVV4 Kosten Fahrtzone (KHK) | ✓ |  | offen |
-| `DO_SVV4_KOSTEN_FAHRTZONE_VERT` | CURRENCY | SVV4 Kosten Fahrtzone (Vertrag) | ✓ |  | offen |
-| `DO_SVV4_MAC` | STRING(50) | SVV4 MAC Adresse | ✓ |  | offen |
-| `DO_SVV4_PRINTER` | STRING(50) | SVV4 Printer Artikelnummer | ✓ |  | offen |
-| `DO_SVV4_PRINTER_BEZ` | STRING(50) | SVV4 Printer Bezeichnung | ✓ |  | offen |
-| `DO_SVV4_PRINTER_SERNR` | STRING(50) | SVV4 Printer Seriennummer | ✓ |  | offen |
-| `DO_SVV4_SONDE1` | STRING(50) | SVV4 Sonde 1 Artikelnummer | ✓ |  | offen |
-| `DO_SVV4_SONDE1_BEZ` | STRING(50) | SVV4 Sonde 1 Bezeichnung | ✓ |  | offen |
-| `DO_SVV4_SONDE2` | STRING(50) | SVV4 Sonde 2 Artikelnummer | ✓ |  | offen |
-| `DO_SVV4_SONDE2_BEZ` | STRING(50) | SVV4 Sonde 2 Bezeichnung | ✓ |  | offen |
-| `DO_SVV4_SONDE2_SERNR` | STRING(50) | SVV4 Sonde 2 Seriennummer | ✓ |  | offen |
-| `DO_SVV4_SONDE3` | STRING(50) | SVV4 Sonde 3 Artikelnummer | ✓ |  | offen |
-| `DO_SVV4_SONDE3_BEZ` | STRING(50) | SVV4 Sonde 3 Bezeichnung | ✓ |  | offen |
-| `DO_SVV4_SONDE3_SERNR` | STRING(50) | SVV4 Sonde 3 Seriennummer | ✓ |  | offen |
-| `DO_SVV4_SONDE4` | STRING(50) | SVV4 Sonde 4 Artikelnummer | ✓ |  | offen |
-| `DO_SVV4_SONDE4_BEZ` | STRING(50) | SVV4 Sonde 4 Bezeichnung | ✓ |  | offen |
-| `DO_SVV4_SONDE4_SERNR` | STRING(50) | SVV4 Sonde 4 Seriennummer | ✓ |  | offen |
-| `DO_SVV4_SYSTEM` | STRING(50) | SVV4 System Artikelnummer | ✓ |  | offen |
-| `DO_SVV4_SYSTEM_BEZ2` | STRING(50) | SVV4 System Bezeichnung 2 | ✓ |  | offen |
-| `DO_SVV4_SYSTEM_OPTIONEN` | STRING(255) | SVV4 System Optionen | ✓ |  | offen |
-| `DO_SVV4_SYSTEM_SERNR` | STRING(50) | SVV4 System Seriennummer | ✓ |  | offen |
-| `DO_SVV4_VERTRAG_ART` | STRING(50) | SVV4 Vertrag-Art | ✓ |  | offen |
-| `DO_SVV4_VOM` | DATE | SVV4 Vertrags-Datum | ✓ |  | offen |
-| `DO_SVV4_WAGEN` | STRING(50) | SVV4 Wagen Artikel | ✓ |  | offen |
-| `DO_SVV4_WAGEN_BEZ` | STRING(50) | SVV4 Wagen Bezeichnung | ✓ |  | offen |
-| `DO_SVV4_WAGEN_SERNR` | STRING(50) | SVV4 Wagen Seriennummer | ✓ |  | offen |
-| `DO_SVV4_ZAHLUNG` | STRING(50) | SVV4 Zahlungskonditionen | ✓ |  | offen |
-| `DO_SVV5_APPSW` | STRING(50) | SVV5 Applikation (SW) | ✓ |  | offen |
-| `DO_SVV5_BASE` | STRING(50) | SVV5 Betriebssystem (OS) | ✓ |  | offen |
-| `DO_SVV5_ELEKTRONIKVERSICHERUNG` | STRING(50) | SVV5 Elektronikversicherung | ✓ |  | offen |
-| `DO_SVV5_ERFUELLUNGSORT` | STRING(50) | SVV5 Erfüllungsort (falls abw.) | ✓ |  | offen |
-| `DO_SVV5_HERSTELLER` | STRING(50) | SVV5 Hersteller | ✓ |  | offen |
-| `DO_SVV5_KOSTEN_FAHRTZONE` | CURRENCY | SVV5 Kosten Fahrtzone (KHK) | ✓ |  | offen |
-| `DO_SVV5_KOSTEN_FAHRTZONE_VERT` | CURRENCY | SVV5 Kosten Fahrtzone (Vertrag) | ✓ |  | offen |
-| `DO_SVV5_MAC` | STRING(50) | SVV5 MAC Adresse | ✓ |  | offen |
-| `DO_SVV5_PRINTER` | STRING(50) | SVV5 Printer Artikelnummer | ✓ |  | offen |
-| `DO_SVV5_PRINTER_SERNR` | STRING(50) | SVV5 Printer Seriennummer | ✓ |  | offen |
-| `DO_SVV5_SONDE1` | STRING(50) | SVV5 Sonde 1 Artikelnummer | ✓ |  | offen |
-| `DO_SVV5_SONDE1_BEZ` | STRING(50) | SVV5 Sonde 1 Bezeichnung | ✓ |  | offen |
-| `DO_SVV5_SONDE1_SERNR` | STRING(50) | SVV5 Sonde 1 Seriennummer | ✓ |  | offen |
-| `DO_SVV5_SONDE2` | STRING(50) | SVV5 Sonde 2 Artikelnummer | ✓ |  | offen |
-| `DO_SVV5_SONDE2_BEZ` | STRING(50) | SVV5 Sonde 2 Bezeichnung | ✓ |  | offen |
-| `DO_SVV5_SONDE2_SERNR` | STRING(50) | SVV5 Sonde 2 Seriennummer | ✓ |  | offen |
-| `DO_SVV5_SONDE3` | STRING(50) | SVV5 Sonde 3 Artikelnummer | ✓ |  | offen |
-| `DO_SVV5_SONDE3_BEZ` | STRING(50) | SVV5 Sonde 3 Bezeichnung | ✓ |  | offen |
-| `DO_SVV5_SONDE4` | STRING(50) | SVV5 Sonde 4 Artikelnummer | ✓ |  | offen |
-| `DO_SVV5_SONDE4_BEZ` | STRING(50) | SVV5 Sonde 4 Bezeichnung | ✓ |  | offen |
-| `DO_SVV5_SONDE4_SERNR` | STRING(50) | SVV5 Sonde 4 Seriennummer | ✓ |  | offen |
-| `DO_SVV5_SYSTEM` | STRING(50) | SVV5 System Artikelnummer | ✓ |  | offen |
-| `DO_SVV5_SYSTEM_BEZ2` | STRING(50) | SVV5 System Bezeichnung 2 | ✓ |  | offen |
-| `DO_SVV5_SYSTEM_OPTIONEN` | STRING(255) | SVV5 System Optionen | ✓ |  | offen |
-| `DO_SVV5_SYSTEM_SERNNR` | STRING(50) | SVV5 System Seriennummer | ✓ |  | offen |
-| `DO_SVV5_VOM` | DATE | SVV5 Vertrags-Datum | ✓ |  | offen |
-| `DO_SVV5_WAGEN_BEZ` | STRING(50) | SVV5 Wagen Bezeichnung | ✓ |  | offen |
-| `DO_SVV6_SYSTEM` | STRING(50) | SVV6 System Artikelnummer | ✓ |  | offen |
-| `DO_SVV6_VETRAG_STATUS` | STRING(50) | SVV6 Vertrag-Status | ✓ |  | offen |
-| `DO_SVV_ELEKTRONIKVERSICHERUNG` | STRING(50) | SVV Elektronikversicherung | ✓ |  | offen |
-| `DO_SVV_HERSTELLER` | STRING(50) | SVV Hersteller | ✓ |  | offen |
-| `DO_SVV_KOSTEN` | CURRENCY | SVV Kosten Grundwartung (KHK) | ✓ |  | offen |
-| `DO_SVV_KOSTEN_FAHRTZONE` | CURRENCY | SVV Kosten Fahrtzone (KHK) | ✓ |  | offen |
-| `DO_SVV_KOSTEN_FAHRTZONE_VERTRA` | CURRENCY | SVV Kosten Fahrtzone (Vertrag) | ✓ |  | offen |
-| `DO_SVV_MAC` | STRING(50) | SVV MAC-Adresse | ✓ |  | offen |
-| `DO_SVV_PRAXIS_ASP` | STRING(50) | Praxis Ansprechpartner | ✓ |  | offen |
-| `DO_SVV_PRAXISSW` | STRING(50) | Praxis-Software | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_BEMERKUNG` | STRING(255) | SVV Praxis-EDV Bemerkung | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_BENUTZER` | STRING(50) | Server Benutzer | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_GATE` | STRING(50) | Server Standardgate | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_HWASP` | STRING(50) | Praxis-EDV Hardware ASP | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_IP` | STRING(50) | Server IP-Adresse | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_ITASP` | STRING(50) | Praxis-EDV IT ASP | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_NETZSPEICHER` | STRING(50) | Server Netzspeicher | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_PASSWORT` | STRING(50) | Server Passwort | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_STOR_AETITEL` | STRING(50) | Praxis AE Title Speicher | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_STOR_PORT` | STRING(50) | Praxis Port Speicher | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_SUB` | STRING(50) | Server Subnetzmaske | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_WL_PORT` | STRING(50) | Praxis Port Arbeitsliste | ✓ |  | offen |
-| `DO_SVV_PRAXISSW_WL_TITLE` | STRING(50) | Praxis AE Title Arbeitsliste | ✓ |  | offen |
-| `DO_SVV_PRINER_BEZ` | STRING(50) | SVV Printer Bezeichnung | ✓ |  | offen |
-| `DO_SVV_PRINTER` | STRING(50) | SVV Printer Artikelnummer | ✓ |  | offen |
-| `DO_SVV_PRINTER_SERNR` | STRING(50) | SVV Printer Seriennummer | ✓ |  | offen |
-| `DO_SVV_SONDE1_BEZ` | STRING(50) | SVV Sonde 1 Bezeichnung | ✓ |  | offen |
-| `DO_SVV_SONDE1_SERNR` | STRING(50) | SVV Sonde 1 Seriennummer | ✓ |  | offen |
-| `DO_SVV_SYSTEM_OPTIONEN` | STRING(255) | SVV System Optionen | ✓ |  | offen |
-| `DO_SVV_SYSTEM_SERNR` | STRING(50) | SVV System Seriennummer | ✓ |  | offen |
-| `DO_SVV_VERTRAG_STATUS` | STRING(50) | SVV Vertrag-Status | ✓ |  | offen |
-| `DO_SVV_VOM` | DATE | SVV Vertrags-Datum | ✓ |  | offen |
-| `DO_SVV_WAGEN` | STRING(50) | SVV Wagen Artikel | ✓ |  | offen |
-| `DO_SVV_WAGEN_BEZ` | STRING(50) | SVV Wagen Bezeichnung | ✓ |  | offen |
-| `DO_SVV_WAGEN_SERNR` | STRING(50) | SVV Wagen Seriennummer | ✓ |  | offen |
+| `DO_SV2_KOSTEN` | CURRENCY | SVV2 Kosten (Vertrag) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SV2_KOSTEN_KHK` | CURRENCY | SVV2 Kosten (KHK) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SV3_KOSTEN` | CURRENCY | SVV3 Kosten (Vertrag) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SV3_KOSTEN_KHK` | CURRENCY | SVV3 Kosten (KHK) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SV4_KOSTEN` | CURRENCY | SVV4 Kosten (Vertrag) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SV4_KOSTEN_KHK` | CURRENCY | SVV4 Kosten (KHK) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SV5_KOSTEN` | CURRENCY | SVV5 Kosten (Vertrag) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SV5_KOSTEN_KHK` | CURRENCY | SVV5 Kosten (KHK) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SV_KOSTEN` | CURRENCY | SVV Kosten (Vertrag) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SV_KOSTEN_KHK` | CURRENCY | SVV Kosten (KHK) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_HERSTELLER` | STRING(50) | SVV2 Hersteller | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_KOSTEN_FAHRTZONE` | CURRENCY | SVV2 Kosten Fahrtzone (KHK) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_KOSTEN_FAHRTZONE_VERT` | CURRENCY | SVV2 Kosten Fahrtzone (Vertrag) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_MAC` | STRING(50) | SVV2 MAC-Adresse | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_NAECHSTEWARTUNG` | DATE | SVV2 nächste Wartung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_PRINER_BEZ` | STRING(50) | SVV2 Printer Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_PRINTER_SERNR` | STRING(50) | SVV2 Printer Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_SONDE4_SERNR` | STRING(50) | SVV2 Sonde 4 Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_SYSTEM` | STRING(50) | SVV2 System Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_SYSTEM_BEZ` | STRING(50) | SVV2 System Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_SYSTEM_SERNR` | STRING(50) | SVV2 System Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_VERTRAG_ART` | STRING(50) | SVV2 Vertrag-Art | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_WAGEN` | STRING(50) | SVV2 Wagen Artikel | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_WAGEN_BEZ` | STRING(50) | SVV2 Wagen Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_WAGEN_SERNR` | STRING(50) | SVV2 Wagen Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV2_ZAHLUNG` | STRING(50) | SVV2 Zahlungskonditionen | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_APPSW` | STRING(50) | SVV3 Applikation (SW) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_BASE` | STRING(50) | SVV3 Betriebssystem (OS) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_ELEKTRONIKVERSICHERUNG` | STRING(50) | SVV3 Elektronikversicherung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_ERFUELLUNGSORT` | STRING(50) | SVV3 Erfüllungsort (falls abw.) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_HERSTELLER` | STRING(50) | SVV3 Hersteller | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_KOSTEN_FAHRTZONE` | CURRENCY | SVV3 Kosten Fahrtzone (KHK) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_KOSTEN_FAHRTZONE_VERT` | CURRENCY | SVV3 Kosten Fahrtzone (Vertrag) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_MAC` | STRING(50) | SVV3 MAC Adresse | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_PRINER_BEZ` | STRING(50) | SVV3 Printer Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_PRINTER` | STRING(50) | SVV3 Printer Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_PRINTER_SERNR` | STRING(50) | SVV3 Printer Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SONDE1` | STRING(50) | SVV3 Sonde 1 Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SONDE1_BEZ` | STRING(50) | SVV3 Sonde 1 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SONDE2` | STRING(50) | SVV3 Sonde 2 Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SONDE2_BEZ` | STRING(50) | SVV3 Sonde 2 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SONDE2_SERNR` | STRING(50) | SVV3 Sonde 2 Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SONDE3` | STRING(50) | SVV3 Sonde 3 Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SONDE3_BEZ` | STRING(50) | SVV3 Sonde 3 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SONDE4` | STRING(50) | SVV3 Sonde 4 Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SONDE4_BEZ` | STRING(50) | SVV3 Sonde 4 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SYSTEM` | STRING(50) | SVV3 System Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SYSTEM_BEZ` | STRING(50) | SVV3 System Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SYSTEM_OPTIONEN` | STRING(255) | SVV3 System Optionen | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_SYSTEM_SERNR` | STRING(50) | SVV3 System Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_VERTRAG_ART` | STRING(50) | SVV3 Vertrag-Art | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_VETRAG_STATUS` | STRING(50) | SVV3 Vertrag-Status | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_VOM` | DATE | SVV3 Vertrags-Datum | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_WAGEN` | STRING(50) | SVV3 Wagen Artikel | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_WAGEN_BEZ` | STRING(50) | SVV3 Wagen Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_WAGEN_SERNR` | STRING(50) | SVV3 Wagen Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV3_ZAHLUNG` | STRING(50) | SVV3 Zahlungskonditionen | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_APPSW` | STRING(50) | SVV4 Applikation (SW) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_BASE` | STRING(50) | SVV4 Betriebssystem (OS) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_BAUJAHR` | STRING(50) | SVV4 Baujahr (KHK) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_ELEKTRONIKVERSICHERUNG` | STRING(50) | SVV4 Elektronikversicherung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_ERFUELLUNGSORT` | STRING(50) | SVV4 Erfüllungsort (falls abw.) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_HERSTELLER` | STRING(50) | SVV4 Hersteller | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_KOSTEN_FAHRTZONE` | CURRENCY | SVV4 Kosten Fahrtzone (KHK) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_KOSTEN_FAHRTZONE_VERT` | CURRENCY | SVV4 Kosten Fahrtzone (Vertrag) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_MAC` | STRING(50) | SVV4 MAC Adresse | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_PRINTER` | STRING(50) | SVV4 Printer Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_PRINTER_BEZ` | STRING(50) | SVV4 Printer Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_PRINTER_SERNR` | STRING(50) | SVV4 Printer Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SONDE1` | STRING(50) | SVV4 Sonde 1 Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SONDE1_BEZ` | STRING(50) | SVV4 Sonde 1 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SONDE2` | STRING(50) | SVV4 Sonde 2 Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SONDE2_BEZ` | STRING(50) | SVV4 Sonde 2 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SONDE2_SERNR` | STRING(50) | SVV4 Sonde 2 Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SONDE3` | STRING(50) | SVV4 Sonde 3 Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SONDE3_BEZ` | STRING(50) | SVV4 Sonde 3 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SONDE3_SERNR` | STRING(50) | SVV4 Sonde 3 Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SONDE4` | STRING(50) | SVV4 Sonde 4 Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SONDE4_BEZ` | STRING(50) | SVV4 Sonde 4 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SONDE4_SERNR` | STRING(50) | SVV4 Sonde 4 Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SYSTEM` | STRING(50) | SVV4 System Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SYSTEM_BEZ2` | STRING(50) | SVV4 System Bezeichnung 2 | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SYSTEM_OPTIONEN` | STRING(255) | SVV4 System Optionen | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_SYSTEM_SERNR` | STRING(50) | SVV4 System Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_VERTRAG_ART` | STRING(50) | SVV4 Vertrag-Art | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_VOM` | DATE | SVV4 Vertrags-Datum | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_WAGEN` | STRING(50) | SVV4 Wagen Artikel | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_WAGEN_BEZ` | STRING(50) | SVV4 Wagen Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_WAGEN_SERNR` | STRING(50) | SVV4 Wagen Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV4_ZAHLUNG` | STRING(50) | SVV4 Zahlungskonditionen | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_APPSW` | STRING(50) | SVV5 Applikation (SW) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_BASE` | STRING(50) | SVV5 Betriebssystem (OS) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_ELEKTRONIKVERSICHERUNG` | STRING(50) | SVV5 Elektronikversicherung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_ERFUELLUNGSORT` | STRING(50) | SVV5 Erfüllungsort (falls abw.) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_HERSTELLER` | STRING(50) | SVV5 Hersteller | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_KOSTEN_FAHRTZONE` | CURRENCY | SVV5 Kosten Fahrtzone (KHK) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_KOSTEN_FAHRTZONE_VERT` | CURRENCY | SVV5 Kosten Fahrtzone (Vertrag) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_MAC` | STRING(50) | SVV5 MAC Adresse | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_PRINTER` | STRING(50) | SVV5 Printer Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_PRINTER_SERNR` | STRING(50) | SVV5 Printer Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SONDE1` | STRING(50) | SVV5 Sonde 1 Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SONDE1_BEZ` | STRING(50) | SVV5 Sonde 1 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SONDE1_SERNR` | STRING(50) | SVV5 Sonde 1 Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SONDE2` | STRING(50) | SVV5 Sonde 2 Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SONDE2_BEZ` | STRING(50) | SVV5 Sonde 2 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SONDE2_SERNR` | STRING(50) | SVV5 Sonde 2 Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SONDE3` | STRING(50) | SVV5 Sonde 3 Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SONDE3_BEZ` | STRING(50) | SVV5 Sonde 3 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SONDE4` | STRING(50) | SVV5 Sonde 4 Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SONDE4_BEZ` | STRING(50) | SVV5 Sonde 4 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SONDE4_SERNR` | STRING(50) | SVV5 Sonde 4 Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SYSTEM` | STRING(50) | SVV5 System Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SYSTEM_BEZ2` | STRING(50) | SVV5 System Bezeichnung 2 | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SYSTEM_OPTIONEN` | STRING(255) | SVV5 System Optionen | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_SYSTEM_SERNNR` | STRING(50) | SVV5 System Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_VOM` | DATE | SVV5 Vertrags-Datum | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV5_WAGEN_BEZ` | STRING(50) | SVV5 Wagen Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV6_SYSTEM` | STRING(50) | SVV6 System Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV6_VETRAG_STATUS` | STRING(50) | SVV6 Vertrag-Status | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_ELEKTRONIKVERSICHERUNG` | STRING(50) | SVV Elektronikversicherung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_HERSTELLER` | STRING(50) | SVV Hersteller | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_KOSTEN` | CURRENCY | SVV Kosten Grundwartung (KHK) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_KOSTEN_FAHRTZONE` | CURRENCY | SVV Kosten Fahrtzone (KHK) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_KOSTEN_FAHRTZONE_VERTRA` | CURRENCY | SVV Kosten Fahrtzone (Vertrag) | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_MAC` | STRING(50) | SVV MAC-Adresse | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXIS_ASP` | STRING(50) | Praxis Ansprechpartner | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW` | STRING(50) | Praxis-Software | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_BEMERKUNG` | STRING(255) | SVV Praxis-EDV Bemerkung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_BENUTZER` | STRING(50) | Server Benutzer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_GATE` | STRING(50) | Server Standardgate | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_HWASP` | STRING(50) | Praxis-EDV Hardware ASP | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_IP` | STRING(50) | Server IP-Adresse | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_ITASP` | STRING(50) | Praxis-EDV IT ASP | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_NETZSPEICHER` | STRING(50) | Server Netzspeicher | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_PASSWORT` | STRING(50) | Server Passwort | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_STOR_AETITEL` | STRING(50) | Praxis AE Title Speicher | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_STOR_PORT` | STRING(50) | Praxis Port Speicher | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_SUB` | STRING(50) | Server Subnetzmaske | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_WL_PORT` | STRING(50) | Praxis Port Arbeitsliste | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRAXISSW_WL_TITLE` | STRING(50) | Praxis AE Title Arbeitsliste | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRINER_BEZ` | STRING(50) | SVV Printer Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRINTER` | STRING(50) | SVV Printer Artikelnummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_PRINTER_SERNR` | STRING(50) | SVV Printer Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_SONDE1_BEZ` | STRING(50) | SVV Sonde 1 Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_SONDE1_SERNR` | STRING(50) | SVV Sonde 1 Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_SYSTEM_OPTIONEN` | STRING(255) | SVV System Optionen | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_SYSTEM_SERNR` | STRING(50) | SVV System Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_VERTRAG_STATUS` | STRING(50) | SVV Vertrag-Status | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_VOM` | DATE | SVV Vertrags-Datum | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_WAGEN` | STRING(50) | SVV Wagen Artikel | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_WAGEN_BEZ` | STRING(50) | SVV Wagen Bezeichnung | ✓ |  | verwerfen (D-001 · tot) |
+| `DO_SVV_WAGEN_SERNR` | STRING(50) | SVV Wagen Seriennummer | ✓ |  | verwerfen (D-001 · tot) |
 | `DSGVO` | BOOLEAN | Datenschutzgrundverordnung | ✓ |  | offen |
 | `DSGVOEWFAX` | BOOLEAN | Einwilligung FAX | ✓ |  | offen |
 | `DSGVOEWMAIL` | BOOLEAN | Einwilligung MAIL | ✓ |  | offen |
