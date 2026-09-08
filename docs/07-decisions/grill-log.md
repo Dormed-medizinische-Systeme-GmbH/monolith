@@ -882,3 +882,46 @@ D-020: Fahrtzone Company statt Vertrag.
 5. Was, wenn Geräte in einem Einsatz unterschiedliche `billing_company_id` haben? (Sollte nicht — 1 Einsatz = 1 Company = 1 Rechnungsempfänger. Bestätigen.)
 6. Teil-Wartung: ein geplantes Gerät wird vor Ort doch nicht gewartet (kein Zugang) — wie im Einsatz/Rechnung abbilden?
 7. `travel_zones`-Lookup: Zonen-Definition (PLZ-Bereiche? manuell je Company?) + Pauschalen.
+
+### D-060 — ServiceCase: 0..n Geräte, keine Vertragskosten, Vertrag nur für Sonderkonditionen
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- Ein `ServiceCase` betrifft **0..n** Geräte (mehrere möglich, oder keins) →
+  Pivot `service_case_devices` statt einem `device_id`-FK (revidiert SERVICE.md).
+- **Keine** Kostenableitung aus dem Vertrag — alle Positionen sind ad-hoc
+  (Teile + Arbeitszeit). Kein `maintenance_price`.
+- Der Vertrag wirkt nur über **Sonderkonditionen**: hat das Gerät/die Company
+  einen (Full-)Servicevertrag → reduzierter Satz auf Mehraufwand/Arbeitszeit.
+  → `ServiceContract` braucht Konditionsfelder (Stundensatz / Rabatt) — Detail offen.
+- Fahrtzone: aus der Company, **einmal je ServiceCase-Anfahrt** (analog D-059) —
+  **zu bestätigen**.
+- **Keine** Bündelung mehrerer Verträge wie bei `Maintenance` (D-059) — ServiceCase
+  ist sein eigenes Ding.
+
+### D-061 — Teil-/Nicht-Wartung: 50 % der Wartungspauschale
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- Ein eingeplantes Gerät wird vor Ort **nicht** gewartet (kein Gerätezugang) →
+  **50 % der Wartungspauschale** für dieses Gerät berechnet; weiterer Termin nötig
+  (seltener Fall). `maintenance_devices.status` = `durchgefuehrt` |
+  `nicht_durchgefuehrt`.
+- Häufiger: **gesamter Praxiszugang** nicht gegeben → die ganze Wartung findet
+  nicht statt. Dann: **auf ALLE eingeplanten Geräte 50 % der Wartungspauschale**
+  **+ die volle Fahrtzone**.
+- Rechnungsposition je `maintenance_device` = 100 % oder 50 % von
+  `contract.maintenance_price`, je nach Status.
+
+**Revidiert SERVICE.md** (D-059 + D-060 + D-061):
+- `Maintenance`: `company_id` + `location_id` + `scheduled_date` / `performed_at` /
+  `finalized_at` + `assigned_technician_id` + `status`. **Kein** `service_contract_id`.
+- `maintenance_devices`: `maintenance_id`, `service_contract_id`, `status`
+  (`durchgefuehrt` | `nicht_durchgefuehrt`) → `hasOne MaintenanceReport`,
+  `hasOne MeasurementProtocol`, `hasMany line_items`. Abrechnung: 100 %/50 % von
+  `contract.maintenance_price`.
+- `ServiceContract`: **kein** `travel_flat_rate` mehr (D-059); + Konditionsfelder
+  für ServiceCase-Sonderkonditionen (D-060, offen).
+- `Company`: `travel_zone_id` → `travel_zones` (Zone, `flat_fee`).
+- `ServiceCase`: `service_case_devices`-Pivot (0..n); Positionen ad-hoc; Fahrtzone
+  aus Company.
