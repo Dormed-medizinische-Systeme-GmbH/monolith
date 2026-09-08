@@ -1,7 +1,23 @@
-# Adressen — Feld-Zuordnung (Entwurf)
+# Adressen — Feld-Zuordnung
 
-Vorschlag je Legacy-Feld → Zielmodell. Basis: D-001 – D-017 im `../../07-decisions/grill-log.md`.
-Review bucket­weise: `Ziel` bestätigen/korrigieren, dann Synthese nach `docs/04-domain/`.
+Jedes der 356 Legacy-`Address`-Felder → Zielmodell. Basis: D-001 – D-022 im
+[`../../07-decisions/grill-log.md`](../../07-decisions/grill-log.md).
+Vom Nutzer bucketweise bestätigt (2026-09-08). Synthese → `docs/04-domain/`.
+
+| Ziel-Bucket | Felder |
+| --- | --- |
+| **verwerfen** | 243 |
+| → `contact_channels` (D-010) | 22 |
+| → Device / Praxis-IT — *Bereich Service* (D-001-Ausnahme) | 19 |
+| → `Address` (Sitz) (D-014) | 13 |
+| → `Location` (Lieferadresse) (D-014) | 10 |
+| → Identity/Employee — *vertagt* (D-012) | 9 |
+| → `consents` (D-013) | 6 |
+| → `Company` · Recht/Steuer | 6 |
+| → Portal — *vertagt* (D-012) | 5 |
+| → `Company` · Bank | 4 |
+| → einzelne `Company` / `Person` / `CompanyContact`-Felder | 22 |
+| → Soft-Delete-Zustand (D-018) | 1 |
 
 | Feld | Typ | Label | Ziel | Herkunft/Notiz |
 | --- | --- | --- | --- | --- |
@@ -17,22 +33,22 @@ Review bucket­weise: `Ziel` bestätigen/korrigieren, dann Synthese nach `docs/0
 | `BankAccountHolder` | STRING(30) | Kontoinhaber | Company · Bank | — |
 | `BankAccountNr` | STRING(20) | Kontonummer | verwerfen | Kto/BLZ → durch IBAN/BIC ersetzt |
 | `BankZipNr` | STRING(20) | Bankleitzahl | verwerfen | Kto/BLZ → durch IBAN/BIC ersetzt |
-| `Birthday` | DATETIME | Geburtstag | verwerfen | Beziehungspflege/Personendetail — offen |
-| `BirthdayGreetings` | BOOLEAN | Geburtstagskarte | verwerfen | Beziehungspflege/Personendetail — offen |
+| `Birthday` | DATETIME | Geburtstag | verwerfen | keine betriebl. Relevanz (D-022) |
+| `BirthdayGreetings` | BOOLEAN | Geburtstagskarte | verwerfen | keine betriebl. Relevanz (D-022) |
 | `BMeABl` | DATETIME | _BMe/ABl | verwerfen | Legacy-Wildwuchs (D-017) |
 | `BudgetfKauf` | INT | Budget f. Kauf | verwerfen | Legacy-Wildwuchs (D-017) |
 | `CASFunction` | STRING(100) | Funktion Ansprechpartner | CompanyContact · role | = role-String (D-005) |
 | `CASWIDNR` | STRING(25) | Wirtschafts-Identifikationsnummer | Company · Recht/Steuer | — |
 | `Category` | STRING(255) | Kategorie | verwerfen | Segmentierung/Sales-Pflege (D-017) |
 | `ChristianName` | STRING(30) | Vorname | Person · first_name | — |
-| `ChristmasGreetings` | BOOLEAN | Weihnachtskarte | verwerfen | Beziehungspflege/Personendetail — offen |
+| `ChristmasGreetings` | BOOLEAN | Weihnachtskarte | verwerfen | keine betriebl. Relevanz (D-022) |
 | `CompName` | STRING(255) | Firma (Anrede) | Company · name | Firma (Anrede) |
-| `CompName2` | STRING(60) | Name | verwerfen | Kurzname-Dublette zu CompName — prüfen |
+| `CompName2` | STRING(60) | Name | Company · name_addition | Adresszusatz (D-021) |
 | `COUNTRY1` | STRING(80) | Land | Address (Sitz) | Sitzadresse (D-014) |
 | `COUNTRY2` | STRING(80) | Lieferung (Land) | Location | Lieferadresse → Location (D-014) |
 | `COUNTRY3` | STRING(80) | Land (Privat) | verwerfen | Privatadresse (D-014) |
 | `CurrencyNat` | STRING(3) | Währung | verwerfen | Segmentierung/Sales-Pflege (D-017) |
-| `Department` | STRING(30) | Abteilung | CompanyContact · department | nullable String — prüfen |
+| `Department` | STRING(30) | Abteilung | CompanyContact · department | nullable String (D-022) |
 | `DO_SV2_KOSTEN` | CURRENCY | SVV2 Kosten (Vertrag) | verwerfen | D-001 tot |
 | `DO_SV2_KOSTEN_KHK` | CURRENCY | SVV2 Kosten (KHK) | verwerfen | D-001 tot |
 | `DO_SV3_KOSTEN` | CURRENCY | SVV3 Kosten (Vertrag) | verwerfen | D-001 tot |
@@ -219,8 +235,8 @@ Review bucket­weise: `Ziel` bestätigen/korrigieren, dann Synthese nach `docs/0
 | `EVTRACKING1` | BOOLEAN | Evalanche Tracking deaktiviert 1 | verwerfen | Marketing-Integration (D-011) |
 | `EVTRACKING2` | BOOLEAN | Evalanche Tracking deaktiviert 2 | verwerfen | Marketing-Integration (D-011) |
 | `explInt1` | STRING(30) | expl. Int. 1 | verwerfen | Legacy-Wildwuchs (D-017) |
-| `Fachrichtung` | STRING(150) | Fachrichtung | Company · medical_specialty | D-017 (bleibt) |
-| `FAHRTZONENPAUSCHALE` | DECIMAL | FAHRTZONENPAUSCHALE | offen · Bereich Service | — |
+| `Fachrichtung` | STRING(150) | Fachrichtung | Company · medical_specialty_id | Lookup-Tabelle (D-019) |
+| `FAHRTZONENPAUSCHALE` | DECIMAL | FAHRTZONENPAUSCHALE | verwerfen | Betrag denorm.; Fahrtzone → Company sep. (D-020) |
 | `FANPORTFOLIO` | STRING(255) | fan!-Portfolio-Gruppe | verwerfen | Marketing-Integration (D-011) |
 | `FaxFieldStr1` | STRING(30) | Fax (Geschäftlich) | contact_channels | D-010 |
 | `FaxFieldStr2` | STRING(30) | Not in Use 5  -  war Fax (Mobil) | verwerfen | Legacy-Schrott |
@@ -236,12 +252,12 @@ Review bucket­weise: `Ziel` bestätigen/korrigieren, dann Synthese nach `docs/0
 | `gwAdditionalInfo2` | STRING(100) | Lieferort (Institution/Praxis) | Location | Lieferort (Institution/Praxis) (D-014) |
 | `gwAdditionalInfo3` | STRING(100) | Zusatzinfo(Privat) | verwerfen | privat (D-014) |
 | `gwBIC` | STRING(11) | BIC | Company · Bank | — |
-| `gwBirthPlace` | STRING(30) | Geburtsort | verwerfen | Beziehungspflege/Personendetail — offen |
+| `gwBirthPlace` | STRING(30) | Geburtsort | verwerfen | keine betriebl. Relevanz (D-022) |
 | `gwBranch` | STRING(60) | Briefanrede(F) | verwerfen | Anrede-Zeilen (D-015) |
 | `GWCOMPANYLEGALFORM` | STRING(500) | Rechtliche Informationen | Company · Recht/Steuer | — |
 | `gwCostCenter` | STRING(30) | Kostenstelle | → Identity/Employee | D-012 (vertagt) |
-| `gwDeactivated` | BOOLEAN | Adresse deaktiviert | Company · archived_at | „Adresse deaktiviert" → Soft-Archiv |
-| `gwDenomination` | STRING(50) | Konfession | verwerfen | Beziehungspflege/Personendetail — offen |
+| `gwDeactivated` | BOOLEAN | Adresse deaktiviert | (Soft-Delete-Zustand) | D-018 — bildet `deleted_at` ab, keine Spalte |
+| `gwDenomination` | STRING(50) | Konfession | verwerfen | keine betriebl. Relevanz (D-022) |
 | `gwDepartment2` | STRING(30) | Not in Use 2 | verwerfen | Legacy-Schrott |
 | `GWDISTRICTCOURT` | STRING(40) | Registerstandort | Company · Recht/Steuer | — |
 | `GWEXTERNALADDRESSDATE` | DATETIME | Geprüft am | Address (Sitz) | Adress-Metadaten (Prüfung/Geocoding) — offen |
@@ -255,7 +271,7 @@ Review bucket­weise: `Ziel` bestätigen/korrigieren, dann Synthese nach `docs/0
 | `gwIsEmployee` | BOOLEAN | ist Mitarbeiter | → Identity/Employee | D-012 (vertagt) |
 | `GWISEXTERNALEMPLOYEE` | BOOLEAN | Externer Mitarbeiter | → Identity/Employee | D-012 (vertagt) |
 | `gwKeepContactSynchron` | BOOLEAN | Feldwerte synchron | verwerfen | CAS-intern |
-| `gwNationality` | STRING(50) | Staatsangehörigkeit | verwerfen | Beziehungspflege/Personendetail — offen |
+| `gwNationality` | STRING(50) | Staatsangehörigkeit | verwerfen | keine betriebl. Relevanz (D-022) |
 | `gwPersonInCharge` | STRING(255) | Not in Use 3 | verwerfen | Legacy-Schrott |
 | `gwPersonnelNumber` | STRING(30) | Personalnummer | → Identity/Employee | D-012 (vertagt) |
 | `gwSalesActivityTypeAllowed` | STRING(100) | Erlaubte Kontaktarten | verwerfen | Kontaktart-Präferenz — offen (D-010?) |
@@ -283,7 +299,7 @@ Review bucket­weise: `Ziel` bestätigen/korrigieren, dann Synthese nach `docs/0
 | `KSgewhrtan` | STRING(30) | generelle Bearbeitung | verwerfen | Legacy-Wildwuchs (D-017) |
 | `LASTCONTACTMEDIUM` | STRING(200) | Letzter Kontakt über | verwerfen | Segmentierung/Sales-Pflege (D-017) |
 | `LASTCONTACTUSER` | STRING(200) | Kontaktperson | verwerfen | Segmentierung/Sales-Pflege (D-017) |
-| `LEASING` | STRING(50) | Leasing | offen · Bereich Service | — |
+| `LEASING` | STRING(50) | Leasing | verwerfen | Altlast (D-017) |
 | `LeisureActivities` | STRING(40) | Vorlieben | verwerfen | Legacy-Wildwuchs (D-017) |
 | `letzteAktion` | DATETIME | letzte Aktion | verwerfen | Segmentierung/Sales-Pflege (D-017) |
 | `lostOrderan` | STRING(30) | _lost Order an | verwerfen | Legacy-Schrott |
@@ -296,7 +312,7 @@ Review bucket­weise: `Ziel` bestätigen/korrigieren, dann Synthese nach `docs/0
 | `Mobilausgeh` | STRING(30) | Mobil ausgehändigt | verwerfen | Geräte-Ausgabe → Service, hier weg |
 | `Name` | STRING(30) | Name | Person · last_name | „Name" = Nachname (Personenzeile) |
 | `Notes` | STRING(255) | Schlagworte | Company · notes | — |
-| `NOTES2` | TEXT | Schlagworte | verwerfen | Dublette zu Notes — prüfen |
+| `NOTES2` | TEXT | Schlagworte | verwerfen | Dublette zu Notes (D-022) |
 | `nurfrMEDICA` | STRING(30) | _altes Medica Feld - Schrott | verwerfen | Legacy-Schrott |
 | `Payment` | STRING(30) | Zahlungsart | verwerfen | Segmentierung/Sales-Pflege (D-017) |
 | `PhoneFieldStr1` | STRING(30) | Not in Use 4 - 1 - leer | verwerfen | Legacy-Schrott |
@@ -349,8 +365,8 @@ Review bucket­weise: `Ziel` bestätigen/korrigieren, dann Synthese nach `docs/0
 | `TurnOverGroup` | STRING(30) | Umsatzgruppe | verwerfen | Segmentierung/Sales-Pflege (D-017) |
 | `TurnoverTaxId` | STRING(30) | Umsatzsteuer-ID | Company · Recht/Steuer | — |
 | `USStatus` | STRING(30) | US-Status (alt/Schrott) | verwerfen | Legacy-Schrott |
-| `VERSAKTIV` | BOOLEAN | Vers. aktiv | offen · Bereich Service | — |
-| `VERSICHERUNG` | STRING(50) | Versicherung | offen · Bereich Service | — |
+| `VERSAKTIV` | BOOLEAN | Vers. aktiv | verwerfen | Altlast (D-017) |
+| `VERSICHERUNG` | STRING(50) | Versicherung | verwerfen | Altlast (D-017) |
 | `was` | STRING(30) | was | verwerfen | Legacy-Wildwuchs (D-017) |
 | `wasgekauft` | STRING(100) | was gekauft | verwerfen | Legacy-Wildwuchs (D-017) |
 | `WWWFieldStr1` | STRING(100) | Homepage | contact_channels | D-010 |

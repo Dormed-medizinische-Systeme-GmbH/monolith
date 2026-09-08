@@ -246,3 +246,61 @@ nicht im Zielsystem. Eine spätere Anbindung würde eigenständig spezifiziert
   `Eingangsdatum1/2`, `was`, `explInt1`, `lostOrderan`.
 - **Nicht** von D-017 erfasst (→ Bereich Service prüfen): `FAHRTZONENPAUSCHALE`,
   `VERSICHERUNG`/`VERSAKTIV`, `LEASING`, `EmpStatus` (Label „Servicevertrag").
+
+### D-018 — Soft-Delete + Papierkorb + Auto-Prune, plattformweit
+
+**Status:** entschieden (Details offen) · **Datum:** 2026-09-08
+
+Es gibt **kein** „archiviert/inaktiv"-Zustand. Ein Datensatz ist **aktiv** oder
+**gelöscht** (im Papierkorb).
+
+- Jedes Domänenmodell nutzt Laravel `SoftDeletes`.
+- Pro Modelltyp ein **Papierkorb** (Ansicht der `deleted_at`-Datensätze,
+  Wiederherstellen möglich) — wie im Altsystem.
+- **Auto-Leerung**: soft-gelöschte Datensätze werden nach **~30 Tagen**
+  endgültig entfernt (Laravel `Prunable` + geplanter `model:prune`).
+- Legacy `gwDeactivated` → bildet den Soft-Delete-Zustand ab, **keine** Spalte.
+- **Plattform-Konzern** — gehört in `.ai/rules` (architecture) + Infra-Doc +
+  eigenen ROADMAP-Slice (Voraussetzung für die Fach-Slices).
+- **Offen:** genaue Modell-Liste (auch Pivot wie `company_contacts`?),
+  Retention 30 T bestätigen, Zugriff auf Papierkorb (welche Rolle).
+
+### D-019 — `Company.medical_specialty` = Lookup-Tabelle
+
+**Status:** entschieden (2 Werte klären) · **Datum:** 2026-09-08
+
+- Tabelle `medical_specialties` (`name`, `is_active`), `Company.medical_specialty_id`
+  (nullable FK). Vom Nutzer editierbar, für Segmentierung/Filter genutzt.
+- Seed-Werte (verbatim aus Auswahlliste Altsystem): Pulmologen · Institution ·
+  Hdin · Orthopäden · Dermatologen · Veterinäre · Radiologen · Chirurgen ·
+  Kardiologen · HNO · Sportmedizin · USVE · Bahnarzt · Rheumatologen · Hebammen ·
+  Werksarzt · Unfallchirurgie · Sanitätshaus · Heilpraktiker · Phlebologie · Neurologen
+- **Offen:** „Hdin" und „USVE" — Abkürzungen klären.
+
+### D-020 — Fahrtzone ist ein Company-Attribut (Detail: Bereich Service)
+
+**Status:** entschieden (Modell offen) · **Datum:** 2026-09-08
+
+- Eine **Fahrtzone** gehört zur Company (Grundlage der Service-Anfahrtskosten).
+  `Company.travel_zone` (bzw. `travel_zone_id`) — Feld lebt auf Company.
+- Legacy `FAHRTZONENPAUSCHALE` (denormalisierter Betrag) → **verworfen**.
+- Fahrtzonen-Modell selbst (Zonen, Preise) → Bereich Service/Billing.
+
+### D-021 — Company-Name zweiteilig: `name` + `name_addition`
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+Wie Vor-/Nachname, aber für Firmen: `Company.name` (← `CompName`) +
+`Company.name_addition` (← `CompName2`, „Adresszusatz", bleibt in der Form).
+`CompName2` also **nicht** verwerfen.
+
+### D-022 — `NOTES2` verwerfen; `CompanyContact.department` als eigenes Feld
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `NOTES2` (2. „Schlagworte") → verworfen; nur `Notes` → `Company.notes`.
+- `Department` („Abteilung", in welcher Abteilung der Ansprechpartner sitzt) →
+  eigenes `CompanyContact.department` (nullable String), **nicht** in `role`
+  gefaltet (andere Achse als die Rolle aus D-005).
+- `Birthday` + `gwBirthPlace` + `gwDenomination` + `gwNationality` +
+  `BirthdayGreetings` + `ChristmasGreetings` → **verworfen** (keine betriebliche Relevanz).
