@@ -2,6 +2,7 @@
 
 Before planning or editing, find the row whose globs match the file's path and read that rule file.
 
-| Applies to | Rule file |
+| Globs | Rule file |
 | --- | --- |
-| docker-compose.yml, docker-compose.dev.yml | .ai/rules/general.md |
+| `routes/**`, `bootstrap/app.php`, `app/Http/Middleware/**`, `config/domains.php`, `app/Support/ApplicationContext.php` | [routing.md](routing.md) |
+| `compose*.yaml`, `docker/**`, `phpunit.xml`, `.env.example` | [local-stack.md](local-stack.md) |

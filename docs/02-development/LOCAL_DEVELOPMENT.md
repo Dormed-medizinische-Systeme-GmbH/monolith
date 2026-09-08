@@ -18,17 +18,33 @@ Weitere Container werden erst hinzugefügt, wenn ein konkreter Bedarf besteht.
 Ein neuer Entwickler soll nach Installation von Docker mit einem dokumentierten Ablauf ungefähr folgendes ausführen können:
 
 ```bash
-docker compose up -d
+cp .env.example .env
+docker compose up -d --build
 ```
+
+Der `app`-Container bootstrappt sich beim ersten Start selbst (`composer install`,
+`php artisan key:generate` falls nötig, `php artisan migrate`) und startet dann
+`php artisan serve` auf Port 8000.
 
 Danach:
 
 ```bash
-docker compose exec app php artisan migrate
 docker compose exec app php artisan db:seed
 ```
 
-Die tatsächlichen Service-Namen und Befehle müssen an das finale Compose-File angepasst werden.
+## Subdomains
+
+Die Anwendung bedient drei Kontext-Subdomains (siehe
+`docs/01-architecture/MULTI_SUBDOMAIN.md`). Lokal müssen sie auf `127.0.0.1`
+zeigen – einmalig in `/etc/hosts` eintragen:
+
+```text
+127.0.0.1 dormed.test crm.dormed.test portal.dormed.test shop.dormed.test
+```
+
+Aufruf: `http://crm.dormed.test:8000`, `http://portal.dormed.test:8000`,
+`http://shop.dormed.test:8000`. Die Hosts sind über `DOMAIN_CRM` / `DOMAIN_PORTAL`
+/ `DOMAIN_SHOP` in `.env` konfigurierbar.
 
 ## Environment
 

@@ -27,30 +27,36 @@ Ein Request auf `portal.*` darf nur deshalb keine CRM-Funktion erhalten, weil ei
 
 Der Hostname wird früh im Request verarbeitet.
 
-Ein zentraler Kontext kann konzeptionell bereitstellen:
+Implementiert als:
 
-```text
-ApplicationContext
-- crm
-- portal
-- shop
-```
+- `App\Support\ApplicationContext` — Enum `Crm | Portal | Shop`, plus
+  `tryFromHost()`, `host()`, `label()`.
+- `App\Http\Middleware\ResolveApplicationContext` — an die `web`-Middleware-Gruppe
+  angehängt (`bootstrap/app.php`). Löst den Kontext aus `$request->getHost()`,
+  bindet ihn als Container-Instanz und teilt ihn allen Views als
+  `$applicationContext` mit. Unbekannter Host ⇒ `null` (kein Fehler).
 
-Der konkrete technische Name und Speicherort sind noch nicht festgeschrieben.
+Die Host-Namen stehen zentral in `config/domains.php` (`env(DOMAIN_CRM|DOMAIN_PORTAL|DOMAIN_SHOP)`).
 
 ## Routing
 
-Routen sollen nach Kontext gruppiert werden.
+Routen sind nach Kontext gruppiert:
 
 ```text
 routes/
-├── web.php
-├── crm.php
-├── portal.php
-└── shop.php
+├── web.php      # host-unabhängig: Auth (auth.php), Profil, /dashboard
+├── crm.php      # nur config('domains.crm')
+├── portal.php   # nur config('domains.portal')
+└── shop.php     # nur config('domains.shop')
 ```
 
-Die genaue Laravel-Registrierung muss zur installierten Laravel-Version passen.
+Registrierung in `bootstrap/app.php` via `withRouting(then: ...)`: pro Kontext eine
+Gruppe mit `->domain(config("domains.$ctx"))`, `web`-Middleware und `$ctx.`-Namensprefix
+(`route('crm.home')` ⇒ `http://crm.dormed.test`). Danach eine host-freie
+`welcome`-Fallback-Route für unbekannte Hosts.
+
+Wichtig: `web.php` wird vor `then:` registriert – dort darf keine URI liegen, die
+eine Kontext-Route mit gleichem Pfad beschattet (`/` wurde deshalb aus `web.php` entfernt).
 
 ## Gemeinsame Komponenten
 
@@ -89,23 +95,28 @@ Das ist eine fachliche Zuordnung, kein Grund für getrennte Auth-Systeme.
 
 ## Lokale Entwicklung
 
-Die lokale DNS-/Hosts-Auflösung muss alle verwendeten Subdomains auf denselben Laravel-Webserver zeigen.
-
-Beispielhaft:
+Basis-Domain lokal: `dormed.test` (reserviert, kein echtes DNS). In `/etc/hosts`:
 
 ```text
-crm.example.test
-portal.example.test
-shop.example.test
+127.0.0.1 dormed.test crm.dormed.test portal.dormed.test shop.dormed.test
 ```
 
-Die konkrete Domain ist noch offen.
+Der `app`-Container (`compose.yaml`) läuft mit `php artisan serve --host=0.0.0.0`
+und akzeptiert jeden Host-Header. Domain-Matching ignoriert den Port, daher
+funktioniert `:8000` transparent.
 
 ## Cookies / Sessions
 
-Wenn CRM, Portal und Shop dieselbe Browser-Session teilen sollen, müssen Cookie-Domain, SameSite-Regeln, HTTPS und Session-Konfiguration bewusst konfiguriert werden.
+Geteilte Session über alle Subdomains ist aktiv konfiguriert:
 
-Dies darf nicht implizit angenommen werden.
+- `SESSION_DOMAIN=.dormed.test` (führender Punkt ⇒ ein Cookie für alle `*.dormed.test`).
+- `SESSION_SAME_SITE=lax` genügt – die Subdomains sind same-site.
+- `login` / `register` / `logout` liegen in `routes/auth.php` (via `web.php`) ohne
+  Domain-Constraint, gelten also für jeden Kontext.
+- In Tests ist `SESSION_DOMAIN` in `phpunit.xml` auf `null` gesetzt (Requests laufen
+  gegen `localhost`).
+
+Prod: `SESSION_DOMAIN` auf die echte Basis-Domain setzen, `SESSION_SECURE_COOKIE=true`.
 
 ## Do not
 
