@@ -85,6 +85,11 @@ Ein Modul darf seine eigenen fachlichen Modelle und Services besitzen. Gemeinsam
 
 Fachliche Abhängigkeiten müssen bewusst sein.
 
+Jedes Modul liegt unter `app/Modules/<Modul>/` (Namespace `App\Modules\<Modul>\`)
+und deklariert seine erlaubten Abhängigkeiten in `module.php`. Die Richtung des
+Graphen wird von `tests/Architecture/ModuleBoundariesTest` erzwungen. Struktur:
+`docs/01-architecture/PROJECT_STRUCTURE.md`.
+
 Beispiel:
 
 ```text
