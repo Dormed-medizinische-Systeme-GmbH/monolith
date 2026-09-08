@@ -925,3 +925,24 @@ D-020: Fahrtzone Company statt Vertrag.
 - `Company`: `travel_zone_id` → `travel_zones` (Zone, `flat_fee`).
 - `ServiceCase`: `service_case_devices`-Pivot (0..n); Positionen ad-hoc; Fahrtzone
   aus Company.
+
+### D-062 — Servicepreise kommen aus einer Preisliste, gestuft nach Vertragsstatus — nicht vom Vertrag
+
+**Status:** Richtung entschieden (Preislisten-Struktur offen) · **Datum:** 2026-09-08 · **revidiert D-036**
+
+- **Keine Preisfelder** am `ServiceContract` (kein `maintenance_price`, kein
+  `travel_flat_rate`, kein `service_hourly_rate`).
+- Es gibt eine zentrale **Preisliste**. Preise (Stundensatz, Wartungspauschale,
+  ggf. Fahrtzone) werden dort geführt, **gestuft nach Vertragsstatus**:
+  - aktuell: Stundensatz **25 €** Vertragskunde / **30 €** Nicht-Vertragskunde.
+- Der `ServiceContract` wirkt nur als **Gate**: hat die Company/das Gerät einen
+  (Full-)Servicevertrag → Vertrags-Tarif, sonst Standard-Tarif.
+- `SERVICE.md`-Umbau (D-059/D-060/D-061) **pausiert**, bis die Preislisten-Struktur
+  steht (Billing/Inventory-Bereich).
+
+**Offen (Preisliste):**
+1. Wartungspauschale — ein Pauschalbetrag, oder je Gerätekategorie/-typ verschieden?
+2. Nur 2 Stufen (Vertrag/Nicht-Vertrag), oder auch kundenindividuell verhandelte Preise?
+3. Fahrtzonenpauschale — auch gestuft nach Vertrag, oder flat je Zone?
+4. Preisliste zeitversioniert (Preis ab Datum X) — für Preisanpassungen?
+5. Eine Preisliste, oder mehrere (Service / Produkte / Ersatzteile getrennt)?
