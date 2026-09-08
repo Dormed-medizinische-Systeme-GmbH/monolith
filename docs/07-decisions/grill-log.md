@@ -194,3 +194,55 @@ nicht im Zielsystem. Eine spätere Anbindung würde eigenständig spezifiziert
 - `DSGVO` (Flag „Datenschutzgrundverordnung") → vermutlich „DSGVO-Info erteilt";
   im Cluster-Durchlauf gegen das Consent-Log prüfen.
 - Betrifft die Person-Spec → gehört in `docs/04-domain/`.
+
+### D-014 — Adress-Slots: Sitz → Company; Lieferung → Location; Privat → verworfen
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- Slot 1 (Haupt: `Street1`/`Zip1`/`Town1`/`Suburb1`/`COUNTRY1`/`GWSTATE1`/
+  `PoBox1`/`PoBoxZip1`/`POTOWN1`/`InHouseZip`) → **Address (Sitz)** an der Company.
+- Slot 2 (Lieferung: `Street2`/`Zip2`/`Town2`/…/`COUNTRY2`/`GWSTATE2`/`PoBox2`/…)
+  → **Location** (eine abweichende Lieferadresse ist eine Location).
+- Slot 3 (Privat: `Street3`/`Zip3`/`Town3`/…/`COUNTRY3`/`GWSTATE3`) → **verworfen.**
+- Bestätigt: **Person hat keine eigene Adresse** (nur über Company erreichbar, D-002).
+
+### D-015 — Anrede minimal: `Person.gender` + `Person.title`, Briefanrede generiert
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `Person.gender` (enum) ← `GWGENDER`
+- `Person.title` (string) ← `Title`
+- Briefanrede wird bei Dokumenterstellung generiert, **nicht** gespeichert →
+  Bereich Dokumente.
+- Verworfen: `AddressTerm`, `AddressLetter`, `Anrede2/3/4`, `gwBranch` (Briefanrede F).
+- `gwAdditionalInfo1` (Namenszusatz), `Birthday`, `gwBirthPlace`, `gwNationality`,
+  `gwDenomination` → im Cluster-Durchlauf entscheiden (Tendenz: Namenszusatz →
+  Person, Rest verwerfen).
+
+### D-016 — `responsible_sales_id` / `responsible_service_id` = echter FK auf User
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `Company.responsible_sales_id`, `Company.responsible_service_id` → `users.id`
+  (nullable FK). UI: Select mit Benutzername. Genutzt in Auswertungen/Filtern
+  („Verantwortlicher = aktueller Benutzer / = L. Everding").
+- **Rein informativ — keine Autorisierung** (Rechte kommen aus der Abteilung,
+  `AUTHORIZATION.md`).
+- FK zeigt vorerst auf `users`; ggf. Re-Point auf `Employee`, wenn das Modell steht (D-012).
+- Legacy-Dubletten: `Mitarbeiter` (= Verantwortlicher Sales) → auf
+  `responsible_sales_id` gemappt; `GWTRUSTEE` („Verantwortlicher (alt)") → verworfen.
+
+### D-017 — Company-Klassifizierung: alles weg außer Fachrichtung
+
+**Status:** entschieden · **Datum:** 2026-09-08
+
+- `Company.medical_specialty` (Fachrichtung) ← `Fachrichtung` — **bleibt,
+  nicht verhandelbar** (es sind Praxen). Kontrollierte Liste; Werte offen.
+- **Verworfen:** `Category`, `ITDKLASSIFIZIERUNG` (Klassifizierung), `TurnOver`,
+  `TurnOverGroup`, `Quelle1/2`, `ITDANZAHLMA`, `Interessean1/2`, `FirstContact(Date)`,
+  `letzteAktion`, `LASTCONTACT*`, `Referenzkunde`, `Rebate`, `Payment`, `CurrencyNat`,
+  `BudgetfKauf`, `Kaufdatum`, `wasgekauft`, `Anschaffungwan`, `Rckkauf`, `Gifts`,
+  `LeisureActivities`, `KSgemeldetan`, `KSgewhrtan`, `durchwenwas1/2`,
+  `Eingangsdatum1/2`, `was`, `explInt1`, `lostOrderan`.
+- **Nicht** von D-017 erfasst (→ Bereich Service prüfen): `FAHRTZONENPAUSCHALE`,
+  `VERSICHERUNG`/`VERSAKTIV`, `LEASING`, `EmpStatus` (Label „Servicevertrag").
