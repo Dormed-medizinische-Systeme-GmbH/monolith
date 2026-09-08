@@ -2,40 +2,50 @@
 
 ## Zweck
 
-Diese Datei dokumentiert nur die Rolle der bereitgestellten Altdefinitionen.
+Diese Datei dokumentiert die Rolle der bereitgestellten Altdefinitionen.
 
-Vorhandene Dateien:
+Die rohen Schema-Exporte liegen unter [`xml/`](xml/) (CAS genesisWorld
+`gwconnect`-Objektdefinitionen aus dem produktiven CRM). Lese-Anleitung und
+Inventar: [`xml/README.md`](xml/README.md).
 
-- Adressen XML
-- Verkaufschancen XML
-- Termine XML
-- Tickets XML
-- Serviceverträge_NEU XML
+| Objekt | Datei | Spalten |
+| --- | --- | --- |
+| Address | [`xml/Adressen.xml`](xml/Adressen.xml) | 356 |
+| Verkaufschancen | [`xml/Verkaufschancen.xml`](xml/Verkaufschancen.xml) | 34 |
+| Termine | [`xml/Termine.xml`](xml/Termine.xml) | 25 |
+| Tickets | [`xml/Tickets.xml`](xml/Tickets.xml) | 112 |
+| Serviceverträge_NEU | [`xml/Servicevertraege-NEU.xml`](xml/Servicevertraege-NEU.xml) | 83 |
 
-Sie stammen aus dem aktuellen System und werden als fachliche Referenz verwendet.
+Sie stammen aus dem aktuellen System und dienen als fachliche **Ist-Referenz**
+(ADR-004) — nicht als Zielschema.
 
 ## Kernerkenntnisse
 
-### Adressen
+### Adressen (`xml/Adressen.xml`)
 
-Das alte `Address`-Objekt ist ein universelles Beziehungsobjekt mit sehr vielen Verwendungszwecken. fileciteturn0file0L2-L2
+Das alte `Address`-Objekt ist ein universelles Beziehungsobjekt mit sehr vielen
+Verwendungszwecken (Unternehmen, Kontaktpersonen, Rechnungsadressen, Standorte …).
 
-### Opportunities
+### Opportunities (`xml/Verkaufschancen.xml`)
 
-Das alte Opportunity-Modell besitzt bereits typische Sales-Daten wie Status, Phase, Wahrscheinlichkeit, Budget und Wettbewerber. fileciteturn0file1L2-L2
+Das alte Opportunity-Modell besitzt bereits typische Sales-Daten wie Status,
+Phase, Wahrscheinlichkeit, Budget und Wettbewerber.
 
-### Termine
+### Termine (`xml/Termine.xml`)
 
-Termine sind derzeit relativ generisch und müssen im Zielsystem stärker mit fachlichen Vorgängen verknüpft werden. fileciteturn0file2L2-L2
+Termine sind derzeit relativ generisch und müssen im Zielsystem stärker mit
+fachlichen Vorgängen verknüpft werden.
 
-### Tickets
+### Tickets (`xml/Tickets.xml`)
 
-Tickets vermischen Service, Wartung, Checklisten, Messungen, Arbeiten und Abrechnung. fileciteturn0file3L2-L2
+Tickets vermischen Service, Wartung, Checklisten, Messungen, Arbeiten und Abrechnung.
 
-### Serviceverträge
+### Serviceverträge (`xml/Servicevertraege-NEU.xml`)
 
-Serviceverträge vermischen Vertrag, Gerät und technische Gerätekonfiguration. fileciteturn0file4L2-L2
+Serviceverträge vermischen Vertrag, Gerät und technische Gerätekonfiguration.
 
 ## Konsequenz
 
-Die neue Architektur soll diese Vermischung reduzieren und fachliche Prozesse explizit modellieren.
+Die neue Architektur soll diese Vermischung reduzieren und fachliche Prozesse
+explizit modellieren. Die konkrete Zerlegung wird in `/grill-me` festgelegt und
+in `docs/04-domain/` + der ROADMAP dokumentiert.
