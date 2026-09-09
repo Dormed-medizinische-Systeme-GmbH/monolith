@@ -1011,3 +1011,26 @@ service_prices (manuell) → Angebot (Opportunity) → angenommen/Auftrag
    → Maintenance → maintenance_device.maintenance_fee_snapshot := contract.maintenance_price
    → Rechnung
 ```
+
+### D-066 — Keine übergreifende Sammelrechnung; 1 Rechnung je Einsatz; Rechnungsempfänger auf `Company`
+
+**Status:** entschieden · **Datum:** 2026-09-08 · präzisiert D-004/D-059
+
+- **Es gibt keine** praxis- oder tagesübergreifende Sammelrechnung, keinen
+  Rechnungslauf, keine Bündelungs-Engine.
+- Die größte „Sammelrechnung" = **eine `Maintenance`** (mehrere Geräte, ein Tag,
+  eine Praxis, D-059) → **eine Rechnung**.
+- Diese Rechnung kann an eine **abweichende Rechnungsanschrift** (Praxisgesellschaft)
+  gehen: `Company.billing_company_id` → andere `Company` (Praxisgesellschaft ist
+  selbst eine `Company`, D-002). **Verschoben** von `ServiceContract` (D-004) auf
+  `Company` — so ist je Einsatz genau **ein** Rechnungsempfänger garantiert
+  (1 Einsatz = 1 Praxis = 1 Empfänger).
+- Rechnungsempfänger einer `ServiceCase`-Rechnung analog aus `Company.billing_company_id`.
+- Die Managementgesellschaft bekommt also **viele Einzelrechnungen** (je Praxis-
+  Einsatz), nicht eine gebündelte.
+- **Konsequenz:** Billing-Modell wird deutlich einfacher — `Invoice` hat **eine**
+  Quelle (ein `Maintenance` **oder** eine `ServiceCase` **oder** eine gewonnene
+  Opportunity **oder** manuell, D-057), snapshottet Empfänger + Positionen, fertig.
+
+**Revidiert:** `SERVICE.md` `ServiceContract.billing_company_id` → entfällt;
+`CORE.md` `Company.billing_company_id` ergänzen.
