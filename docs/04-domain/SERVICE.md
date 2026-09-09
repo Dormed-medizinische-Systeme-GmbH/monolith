@@ -110,7 +110,6 @@ Die Servicevereinbarung für genau ein Device.
 | `next_due_at` | date | ✓ | **abgeleitet** aus letztem `maintenance_devices.performed_at` + Intervall (D-037/D-059) |
 | `maintenance_price` | decimal(10,2) | – | Wartungspauschale, **auf diesen Vertrag fixiert** bei Vertragserstellung aus der Preisliste; spätere Preislistenänderung wirkt nicht (D-065) |
 | `payment_terms` | string | ✓ | ← `VERTRAG_ZAHLUNGSKONDITIONEN` |
-| `billing_company_id` | FK → `companies` | ✓ | abw. Rechnungsempfänger (← `ABWEICHENDE_RECHNUNG`, D-004) |
 | `warranty_manufacturer_until` | date | ✓ | ← `GARANTIE_HERSTELLER` |
 | `warranty_customer_until` | date | ✓ | ← `GARANTIE_KUNDE` |
 | `warranty_insurance` | boolean | – | ← `VERTAG_GARANTIEVERSICHERUNG` |

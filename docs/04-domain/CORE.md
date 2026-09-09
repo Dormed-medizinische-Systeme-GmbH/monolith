@@ -39,7 +39,7 @@ Kunden** (Lieferanten/Kreditoren = späterer Bereich, D-008). Companies sind fla
 | `avv_signed_at` | date | ✓ | — |
 | `responsible_sales_id` | FK → `users` | ✓ | Verantwortlich Vertrieb, **informativ**, keine AuthZ (D-016) |
 | `responsible_service_id` | FK → `users` | ✓ | Verantwortlich Service, dito (D-016) |
-| `billing_company_id` | FK → `companies` | ✓ | Abweichender Rechnungsempfänger (D-004). Self-Reference. |
+| `billing_company_id` | FK → `companies` | ✓ | Abweichende Rechnungsanschrift → andere `Company` (z. B. Praxisgesellschaft). Self-Reference. **Alle** Rechnungen dieser Praxis gehen dorthin (D-004/D-066). Keine praxisübergreifende Sammelrechnung. |
 | `travel_zone_id` | FK → `travel_zones` | ✓ | Fahrtzone der Institution — Grundlage der Service-Anfahrtspauschale (D-020/D-059/D-063). `travel_zones` (`name`, `flat_fee`) definiert im Service-Bereich. Fahrtzone wird **einmal je Anfahrt** berechnet, nicht je Gerät/Vertrag. |
 | — Bankverbindung — | | | |
 | `iban` | string(34) | ✓ | ← `gwIBAN` |
