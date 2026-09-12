@@ -110,8 +110,8 @@ Die Servicevereinbarung für genau ein Device.
 | `cancelled_at` | date | ✓ | Kündigungsdatum |
 | `full_service_ends_at` | date | ✓ | ← `VERTRAG_FS_ENDE` |
 | `maintenance_interval_months` | smallint | – | 12 / 6 / 4 / 3 … (D-037; deckt „Mehrfachwartung", D-042) |
-| `next_due_at` | date | ✓ | **abgeleitet** aus letztem `maintenance_devices.performed_at` + Intervall (D-037/D-059) |
-| `maintenance_price` | decimal(10,2) | – | Wartungspauschale, **auf diesen Vertrag fixiert** bei Vertragserstellung aus der Preisliste; spätere Preislistenänderung wirkt nicht (D-065) |
+| — | – | – | `next_due_at` ist **kein** gespeichertes Feld — live berechnet aus `MAX(maintenance_devices.performed_at) + maintenance_interval_months` (D-093, revidiert D-037) |
+| `maintenance_price` | decimal(12,2) | – | Wartungspauschale, **auf diesen Vertrag fixiert** bei Vertragserstellung aus der Preisliste; spätere Preislistenänderung wirkt nicht (D-065) |
 | `payment_terms` | string | ✓ | ← `VERTRAG_ZAHLUNGSKONDITIONEN` |
 | `warranty_manufacturer_until` | date | ✓ | ← `GARANTIE_HERSTELLER` |
 | `warranty_customer_until` | date | ✓ | ← `GARANTIE_KUNDE` |
@@ -146,7 +146,7 @@ Vertrags. **Keine** Wirkung auf bestehende Verträge, **keine** Wirkung auf die 
 | `item` | enum `maintenance_flat` \| `hourly_rate` \| … | |
 | `form_factor` | enum `portabel` \| `standgeraet` (nullable) | nur bei `maintenance_flat` — **einzige** preisrelevante Geräte-Achse (D-080). `imaging_type` (schwarzweiß/Farbdoppler) hat **keine** Preiswirkung, ist rein katalog-/anzeigerelevant |
 | `tier` | enum `contract` \| `standard` | |
-| `amount` | decimal(10,2) | z. B. `hourly_rate/contract` = 25 €, `/standard` = 30 €; `maintenance_flat`: `standgeraet` teurer als `portabel` |
+| `amount` | decimal(12,2) | z. B. `hourly_rate/contract` = 25 €, `/standard` = 30 €; `maintenance_flat`: `standgeraet` teurer als `portabel` |
 
 - `maintenance_flat` → wird bei Vertragserstellung in `ServiceContract.maintenance_price`
   **kopiert/fixiert**. Ab dann trägt der Vertrag den Preis.
@@ -212,7 +212,7 @@ Ein Eintrag je gebündeltem Gerät im Einsatz.
 | `planned_due_at` | date | – | Fälligkeit dieses Geräts (kann je Gerät abweichen) |
 | `performed_at` | datetime | ✓ | Basis `next_due_at` **dieses** Vertrags (D-037) |
 | `status` | enum `durchgefuehrt` \| `nicht_durchgefuehrt` | – | D-061 |
-| `maintenance_fee_snapshot` | decimal(10,2) | ✓ | Snapshot von `contract.maintenance_price` zum Einsatzzeitpunkt (D-065) |
+| `maintenance_fee_snapshot` | decimal(12,2) | ✓ | Snapshot von `contract.maintenance_price` zum Einsatzzeitpunkt (D-065) |
 | `work_performed` | text | ✓ | ← `TICKET_DURCHGEFUEHRTEARBEITEN` |
 
 **Beziehungen:** `report()` `hasOne` `MaintenanceReport`, `measurementProtocol()`
@@ -345,7 +345,7 @@ Polymorph an `Maintenance` **oder** `ServiceCase` (D-043).
 | `description` | string | – | |
 | `quantity` | decimal(10,2) | – | |
 | `unit` | string | ✓ | Stk / Std / Pauschale |
-| `unit_price` | decimal(10,2) | ✓ | netto |
+| `unit_price` | decimal(12,2) | ✓ | netto |
 
 **Keine** Summen-/Steuerfelder hier. Bei Einsatzabschluss + Freigabe → Übergabe an
 Billing, das die `Invoice` erstellt und einfriert (D-043). Legacy `TICKET_GESAMT_*`,

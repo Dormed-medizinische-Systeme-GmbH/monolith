@@ -1349,3 +1349,60 @@ Das Praxis-Netzwerk (Server-IP, Passwort, Gateway, Subnetz, Ports,
 Praxis-EDV-ASP, Speicher-/Arbeitslisten-AE-Titel+Port) ist standort-, nicht
 gerätebezogen — mehrere Geräte am selben Standort teilen sich dasselbe
 Praxis-Netz. Die 14 Felder werden `Location`-Felder, nicht `Device`-Felder.
+
+---
+
+## Bereich: Datenbank-Standards (Runde 2026-09-12)
+
+Nutzer möchte höchstmögliche Normalisierung + einen eigenen Doku-Bereich dafür.
+Ergebnis: [`../04-database/DATABASE.md`](../04-database/DATABASE.md).
+
+### D-093 — Normalisierungs-Ausnahmen bereinigt: `next_due_at` und `users.name` gestrichen, Invoice-Summen/Snapshots bleiben
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **revidiert D-037**
+
+- `ServiceContract.next_due_at` (D-037, war ein Planungs-Cache) → **gestrichen**,
+  wird live aus `MAX(maintenance_devices.performed_at) + maintenance_interval_months`
+  berechnet. Kein Cache-Feld — bei Performance-Bedarf später eine Materialized
+  View, keine denormalisierte Spalte.
+- `users.name` (IDENTITY_RBAC.md, nur Breeze-Kompatibilität) → **gestrichen**,
+  wird `getNameAttribute()`-Accessor. Grund entfällt mit ADR-023 (Fortify statt
+  Breeze).
+- `Invoice.net_total`/`tax_total`/`gross_total` und `Invoice.recipient_*`
+  (BILLING.md) sowie `MaintenanceDevice.maintenance_fee_snapshot`/
+  `ServiceContract.maintenance_price` (D-065) → **bleiben** unverändert. Das sind
+  **keine** echten Normalisierungsverletzungen, sondern rechtlich/fachlich
+  geforderte Zustands-Snapshots zu einem Zeitpunkt (GoBD-Unveränderlichkeit bzw.
+  Preis-zum-Vertragszeitpunkt) — eine andere Kategorie als redundant gespeicherte,
+  jederzeit aktuelle Ableitungen.
+
+### D-094 — Enum-Speicherung: VARCHAR + DB-CHECK-Constraint
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+Nicht Postgres-native `ENUM`-Typen (zu unflexibel bei den noch reifenden
+Wertelisten), nicht nur PHP-seitige Validierung ohne DB-Constraint (zu schwach
+angesichts ADR-007 „Postgres als zusätzliche Integrity Boundary"). Stattdessen:
+`VARCHAR`-Spalte + expliziter `CHECK`-Constraint mit der Werteliste, **zusätzlich**
+zum Laravel-PHP-Enum-Cast. Wertelisten-Änderung = eigene Migration
+(`DROP CONSTRAINT` + `ADD CONSTRAINT`) — bewusster Reibungspunkt, da jede solche
+Änderung ohnehin eine eigene `D-NNN`-Entscheidung ist.
+
+### D-095 — Primärschlüssel: Auto-Increment bigint, kein UUID
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+Laravel-Standard `id()` (bigint, auto-increment) für alle Tabellen. Kein UUID —
+fachliche Nummernkreise mit externer Sichtbarkeit existieren bereits separat
+(`number`-Felder, z. B. D-067), der DB-PK ist rein intern. Kein Multi-Master-/
+Offline-Sync-Bedarf, der UUIDs erfordern würde (Offline-Wartungsbericht ist
+D-041 bewusst ein späterer Slice).
+
+### D-096 — Geldbeträge einheitlich `decimal(12,2)`
+
+**Status:** entschieden · **Datum:** 2026-09-12 · vereinheitlicht uneinheitliche Angaben in SERVICE.md/BILLING.md
+
+Alle Geld-Spalten über alle Bereiche hinweg `decimal(12,2)` (statt der bisher
+uneinheitlichen Mischung `decimal(10,2)`/`decimal(12,2)` in den einzelnen
+`04-domain/*.md`-Tabellen). Prozentsätze (Stundensatz-Faktoren, Rabatt) bleiben
+`decimal(5,2)`.

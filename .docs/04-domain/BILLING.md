@@ -63,7 +63,7 @@ Opportunity ─┘         │
 | `sepa_mandate_reference` | string | ✓ | nur bei `lastschrift` |
 | `routing_id` | string | ✓ | Leitweg-ID, nur B2G-Sonderfälle (D-074) |
 | `currency` | string(3) | – | default `EUR` |
-| `net_total`, `tax_total`, `gross_total` | decimal(10,2) | – | berechnet bei `gestellt`, danach unveränderlich |
+| `net_total`, `tax_total`, `gross_total` | decimal(12,2) | – | berechnet bei `gestellt`, danach unveränderlich |
 | `sent_at` | datetime | ✓ | Versanddatum |
 | `cancelled_at` | datetime | ✓ | |
 | `notes` | text | ✓ | |
@@ -92,11 +92,11 @@ Live-Referenz mehr auf die Quelle).
 | `quantity` | decimal(10,2) | – | |
 | `unit` | string | ✓ | Stk / Std / Pauschale (Anzeige) |
 | `unit_code` | string | ✓ | UN/ECE-Recommendation-20-Code (z. B. `C62`, `HUR`) — XRechnung-Pflichtfeld |
-| `unit_price` | decimal(10,2) | – | netto |
-| `net_amount` | decimal(10,2) | – | `quantity × unit_price` |
+| `unit_price` | decimal(12,2) | – | netto |
+| `net_amount` | decimal(12,2) | – | `quantity × unit_price` |
 | `tax_category` | enum `standard_19` \| `reverse_charge` \| `export_tax_free` \| `other_tax_free` | – | je Position, nicht am Kopf (D-074) |
 | `tax_rate` | decimal(5,2) | – | z. B. `19.00` / `0.00` |
-| `tax_amount` | decimal(10,2) | – | |
+| `tax_amount` | decimal(12,2) | – | |
 
 Bei `type = gutschrift`: identische Positionen wie das Original, Beträge negiert
 (D-069).
@@ -108,7 +108,7 @@ Bei `type = gutschrift`: identische Positionen wie das Original, Beträge negier
 | Feld | Typ | Null | Notiz |
 | --- | --- | :-: | --- |
 | `received_at` | date | – | |
-| `amount` | decimal(10,2) | – | |
+| `amount` | decimal(12,2) | – | |
 | `currency` | string(3) | – | default `EUR` |
 | `bank_reference` | string | ✓ | Verwendungszweck / End-to-End-Referenz aus dem Kontoauszug |
 | `import_batch_id` | FK → `bank_statement_imports` | ✓ | |
@@ -123,7 +123,7 @@ eindeutiger Treffer → `nicht_zugeordnet`, manuelle Zuordnung durch die Buchhal
 | --- | --- | --- |
 | `payment_id` | FK → `payments` | |
 | `invoice_id` | FK → `invoices` | |
-| `amount` | decimal(10,2) | Anteil dieser Zahlung an dieser Rechnung |
+| `amount` | decimal(12,2) | Anteil dieser Zahlung an dieser Rechnung |
 
 Bildet sowohl Sammelüberweisungen (eine Zahlung deckt mehrere Rechnungen — z. B.
 Managementgesellschaft, D-004/D-066) als auch Teilzahlungen (mehrere Zahlungen auf

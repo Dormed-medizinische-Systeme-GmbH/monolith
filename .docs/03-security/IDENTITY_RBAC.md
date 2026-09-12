@@ -20,7 +20,6 @@ Autoritative deklarative Spec. Entscheidungen **D-026 – D-033**
 | --- | --- | :-: | --- |
 | `first_name` | string | – | |
 | `last_name` | string | – | |
-| `name` | string | – | Anzeigename (Breeze-Kompat; = „first last") |
 | `email` | string | – | unique, Login |
 | `password` | string | ✓ | nullable (später SSO-User ohne Passwort) |
 | `entra_oid` | string | ✓ | unique — **jetzt reserviert**, von SSO (D-029) befüllt |
@@ -28,7 +27,9 @@ Autoritative deklarative Spec. Entscheidungen **D-026 – D-033**
 | `is_active` | boolean | – | default `true` — inaktiv ⇒ kein Login, aus `responsible_*` ausgeblendet |
 | `last_login_at` | datetime | ✓ | |
 
-`SoftDeletes` (D-018). **Kein** Personalnummer/Kostenstelle/HR-Datum (D-033).
+`SoftDeletes` (D-018). **Kein** Personalnummer/Kostenstelle/HR-Datum (D-033). **Kein**
+`name`-Feld — `getNameAttribute()`-Accessor (`first_name . ' ' . last_name`), keine
+Spalte (D-093; ursprünglicher Breeze-Kompat-Grund entfällt mit ADR-023/Fortify).
 
 **Beziehungen:** `roles()` `belongsToMany` über `role_user`.
 
