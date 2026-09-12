@@ -132,9 +132,18 @@ keine freistehende Rechnungsadresse ohne Company. Details: `BILLING.md`.
 - ✅ Sage/KHK vollständig abgelöst, keine Sync-Brücke (D-068).
 - ✅ Zahlungsabgleich, Mahnwesen, Storno/Gutschrift, e-Rechnungs-Detailfelder (D-069–D-074).
 
-### Service / Sales — noch offen
+### Service / Sales — geklärt (siehe `SERVICE.md`/`SALES.md`/`grill-log.md` D-078–D-098)
 
-- Fahrtzonen-Modell: Zonen-**Definition** (PLZ-Bereiche vs. manuell je Company) —
-  Bereich Service, `SERVICE.md` offener Punkt.
-- „Melder" eines Servicefalls — bereits gelöst (`ServiceCase.reported_by` →
-  CompanyContact, `CORE.md`/`SERVICE.md`).
+- ✅ Fahrtzonen-/Territorien-Modell: drei unabhängige PLZ-Bereichstabellen
+  (`travel_zones`, `service_territories`, `sales_territories`), revidiert D-054 (D-084).
+- ✅ „Melder" eines Servicefalls → `ServiceCase.reported_by` → CompanyContact
+  (`CORE.md`/`SERVICE.md`).
+- ✅ Device-Klassen: `form_factor` bestimmt Preis, `imaging_type` ist reine
+  Katalogeigenschaft (D-080, revidiert D-063).
+- ✅ Enum-Wertelisten ServiceContract/Maintenance/ServiceCase/Appointment
+  (D-079, D-081–083, D-088, D-090, D-097).
+
+### Sales — vertagt
+
+- `stage`/`probability`-Phasenliste (reale % aus Legacy-`DistributionPhase`) —
+  vertagt bis Nutzer die Werteliste liefert (D-089).
