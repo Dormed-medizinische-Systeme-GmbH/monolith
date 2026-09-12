@@ -7,11 +7,18 @@ Prinzipien: [`../05-modules/INVENTORY.md`](../05-modules/INVENTORY.md).
 Modul: `packages/core/src/Modules/Inventory/` (Namespace `Dormed\Core\Modules\Inventory\`,
 `depends_on: [Core]`, ADR-013).
 
-> **Keine Legacy-Vorlage.** Für diesen Bereich existiert **kein** Export unter
-> `00-legacy/` — der Artikelstamm liegt in Sage/KHK, das mit D-068 ersatzlos
-> abgelöst wird. Diese Spec beruht ausschließlich auf Nutzerangaben. Ein Abgleich
-> gegen einen echten Sage-Artikelstamm-Export ist ausdrücklich vorgesehen (D-108)
-> und kann einzelne Entscheidungen hier noch korrigieren.
+> **Keine Legacy-Vorlage — und es wird auch keine geben (D-108).** Für diesen
+> Bereich existiert **kein** Export unter `00-legacy/`: der Artikelstamm liegt in
+> Sage/KHK, das mit D-068 ersatzlos abgelöst wird, und der Nutzer kann ihn
+> **aktuell nicht beschaffen**. `INVENTORY.md` ist damit die einzige Domänen-Spec
+> **ohne** Ist-Absicherung — Core, Service, Scheduling, Sales und Billing konnten
+> jeweils gegen ein `*.xml`/`*.csv` geprüft werden, Inventory nicht.
+>
+> Zwei Konsequenzen, die bewusst getragen werden: die breit angelegte
+> `Article`-Feldliste (D-115) muss **aus der Nutzung heraus** gekürzt werden statt
+> aus dem Abgleich, und der benutzerdefinierte Feldkatalog (D-100/D-111/D-119)
+> wird damit vom Komfort- zum **Sicherheitsnetz** — was hier fehlt, lässt sich
+> ohne Migration nachtragen.
 
 ---
 
@@ -479,8 +486,8 @@ sind entsprechend angepasst:
 
 | # | Punkt | Wohin |
 | --- | --- | --- |
-| 1 | **Fremdgeräte ohne Artikelstamm** — ist `Device.article_id` `NOT NULL` oder nullable? Dormed wartet Geräte, die es nie verkauft hat | Nutzer prüft Altstruktur, migrationsrelevant (D-107) |
-| 2 | **Sage/KHK-Artikelstamm-Export** als Ist-Referenz unter `00-legacy/Artikel/`, dann Abgleich nach dem Verfahren aus D-098 | Nutzer liefert (D-108) |
+| 1 | **Fremdgeräte ohne Artikelstamm** — ist `Device.article_id` `NOT NULL` oder nullable? Dormed wartet Geräte, die es nie verkauft hat | **eigener Detaildurchgang**, Nutzer braucht Vorlauf. Ohne Schema-Abgleich zu beantworten (D-108 entfällt), migrationsrelevant (D-107) |
+| 2 | ~~Sage/KHK-Artikelstamm-Export als Ist-Referenz~~ | ⛔ **nicht beschaffbar** (D-108). Abgleich nach D-098-Verfahren entfällt auf unbestimmte Zeit |
 | 3 | **Bestellwesen ja/nein** — Agent legt begründete Empfehlung vor, nicht nur Optionsliste | nächste Runde (D-120) |
 | 4 | **D-109 „etwas mehr Komplexität"** — Garantie-/Kulanzteile ohne Position, Rückgabe unverbrauchter Teile ins Lager, verbaut aber nicht abgerechnet | nächste Runde (D-109) |
 | 5 | **`DeviceComponent` vs. serialisiertes Exemplar** — eine Sonde ist heute eine Zeile am Gerät, könnte aber ein seriennummernpflichtiger Artikel im Lager sein, der beim Einbau ans Gerät wandert. Beides parallel wäre eine Dublette | nächste Runde (D-121) |

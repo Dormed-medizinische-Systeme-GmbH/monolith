@@ -162,11 +162,28 @@ keine freistehende Rechnungsadresse ohne Company. Details: `BILLING.md`.
 - ✅ Belegprinzip durchgezogen: Wareneingang, Umbuchung, Reservierung + Rückgabe,
   Zählauftrag sind eigene Belege (D-106/D-113/D-114).
 
+### Noch zu grillen — vorgemerkte Bereiche
+
+- **Communication — Kontaktformular + Automatisierung (wichtig, D-122).**
+  Eingehende Formularanfragen sollen automatisch mit bestehenden Datensätzen
+  verknüpft oder direkt zu einem Kundenstamm werden. **Kernanforderung: es darf
+  keine verwaisten Anfragen geben.** Enthält einen ungelösten Konflikt mit D-002
+  (Person existiert nie ohne Company — ein Formular liefert aber zuerst eine
+  Person), dazu Spam-Abwehr vor der Auto-Anlage und die DSGVO-Einwilligung aus
+  dem Formular. Stärkstes Argument, Communication vor Documents zu grillen.
+- **Communication — Aktivitäten-Timeline** (Anrufe/Mails/Notizen), `SALES.md` #7.
+- **Documents** — inkl. der vertagten Template-Designer-Idee (siehe oben).
+
 ### Vertagt
 
 - **Sales:** `stage`/`probability`-Phasenliste (reale % aus Legacy-`DistributionPhase`)
   — vertagt bis Nutzer die Werteliste liefert (D-089).
 - **Inventory:** Fremdgeräte ohne Artikelstamm — ist `Device.article_id` `NOT NULL`?
-  Nutzer prüft die Altstruktur, migrationsrelevant (D-107).
+  **Eigener Detaildurchgang nötig**, Nutzer braucht Vorlauf; migrationsrelevant
+  und **ohne** Schema-Abgleich zu beantworten, da D-108 nicht verfügbar (D-107).
 - **Inventory:** Bestellwesen ja/nein — Agent legt in der nächsten Runde eine
   begründete Empfehlung vor (D-120).
+- **Inventory:** Sage/KHK-Artikelstamm-Export **nicht beschaffbar** (D-108).
+  `INVENTORY.md` ist damit die einzige Domänen-Spec **ohne** Legacy-Ist-Referenz —
+  die breit angelegte `Article`-Feldliste (D-115) muss aus der Nutzung heraus
+  gekürzt werden, nicht aus dem Abgleich.

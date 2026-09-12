@@ -1610,9 +1610,10 @@ eigener Nummernkreis, FK auf die Reservierung. Begründung:
 Der Reservierungsstatus (`offen` / `teilweise_zurueck` / `erledigt`) ist
 **abgeleitet**, nicht gespeichert — konsistent zu D-093/D-102.
 
-### D-107 — Fremdgeräte ohne Artikelstamm: vertagt
+### D-107 — Fremdgeräte ohne Artikelstamm: vertagt, eigene Detailrunde nötig
 
-**Status:** offen (Rückfrage) · **Datum:** 2026-09-12
+**Status:** offen — **eigener Grill-Durchgang erforderlich** · **Datum:** 2026-09-12,
+präzisiert 2026-09-13
 
 Dormed wartet auch Geräte, die es nie verkauft hat (fremde Hersteller, Altbestand).
 Wenn die `article_number` am Artikel hängt (D-099), ist offen, ob solche Exemplare
@@ -1621,26 +1622,59 @@ trotzdem einen `Article`-Datensatz brauchen — also ob `Device.article_id`
 
 **Vertagt auf Nutzerwunsch:** „muss später nochmal besprochen werden, ich muss mir
 die aktuelle Struktur angucken, damit die Datenüberführung auch gut funktioniert."
-Die Antwort hängt an der realen Sage/KHK-Struktur (D-108) und ist
-migrations­relevant — bis dahin **nicht** selbst entscheiden.
 
-### D-108 — Sage/KHK-Artikelstamm-Export als spätere Ist-Referenz vorgesehen
+**Nachtrag 2026-09-13 — Status verschärft.** Der Nutzer hat bestätigt: „da müssen
+wir nochmal ins Detail eingehen, da muss ich drüber nachdenken." Das ist damit
+**keine Einzelfrage mehr, die nebenbei in einer anderen Runde mitläuft**, sondern
+ein **eigener Grill-Durchgang** mit Vorlauf beim Nutzer.
 
-**Status:** offen (Datenlieferung) · **Datum:** 2026-09-12
+**Erschwerend:** die ursprünglich geplante Absicherung über die reale Sage/KHK-
+Struktur (D-108) steht **nicht** zur Verfügung — der Nutzer kann den Artikelstamm-
+Export aktuell nicht besorgen. Die Frage muss also **aus Fachwissen und Blick ins
+Altsystem** beantwortet werden, nicht aus einem Schema-Abgleich.
+
+**Bis dahin gilt:** `Device.article_id` ist in `INVENTORY.md`/`SERVICE.md`
+ausdrücklich mit **offener Nullability** geführt. Der Agent entscheidet das
+**nicht** selbst — die Antwort bestimmt, ob jedes gewartete Fremdgerät einen
+Katalogeintrag braucht, und ist damit direkt migrationsrelevant.
+
+### D-108 — Sage/KHK-Artikelstamm-Export: aktuell nicht beschaffbar
+
+**Status:** **blockiert — Datenlieferung nicht möglich** · **Datum:** 2026-09-12,
+revidiert 2026-09-13
 
 Der einzige gepflegte Artikel-/Preisstamm liegt heute in **Sage/KHK** (Nutzer
 bestätigt) — dem System, das mit D-068 ersatzlos abgelöst wird. Es gibt für
 Inventory bisher **keinen** Export im Muster von `00-legacy/{Adressen,Tickets,
 Servicevertraege}/`.
 
-Vorgesehen, sobald verfügbar: Feldinventar + echter Datenexport unter
-`00-legacy/Artikel/`, dann Abgleich der hier getroffenen Entscheidungen gegen die
-reale Feldbelegung — nach demselben Verfahren wie D-098 (Abweichung wird geprüft
-und begründet entschieden, die Werteliste wird **nicht** stillschweigend
-angepasst). Der Nutzer hat den „umfassenden Zusatzfeldern" des Altsystems
-ausdrücklich attestiert, dass sie „teilweise notwendig und richtig sind,
-teilweise aber auch kein Belangen für uns haben" — die Übernahme ist also eine
-Feld-für-Feld-Entscheidung, kein 1:1-Import.
+**Revision 2026-09-13:** Der Nutzer kann den Export **aktuell nicht besorgen**
+(„D-108 kann ich dir aktuell nicht besorgen"). Der ursprünglich vorgesehene
+Abgleich nach dem D-098-Verfahren entfällt damit **auf unbestimmte Zeit** — er ist
+nicht „geplant, aber noch nicht geliefert", sondern **nicht verfügbar**.
+
+**Konsequenzen, die bewusst getragen werden:**
+
+1. **`INVENTORY.md` steht ohne Ist-Absicherung.** Als einzige der bisher
+   spezifizierten Domänen hat Inventory **keine** Legacy-Referenz — weder Schema
+   noch Datenstichprobe. Core, Service, Scheduling, Sales und Billing konnten
+   jeweils gegen ein `*.xml`/`*.csv` unter `00-legacy/` geprüft werden, Inventory
+   nicht.
+2. **Die `Article`-Feldliste (D-115) bleibt unvalidiert.** Sie wurde bewusst breit
+   angelegt mit dem Plan, sie später gegen die Realität zu kürzen. Diese Kürzung
+   muss nun **aus der Nutzung heraus** erfolgen, nicht aus dem Abgleich.
+3. **D-107 verliert seine geplante Entscheidungsgrundlage** und wird dadurch zu
+   einer reinen Fachfrage an den Nutzer.
+4. Die vom Nutzer beschriebenen „umfassenden Zusatzfeldern" des Altsystems, von
+   denen „teilweise notwendig und richtig sind, teilweise aber auch kein Belangen
+   für uns haben", lassen sich **nicht Feld für Feld durchgehen**. Der
+   benutzerdefinierte Feldkatalog (D-100/D-111/D-119) federt das ab: was fehlt,
+   kann ohne Migration nachgetragen werden — das war beim Entwurf nicht der
+   Hauptgrund, wird jetzt aber zum entscheidenden Sicherheitsnetz.
+
+**Wiederaufnahme:** falls der Export doch noch beschaffbar wird, gilt unverändert
+das D-098-Verfahren — Abweichung prüfen und begründet entscheiden, die Werteliste
+**nicht** stillschweigend anpassen.
 
 ### D-109 — ⭐ Teileentnahme: das Technikerlager **ist** die Positionsauswahl
 
@@ -2016,3 +2050,59 @@ vollständig dort. Nur der Datensatz des physischen Geräts liegt eine Etage tie
 serialisierten Exemplaren verhält. Eine Sonde ist heute eine Zeile am Gerät,
 könnte aber genauso ein seriennummernpflichtiger Artikel im Lager sein, der beim
 Einbau ans Gerät wandert. Beides parallel wäre eine Dublette. Nächste Runde.
+
+### D-122 — Kontaktformular: Eingang, Dublettenabgleich, Auto-Anlage — keine verwaisten Anfragen
+
+**Status:** offen — **eigener Grill-Durchgang, vom Nutzer als wichtig markiert**
+· **Datum:** 2026-09-13 · Bereich Communication/CRM
+
+Vom Nutzer als eigener Besprechungspunkt eingebracht. Kernanforderung:
+
+> **Es darf keine verwaisten Kontaktformular-Anfragen geben.** Jede eingehende
+> Anfrage ist am Ende mit einem Datensatz verknüpft — entweder mit einem
+> bestehenden oder mit einem, der aus den Formulardaten **direkt automatisch
+> angelegt** wurde.
+
+**Zu spezifizieren:**
+
+1. **Automatische Verknüpfung mit bestehenden Datensätzen, wo möglich** — inkl.
+   der Matching-Kriterien (E-Mail? Telefon? Name + PLZ?) und des Verhaltens bei
+   **mehreren** Treffern.
+2. **Logik „verknüpfen **oder** direkt anlegen"** — wann genügt das Formular, um
+   einen Kundenstamm ohne menschliche Prüfung zu erzeugen, und wann landet die
+   Anfrage in einer Prüfliste?
+3. **Direkte Verknüpfung** der Anfrage mit dem Datensatz als Pflicht, nicht als
+   Option — die Verwaisung soll strukturell unmöglich sein, nicht durch Disziplin
+   verhindert werden.
+
+**Drei Spannungen, die in dieser Runde beantwortet werden müssen** (hier bewusst
+nur benannt, **nicht** vorentschieden):
+
+- **Konflikt mit D-002.** Nach D-002/CORE.md existiert eine `Person` **nie
+  eigenständig** — immer über `CompanyContact` an ≥ 1 `Company`. Ein
+  Kontaktformular liefert aber typischerweise erst mal eine **Person** (Name,
+  E-Mail, Telefon) und vielleicht einen Praxisnamen. Eine Anfrage ohne
+  Firmenangabe kann nach dem heutigen Modell **nicht** direkt zu einem
+  Kundenstamm werden. Entweder braucht es eine Zwischenstufe (Anfrage/Lead als
+  eigenes Objekt vor der Company-Anlage), oder D-002 bekommt eine Ausnahme. Das
+  ist eine **Nutzerentscheidung**, kein Agent-Call.
+- **Spam vs. Auto-Anlage.** „Automatisch Kundenstamm anlegen" und „öffentliches
+  Webformular" zusammen heißen: jeder Bot kann die `companies`-Tabelle befüllen.
+  Braucht eine Abwehrstufe **vor** der Anlage.
+- **DSGVO.** `Consent` ist nach D-013 historisiert und kanalweise geführt. Die im
+  Formular erteilte Einwilligung muss beim automatischen Anlegen **mit** erzeugt
+  werden, sonst entsteht ein Datensatz ohne Rechtsgrundlage für die Kontaktaufnahme.
+
+**Anschlusspunkte, die schon existieren:**
+
+- `Opportunity.lead_source = website_anfrage` (D-086) ist bereits vorgesehen — der
+  Weg Formular → Opportunity ist also fachlich schon angelegt, nur nicht
+  ausspezifiziert.
+- `ContactChannel` und `Consent` (CORE.md) sind die Zielstrukturen für die
+  Formularfelder.
+- Das Formular selbst lebt in `apps/website`, die Verarbeitung gehört nach
+  `packages/core` (ADR-011: Apps enthalten keine domänenübergreifende Logik).
+
+**Einordnung:** gehört zum Bereich **Communication**, der noch nicht gegrillt ist
+(auch `SALES.md` #7, Aktivitäten-Timeline, hängt dort). Dieser Punkt ist das
+**stärkste Argument, Communication vor Documents zu grillen**.

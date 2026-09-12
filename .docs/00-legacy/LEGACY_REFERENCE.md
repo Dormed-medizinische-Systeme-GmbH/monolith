@@ -18,6 +18,13 @@ Diese Datei dokumentiert die Rolle der bereitgestellten Altdefinitionen.
 | Termine | [`Termine/`](Termine/) | [`Termine.xml`](Termine/Termine.xml) (25 Spalten) | [`Termine-Felder.md`](Termine/Termine-Felder.md) | — | [`Kalendaransicht.png`](Termine/Kalendaransicht.png) (Screenshot der Kalenderansicht im Altsystem) |
 | Verkaufschancen | [`Verkaufschancen/`](Verkaufschancen/) | [`Verkaufschancen.xml`](Verkaufschancen/Verkaufschancen.xml) (34 Spalten) | [`Verkaufschancen-Felder.md`](Verkaufschancen/Verkaufschancen-Felder.md) | — | — |
 
+> **Bekannte Lücke — Inventory/Artikelstamm (D-108).** Für die Warenwirtschaft
+> existiert hier **kein** Export und es ist auch keiner in Aussicht: der
+> Artikelstamm lag in Sage/KHK (mit D-068 abgelöst) und ist aktuell nicht
+> beschaffbar. [`../04-domain/INVENTORY.md`](../04-domain/INVENTORY.md) ist daher
+> die einzige Domänen-Spec ohne Ist-Absicherung — wer dort etwas prüfen will,
+> findet in diesem Ordner nichts. Nicht suchen, sondern beim Nutzer nachfragen.
+
 Rohe Schema-Exporte = CAS genesisWorld `gwconnect`-Objektdefinitionen aus dem
 produktiven CRM, nur Feld-**Definitionen**, keine Beispieldaten. Die CSV-Dateien
 sind echte **Daten**-Exporte (populierte Zeilen) — nützlich, um Enum-Werte/

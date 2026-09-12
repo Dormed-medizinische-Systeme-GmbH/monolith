@@ -59,6 +59,10 @@ in der Spec.
 - **Kreditoren ≠ Debitoren.** Lieferanten sind eine eigene Tabelle, kein
   `type`-Feld auf `Company` (D-103). `Company` bleibt kundenseitig (D-002).
 
+> **Ohne Legacy-Ist-Referenz (D-108).** Der Sage/KHK-Artikelstamm ist nicht
+> beschaffbar. Diese Domäne ist als einzige nicht gegen einen Altsystem-Export
+> geprüft — Korrekturen kommen aus der Nutzung, nicht aus dem Abgleich.
+
 ## Bereiche
 
 | Bereich | Stand |
