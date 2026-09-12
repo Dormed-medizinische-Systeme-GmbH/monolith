@@ -152,17 +152,26 @@ Vertrags. **Keine** Wirkung auf bestehende Verträge, **keine** Wirkung auf die 
   (Tarifstufe nach Vertragsstatus des Geräts), auf die Position gesnapshottet.
   **Nicht** am Vertrag fixiert.
 
-### `travel_zones` — eigenständig
+### `travel_zones` — eigenständig, PLZ-basiert (D-084)
 
-`name`, `flat_fee` (decimal, **ein** Wert je Zone — identisch für `contract` und
-`standard`, D-063), `is_active`. **Nicht** Teil der Preisliste. Zonen-Definition
-(PLZ-Bereiche vs. manuell je Company) → **offen**.
+`name`, `postal_code_from`, `postal_code_to` (echte PLZ-Von-Bis-Bereiche, D-084),
+`flat_fee` (decimal, **ein** Wert je Zone — identisch für `contract` und `standard`,
+D-063), `is_active`. **Nicht** Teil der Preisliste.
 
-`Company.travel_zone_id` → `travel_zones` (nullable FK, **in CORE.md nachzutragen**).
-Fahrtzonenpauschale wird bei der Abrechnung **einmal je Anfahrt** aus der Company
-abgeleitet — **nicht** je Gerät, **nicht** vom Vertrag (D-059).
+`Company.travel_zone_id` → `travel_zones` (nullable FK, **in CORE.md nachzutragen**) —
+**automatisch aus der PLZ der Company-Adresse abgeleitet, manuell überschreibbar**
+(D-084). Fahrtzonenpauschale wird bei der Abrechnung **einmal je Anfahrt** aus der
+Company abgeleitet — **nicht** je Gerät, **nicht** vom Vertrag (D-059).
 
 **Tarifstufe** je Position = `device.service_contract_id ? 'contract' : 'standard'`.
+
+### `service_territories` — unabhängige PLZ-Tabelle für die Techniker-Vorbelegung (D-084)
+
+`postal_code_from`, `postal_code_to`, `default_technician_id` (FK → `users`),
+`is_active`. **Eigene** PLZ-Bereiche, unabhängig von `travel_zones` (fachlich
+unterschiedlich geschnitten). Bestimmt `Maintenance.assigned_technician_id` /
+`ServiceCase.assigned_technician_id` bei Erstellung (D-082/D-083) — Vorschlag, jederzeit
+manuell änderbar.
 
 ---
 
@@ -178,11 +187,11 @@ gewartet werden. Zwei bewusst getrennte Anfahrten = zwei `Maintenance`.
 | `company_id` | FK → `companies` | – | eine Praxis je Einsatz |
 | `location_id` | FK → `locations` | – | ein Standort je Einsatz |
 | `number` | string | – | Nummernkreis |
-| `status` | enum | – | State-Machine (s. u.) |
+| `status` | enum `geplant` \| `in_durchfuehrung` \| `kunde_bestaetigt` \| `abgeschlossen` \| `rechnung_freigegeben` | – | State-Machine (s. u.), D-082 |
 | `scheduled_date` | date | ✓ | geplanter Anfahrtstag |
 | `performed_at` | datetime | ✓ | tatsächliche Durchführung |
 | `finalized_at` | datetime | ✓ | ← `TICKET_DATUM_GESCHLOSSEN` |
-| `assigned_technician_id` | FK → `users` | ✓ | |
+| `assigned_technician_id` | FK → `users` | ✓ | bei Erstellung **automatisch** aus `service_territories` (PLZ des Erfüllungsortes) vorbelegt, jederzeit übergebbar (D-082/D-084) |
 | `visit_aborted` | boolean | – | ganze Praxis kein Zugang (D-061) |
 | `notes` | text | ✓ | |
 
@@ -221,10 +230,12 @@ Rechnung = Fahrtzone (Company.travel_zone.flat_fee, Snapshot) × 1
 `visit_aborted = true` ⇒ **alle** `maintenance_devices` gelten als
 `nicht_durchgefuehrt` (50 %) **+ volle Fahrtzone** (D-061).
 
-### State-Machine (Werte offen — Vorschlag)
+### State-Machine (D-082)
 
-`geplant → zugewiesen → in_durchfuehrung → kunde_bestaetigt → abgeschlossen →
-rechnung_freigegeben`. Übergänge server-seitig erzwungen; kein Sprung
+`geplant → in_durchfuehrung → kunde_bestaetigt → abgeschlossen →
+rechnung_freigegeben`. **Kein** separater `zugewiesen`-Zustand — der Techniker ist ab
+Erstellung bekannt (automatische PLZ-Vorbelegung, s. o.), nicht Teil der
+Status-Übergänge. Übergänge server-seitig erzwungen; kein Sprung
 `geplant → rechnung_freigegeben` (IDENTITY_RBAC „Business-Workflow").
 
 ---
@@ -259,9 +270,8 @@ Fotos/Nachweise → `documents` (Dokumenten-Bereich), polymorph am Report.
 
 Versionierte Prüfkatalog-Vorlage (D-038).
 
-- `checklist_templates`: `name`, `device_category` (optional — Templates je
-  Systemklasse, s. offene Punkte), `version` (integer), `is_active`,
-  `published_at`.
+- `checklist_templates`: `name`, `version` (integer), `is_active`, `published_at`.
+  **Ein universeller Katalog für alle Geräte** — kein `device_category`-Feld (D-085).
 - `checklist_template_items`: `template_id`, `section` (enum `sichtkontrolle` ·
   `funktionskontrolle` · `wartungsarbeiten`), `position`, `label`,
   `input_type` (`bool` — vorerst nur ja/nein/na).
@@ -305,8 +315,8 @@ Kein Bündeln von Verträgen wie bei `Maintenance`.
 | `number` | string | – | Nummernkreis |
 | `reported_by` | FK → `company_contacts` | – | **Pflicht**, Melder muss bestehender Kontakt sein (CORE.md) |
 | `type` | enum | – | ← `GWSTYPE` — Werte **offen** |
-| `status` | enum | – | inkl. `wartet_auf_kunde` (← `WARTEAURUECKMELDUNG`) — Werte **offen** |
-| `assigned_technician_id` | FK → `users` | ✓ | |
+| `status` | enum `neu` \| `zugewiesen` \| `in_bearbeitung` \| `wartet_auf_kunde` \| `abgeschlossen` \| `storniert` | – | ← `GWSSTATUS`/`WARTEAURUECKMELDUNG` (D-083). `storniert` als Endzustand von jedem Nicht-Abschluss-Zustand aus erreichbar |
+| `assigned_technician_id` | FK → `users` | ✓ | bei Erstellung automatisch aus `service_territories` vorbelegt (D-082/D-084), Übergang `neu → zugewiesen` bleibt ein eigener Schritt (D-083) |
 | `escalated_at` | datetime | ✓ | ← `TICKET_TICKETESCALATIONSTIME1` |
 | `technician_diagnosis` | text | ✓ | ← `TICKET_TECHNIKERDIAGNOSE` |
 | `fault_cause` | text | ✓ | ← `TICKET_GWSFEHLERURSACHE` |
@@ -346,16 +356,17 @@ Billing, das die `Invoice` erstellt und einfriert (D-043). Legacy `TICKET_GESAMT
 | # | Punkt | Wohin |
 | --- | --- | --- |
 | 1 | ~~ServiceContract `contract_type`/`status`-Enum-Werte~~ | ✅ gelöst (D-079/D-081) |
-| 1a | `Maintenance`- und `ServiceCase`-`status`-Enum-Werte (State-Machine-Übergänge) | Rückfrage Nutzer |
-| 1b | `travel_zones`-Zonen-Definition (PLZ-Bereiche vs. manuell je Company) | Rückfrage Nutzer |
+| 1a | ~~`Maintenance`- und `ServiceCase`-`status`-Enum-Werte~~ | ✅ gelöst (D-082/D-083) |
+| 1b | ~~`travel_zones`-Zonen-Definition~~ | ✅ gelöst — PLZ-Von-Bis, automatisch (D-084) |
 | 2 | `DO_SVV_PRAXISSW*` (14 Praxis-IT-Felder aus D-001) → Device vs. Location aufteilen | Rückfrage Nutzer |
-| 3 | Templates je `device_category` — welche Kategorien? | Rückfrage Nutzer |
-| 4 | Betriebsstatus-Werte, State-Machine-Übergänge final | Rückfrage Nutzer |
+| 3 | ~~Templates je `device_category`~~ | ✅ gelöst — ein universeller Katalog (D-085) |
+| 4 | `MaintenanceReport.operating_status`-Werte final (aktuell `in_betrieb`/`eingeschraenkt`/`ausser_betrieb`) | Rückfrage Nutzer |
 | 5 | ~~Übergabe-Mechanismus line_items → Invoice~~ | ✅ gelöst, siehe `BILLING.md` (D-057/D-066) |
 | 6 | `Termine.xml` — Terminplanung für Maintenance/ServiceCase | ✅ gelöst, siehe `SCHEDULING.md` |
 | 7 | Ersatzteile/Lager (Teile in line_items) | Bereich Inventory (nächster) |
 | 8 | Qualifizierte e-Signatur | späterer Slice |
 | 9 | Offline-Wartungsbericht | späterer ROADMAP-Slice (D-041) |
+| 10 | `sales_territories`/`service_territories`: konkrete PLZ-Bereiche + Zuordnungen befüllen | Datenerfassung bei Umsetzung |
 
 ## Migration (Hinweise)
 

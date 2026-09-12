@@ -22,7 +22,7 @@ Endzuständen `gewonnen` / `verloren` (D-051).
 | `stage` | enum | – | `lead` · `qualifiziert` · `angebot` · `verhandlung` · `gewonnen` · `verloren` (Werte offen) |
 | `lost_reason` | string | ✓ | nur bei `stage = verloren` |
 | `probability` | smallint | – | % 0–100 (← `Probability`) |
-| `owner_id` | FK → `users` | ✓ | verantwortliche Person (← `PersonInCharge`) |
+| `owner_id` | FK → `users` | ✓ | verantwortliche Person (← `PersonInCharge`); Default kommt von `Company.responsible_sales_id`, das wiederum aus `sales_territories` per PLZ vorbelegt wird (D-084) — manuell überschreibbar |
 | `customer_budget` | decimal(12,2) | ✓ | ← `BUDGET` |
 | `payment_terms` | string | ✓ | ← `ZAHLUNGKONDITIONEN` |
 | `lead_source` | enum/Lookup | ✓ | Werte **offen** (← `Source`) |
@@ -67,10 +67,28 @@ Endzuständen `gewonnen` / `verloren` (D-051).
 
 ## Verworfen
 
-`VENDORINFORMATION2/3` · `AttorneyInFact` · `VCAWKZ` (Territory) · `CurrencyNat` ·
+`VENDORINFORMATION2/3` · `AttorneyInFact` · `CurrencyNat` ·
 `Alarm` (→ `Appointment`) · `LASTCONTACTINSALESPROCESS` (abgeleitet) ·
 `OppTotalAmount` / `RelativeAmount` / `MARGINALRETURN*` (abgeleitet) ·
 `ProductPositionsDisplay` (→ `items`) · `DO_SV_VORGANSSART` (tote `DO_SV*`-Familie, D-001).
+
+`VCAWKZ` (Legacy Territory-Feld) selbst bleibt verworfen (die konkrete Legacy-Codierung
+wird nicht übernommen) — das **Konzept** eines PLZ-Gebietsmodells für Vertrieb kommt
+aber über `sales_territories` zurück (D-084, revidiert D-054s „kein Territory-Modell").
+
+## `sales_territories` (neu, D-084 — revidiert D-054)
+
+Eigenständige, unabhängige PLZ-Gebietstabelle (echte Von-Bis-Bereiche, analog
+`travel_zones`/`service_territories` in `SERVICE.md`, jeweils **eigene** Grenzen):
+
+| Feld | Typ | Notiz |
+| --- | --- | --- |
+| `postal_code_from`, `postal_code_to` | string | PLZ-Bereich |
+| `default_sales_rep_id` | FK → `users` | |
+| `is_active` | boolean | |
+
+Schlägt `Company.responsible_sales_id` bei Company-Anlage automatisch vor (D-016/D-084)
+— **kein** Autorisierungsbezug, weiterhin rein informativ, manuell überschreibbar.
 
 ## Offene Punkte
 

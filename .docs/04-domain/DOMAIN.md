@@ -71,6 +71,13 @@ Strukturierte Fachdaten sind die Source of Truth.
 
 PDFs sind möglichst Repräsentationen davon.
 
+> **Notiz (2026-09-12, Detail folgt bei Grill-Runde Documents):** Als Template-/
+> Report-Designer-Frontend für die Dokumenterstellung sind
+> [AnkaReports](https://github.com/ankareport/ankareport) und
+> [NextReports](https://github.com/nextreport/engine) Kandidaten. Templates werden
+> später mit Daten aus der Datenbank befüllt (Invoice, Angebot,
+> Wartungsbericht, …) — Bindung/Datenfluss noch nicht spezifiziert.
+
 Beispiel:
 
 ```text

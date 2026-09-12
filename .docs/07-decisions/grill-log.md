@@ -1236,3 +1236,60 @@ Reale Werte aus dem operativen Geschäft (nicht die ursprünglich vorgeschlagene
 - `kein_interesse` — Kunde lehnt nach Auslaufen/Kündigung einen Neuabschluss explizit ab.
 
 Kein Bezug zur Opportunity-Pipeline — alle fünf sind echte `ServiceContract`-Zustände.
+
+### D-082 — Maintenance.status: ohne separaten `zugewiesen`-Schritt, Techniker automatisch per PLZ-Gebiet
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **revidiert D-048**
+
+- State-Machine: `geplant → in_durchfuehrung → kunde_bestaetigt → abgeschlossen →
+  rechnung_freigegeben`. **Kein** separater `zugewiesen`-Zustand mehr — der
+  verantwortliche Techniker ist bei Erstellung sofort bekannt, abgeleitet aus dem PLZ-
+  Gebiet des Erfüllungsortes (`service_territories`, D-084), nicht aus einem
+  manuellen Zuweisungsschritt.
+- `assigned_technician_id` bleibt als Feld (D-048) — wird bei Erstellung automatisch
+  aus dem PLZ-Gebiet vorbelegt, kann aber jederzeit übergeben/geändert werden
+  („kann theoretisch übergeben werden").
+- Gilt analog für `ServiceCase.assigned_technician_id`.
+
+### D-083 — ServiceCase.status: 5 Werte, inkl. echtem `zugewiesen`-Schritt
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+`neu → zugewiesen → in_bearbeitung → wartet_auf_kunde → abgeschlossen` (+ `storniert`
+als Endzustand von jedem Nicht-Abschluss-Zustand aus). Anders als bei `Maintenance`
+(D-082) bleibt `zugewiesen` hier ein **eigener** Zustand — die automatische
+PLZ-Vorbelegung (D-084) setzt zwar sofort einen Vorschlag, der Übergang `neu →
+zugewiesen` ist aber ein einsehbarer Schritt (Triage/Bestätigung durch Innendienst),
+bevor die Bearbeitung beginnt.
+
+### D-084 — Drei unabhängige PLZ-Gebietstabellen: Fahrtzonen, Service-Gebiete, Vertriebs-Gebiete
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **revidiert D-054** (Sales-Territory)
+
+Es gibt **drei fachlich getrennte** PLZ-Gebietsmodelle, jedes mit **echten
+Von-Bis-PLZ-Bereichen** (nicht Präfix-basiert), unabhängig voneinander geschnitten:
+
+1. **`travel_zones`** (Service/Billing, D-020/D-059/D-063): PLZ-Bereich → Fahrtzone
+   (`flat_fee`). Bereits bestehend.
+2. **`service_territories`** (neu, Service): PLZ-Bereich → `default_technician_id`.
+   Bestimmt den bei Erstellung automatisch vorbelegten Techniker für `Maintenance`
+   und `ServiceCase` (D-082/D-083).
+3. **`sales_territories`** (neu, Sales — **revidiert D-054**): PLZ-Bereich →
+   `default_sales_rep_id`. Schlägt `Company.responsible_sales_id` automatisch vor
+   (D-016), **manuell überschreibbar**. D-054s „kein Territory-Modell, Zuständigkeit
+   nur über Abteilung" gilt damit nicht mehr uneingeschränkt — es gibt doch ein
+   PLZ-Gebietsmodell für Vertrieb, nur eben als **Vorschlag**, keine harte
+   Autorisierungsgrenze (RBAC bleibt wie in D-016: rein informativ).
+
+**Struktur je Tabelle:** `postal_code_from`, `postal_code_to`, das jeweilige
+Zuordnungsfeld, `is_active`. Alle drei unabhängig pflegbar — **keine** gemeinsame
+Basis-Zonen-Tabelle mit mehreren Attributen, da die Gebietsgrenzen fachlich
+unterschiedlich geschnitten sein können.
+
+### D-085 — Checklisten-Templates: ein universeller Katalog, kein `device_category`
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **revidiert** den SERVICE.md-Vorschlag
+
+Dormed wartet überwiegend Ultraschall-/Sonographiesysteme — **ein einziger,
+universeller Prüfkatalog** für alle Geräte. `checklist_templates.device_category`
+entfällt ersatzlos (war „optional — Templates je Systemklasse" in `SERVICE.md`).
