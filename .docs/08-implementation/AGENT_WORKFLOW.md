@@ -50,13 +50,11 @@ Wenn AI Rules vorhanden sind, sind sie zu prüfen und bei Bedarf auf die Archite
 
 Nicht gleichzeitig:
 
-- gesamtes CRM
-- Portal
-- Shop
-- Service
-- Billing
-- Inventory
+- gesamtes `apps/crm`
+- fachliche Module in `packages/core` (Crm, Service, Sales, Billing, …)
+- `apps/website` / `apps/shop` / `apps/portal` (existieren extern, werden erst
+  später hereinmigriert, ADR-020)
 
-implementieren.
+implementieren. Reihenfolge: [`IMPLEMENTATION_SEQUENCE.md`](IMPLEMENTATION_SEQUENCE.md).
 
 Jeder Slice muss lokal lauffähig und testbar bleiben.
