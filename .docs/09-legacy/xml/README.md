@@ -45,4 +45,4 @@ gwconnect
 
 Diese Dateien sind **Input für die Domänen-Spec** (`/grill-me`), nicht für Migrationscode.
 Ein späterer Live-Datenimport ist ein eigener, separat zu spezifizierender Mechanismus
-(`docs/02-development/TESTING_AND_SEEDING.md`).
+(`.docs/02-development/TESTING_AND_SEEDING.md`).

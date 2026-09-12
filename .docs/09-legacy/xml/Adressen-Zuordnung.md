@@ -2,7 +2,7 @@
 
 Jedes der 356 Legacy-`Address`-Felder → Zielmodell. Basis: D-001 – D-022 im
 [`../../07-decisions/grill-log.md`](../../07-decisions/grill-log.md).
-Vom Nutzer bucketweise bestätigt (2026-09-08). Synthese → `docs/04-domain/`.
+Vom Nutzer bucketweise bestätigt (2026-09-08). Synthese → `.docs/04-domain/`.
 
 | Ziel-Bucket | Felder |
 | --- | --- |

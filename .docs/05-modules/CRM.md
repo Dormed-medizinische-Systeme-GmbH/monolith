@@ -12,7 +12,7 @@ Domänencode liegt unter `packages/core/src/Modules/Crm/` (Namespace
 `Dormed\Core\Modules\Crm\`, Abhängigkeit: nur `Core` — siehe
 `packages/core/src/Modules/Crm/module.php`, ADR-013). Die HTTP-Schicht liegt in der
 eigenständigen `apps/crm`-App (`apps/crm/app/Http/Controllers/`) und ruft das Modul auf.
-Struktur/Regeln: `docs/01-architecture/PROJECT_STRUCTURE.md`, `.ai/rules/architecture.md`.
+Struktur/Regeln: `.docs/01-architecture/PROJECT_STRUCTURE.md`, `.ai/rules/architecture.md`.
 
 ## Erste Ausbaustufe
 

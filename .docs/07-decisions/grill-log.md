@@ -2,7 +2,7 @@
 
 Chronologisches Roh-Protokoll der `/grill-me`-Sessions. Jede Entscheidung bekommt
 eine ID (`D-NNN`). Nach Abschluss eines Bereichs wird der Inhalt in die
-`docs/`-Struktur + `.ai/rules/` synthetisiert; dieses Log bleibt als Audit-Spur.
+`.docs/`-Struktur + `.ai/rules/` synthetisiert; dieses Log bleibt als Audit-Spur.
 
 Status je Eintrag: `entschieden` · `offen (Rückfrage)` · `Entscheidungspunkt in ROADMAP`.
 
@@ -200,7 +200,7 @@ nicht im Zielsystem. Eine spätere Anbindung würde eigenständig spezifiziert
   **Company**-Attribut (Vorschlag: `avv_signed_at` / `avv_status`).
 - `DSGVO` (Flag „Datenschutzgrundverordnung") → vermutlich „DSGVO-Info erteilt";
   im Cluster-Durchlauf gegen das Consent-Log prüfen.
-- Betrifft die Person-Spec → gehört in `docs/04-domain/`.
+- Betrifft die Person-Spec → gehört in `.docs/04-domain/`.
 
 ### D-014 — Adress-Slots: Sitz → Company; Lieferung → Location; Privat → verworfen
 
@@ -369,7 +369,7 @@ Wie Vor-/Nachname, aber für Firmen: `Company.name` (← `CompName`) +
 > [`../03-security/IDENTITY_RBAC.md`](../03-security/IDENTITY_RBAC.md). SSO bleibt
 > offener ROADMAP-Slice (8 Azure-Admin-Fragen unten). Audit-Ausbau offen.
 
-Kontext: `docs/03-security/AUTHORIZATION.md` + `SECURITY.md`, `CRM.md` „Mitarbeiter"
+Kontext: `.docs/03-security/AUTHORIZATION.md` + `SECURITY.md`, `CRM.md` „Mitarbeiter"
 (`User → Employee → Department → Roles/Permissions`). Kein Permission-Package
 installiert. Blockiert: D-012 (Mitarbeiter-Felder), D-016 (`responsible_*`),
 D-023 (Papierkorb nur Management/Backoffice) und **jede Policy jedes Moduls**.
@@ -512,7 +512,7 @@ Kostenstelle, Ein-/Austrittsdatum, extern-Flag (HR-System, nicht CRM).
 > State-Machine-Übergänge → nächste Runde. Termine → Bereich Scheduling.
 
 Legacy: `Servicevertraege-NEU.xml` (83 F.), `Tickets.xml` (112 F.), `Termine.xml`
-(25 F., anteilig). Prinzipien: `docs/05-modules/SERVICE.md`. Feeds Rest-Offen aus
+(25 F., anteilig). Prinzipien: `.docs/05-modules/SERVICE.md`. Feeds Rest-Offen aus
 `CORE.md` (Fahrtzone D-020, Melder, Device/Praxis-IT aus D-001).
 
 ### D-034 — Entitäten-Zerlegung Service

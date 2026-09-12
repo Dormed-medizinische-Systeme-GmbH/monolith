@@ -35,7 +35,7 @@ Keine alleinige Sicherheit durch Frontend-Filter.
 
 Portal und Shop teilen sich einen Kundenlogin: derselbe Kunde bewegt sich mit einem
 Account/einer Session in beiden Apps (gleicher `APP_KEY` + `SESSION_DOMAIN` + gemeinsame
-`sessions`-Tabelle, Details: `docs/01-architecture/MULTI_SUBDOMAIN.md`). Die genaue
+`sessions`-Tabelle, Details: `.docs/01-architecture/MULTI_SUBDOMAIN.md`). Die genaue
 Account-/Domain-UX (Registrierung, Passwort-Reset) ist bei der Portal-Migration final zu
 klären.
 

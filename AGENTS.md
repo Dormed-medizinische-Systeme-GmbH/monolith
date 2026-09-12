@@ -8,9 +8,9 @@ Dieses Dokument ist verbindlich für Coding Agents.
 
 ## Prioritäten
 
-1. Bestehende fachliche Entscheidungen aus `docs/` befolgen.
+1. Bestehende fachliche Entscheidungen aus `.docs/` befolgen.
 2. Keine Architekturentscheidung stillschweigend ändern.
-3. Bei Widersprüchen zwischen bestehendem Code und `docs/` zuerst den dokumentierten Zielzustand bewerten und die Abweichung sichtbar machen.
+3. Bei Widersprüchen zwischen bestehendem Code und `.docs/` zuerst den dokumentierten Zielzustand bewerten und die Abweichung sichtbar machen.
 4. Bestehende Legacy-Strukturen nicht automatisch als Zielmodell übernehmen.
 5. Fachliche Logik gehört in Laravel; PostgreSQL dient zusätzlich als Sicherheits- und Integritätsgrenze.
 6. Keine direkte Datenbankkommunikation aus Browser, Mobile App oder Shop/Portal-Frontend.
@@ -69,7 +69,7 @@ Subdomain-Erkennung muss zentral und explizit erfolgen. Fachliche Autorisierung 
 Wenn eine Fachfrage noch nicht entschieden ist:
 
 1. Nicht eigenmächtig eine irreversible Struktur wählen.
-2. Die Annahme im Code und/oder in `docs/` dokumentieren.
+2. Die Annahme im Code und/oder in `.docs/` dokumentieren.
 3. Eine möglichst reversible technische Lösung wählen.
 4. Keine Migration erzeugen, deren spätere Änderung unnötig teuer wäre.
 

@@ -9,7 +9,7 @@ paths:
 # Monorepo: vier Apps + `packages/core` — wohin welcher Code gehört
 
 > Kurswechsel 2026-09-12 (ADR-011–ADR-018). Ersetzt das frühere Ein-App-`app/Modules/**`-
-> Modell vollständig. Vollständige Struktur: `docs/01-architecture/PROJECT_STRUCTURE.md`.
+> Modell vollständig. Vollständige Struktur: `.docs/01-architecture/PROJECT_STRUCTURE.md`.
 
 ## Zwei Ebenen
 

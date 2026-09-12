@@ -116,7 +116,7 @@ Controller/Views/Routen/App-lokale DTOs (ADR-011, Regel 1+2 aus
 `03-domain-boundaries-rules.md`).
 
 Diese Entscheidung hält die gesamte bisherige Domain-Spec-Arbeit
-(`docs/04-domain/{CORE,SERVICE,SCHEDULING,SALES}.md`, `docs/07-decisions/grill-log.md`
+(`.docs/04-domain/{CORE,SERVICE,SCHEDULING,SALES}.md`, `.docs/07-decisions/grill-log.md`
 D-001–D-0NN) strukturell gültig — nur der Wurzelpfad ändert sich.
 
 ## ADR-014 — Deployment bleibt auf Coolify, kein eigenständiges Docker Swarm
@@ -183,7 +183,7 @@ Der bisherige Anwendungscode wird vollständig verworfen und durch das Vier-Apps
   realtime.sql, `functions/hello`), obsolet seit ADR-001 (Postgres statt Supabase), ohne
   jede Referenz im aktuellen Repo
 
-**Nicht betroffen** (bleibt unverändert erhalten): `docs/`, `.ai/rules/`, Skills, MCP-
+**Nicht betroffen** (bleibt unverändert erhalten): `.docs/`, `.ai/rules/`, Skills, MCP-
 Konfiguration und alles, was nicht Laravel-Framework-/Anwendungscode ist. Die tatsächliche
 Löschung/der Neuaufbau erfolgt erst als eigener, separat bestätigter Schritt — nicht
 automatisch mit dieser Dokumentations-Synthese.
@@ -211,7 +211,7 @@ Code-Teilungsfrage, analog `ARCHITECTURE.md` §3).
 Status: Accepted (2026-09-12)
 
 Die aktuelle Bauphase beschränkt sich auf **`packages/core`** (die gesamte fachliche
-Domäne, `docs/04-domain/*`, `grill-log.md` D-001ff.) und **`apps/crm`**. Die übrigen drei
+Domäne, `.docs/04-domain/*`, `grill-log.md` D-001ff.) und **`apps/crm`**. Die übrigen drei
 Apps existieren bereits als eigenständige, teils live laufende Systeme außerhalb dieses
 Repos und werden erst später hereinmigriert:
 

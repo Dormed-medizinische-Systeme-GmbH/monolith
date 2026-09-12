@@ -19,7 +19,7 @@ Die Legacy-`Address`-Entität ist sehr breit und übernimmt Rollen für:
 - Standorte bzw. andere Beziehungen
 - generische Referenzen aus Opportunities, Tickets, Terminen, Dokumenten, E-Mails und Telefonaten
 
-Die XML-Definition (`docs/09-legacy/xml/Adressen.xml`) enthält 356 Spalten, davon rund 176 Kunden-/Custom-Felder.
+Die XML-Definition (`.docs/09-legacy/xml/Adressen.xml`) enthält 356 Spalten, davon rund 176 Kunden-/Custom-Felder.
 
 ### Ziel
 
@@ -51,7 +51,7 @@ Die Legacy-Opportunity enthält u. a.:
 - Wettbewerber
 - Kooperation
 
-Die Struktur ist ein guter Hinweis auf ein zukünftiges `SalesOpportunity`, aber nicht zwingend dessen finales Schema. (`docs/09-legacy/xml/Verkaufschancen.xml`, 34 Spalten)
+Die Struktur ist ein guter Hinweis auf ein zukünftiges `SalesOpportunity`, aber nicht zwingend dessen finales Schema. (`.docs/09-legacy/xml/Verkaufschancen.xml`, 34 Spalten)
 
 ## Appointments
 
@@ -68,7 +68,7 @@ Legacy-Termine enthalten u. a.:
 - Online-Meeting
 - Ganztag
 
-Zukünftig sollte `Appointment` als Scheduling-Objekt von fachlichen Vorgängen sauber getrennt werden. (`docs/09-legacy/xml/Termine.xml`, 25 Spalten)
+Zukünftig sollte `Appointment` als Scheduling-Objekt von fachlichen Vorgängen sauber getrennt werden. (`.docs/09-legacy/xml/Termine.xml`, 25 Spalten)
 
 ## Tickets
 
@@ -86,7 +86,7 @@ Das Legacy-Ticket umfasst 112 Custom Fields. Darunter befinden sich:
 - Fehlerursache
 - Abrechnung
 
-Das ist ein überladenes Universalobjekt und wird nicht als Zielstruktur übernommen. (`docs/09-legacy/xml/Tickets.xml`, 112 Spalten)
+Das ist ein überladenes Universalobjekt und wird nicht als Zielstruktur übernommen. (`.docs/09-legacy/xml/Tickets.xml`, 112 Spalten)
 
 ## ServiceContract
 
@@ -103,7 +103,7 @@ Der Legacy-Servicevertrag enthält gleichzeitig:
 - Betriebssystem-/Softwaredaten
 - Peripherie
 
-Die XML-Definition (`docs/09-legacy/xml/Servicevertraege-NEU.xml`) umfasst 83 Spalten.
+Die XML-Definition (`.docs/09-legacy/xml/Servicevertraege-NEU.xml`) umfasst 83 Spalten.
 
 ### Ziel
 

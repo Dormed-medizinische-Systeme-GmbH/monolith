@@ -9,7 +9,7 @@
 
 Die komplette technische Basis soll lokal mit Docker Compose startbar sein.
 
-Zielstack (ADR-011, `docs/06-infrastructure/DOCKER.md`):
+Zielstack (ADR-011, `.docs/06-infrastructure/DOCKER.md`):
 
 ```text
 website container   (apps/website, Blade — Platzhalter)
@@ -43,7 +43,7 @@ docker compose exec crm php artisan db:seed
 ## Domains (lokal)
 
 Jede App bedient ihre eigene Domain (kein zentrales Subdomain-Dispatch mehr, ADR-012 —
-siehe `docs/01-architecture/MULTI_SUBDOMAIN.md`). Lokal auf `127.0.0.1` zeigen lassen –
+siehe `.docs/01-architecture/MULTI_SUBDOMAIN.md`). Lokal auf `127.0.0.1` zeigen lassen –
 einmalig in `/etc/hosts` eintragen:
 
 ```text

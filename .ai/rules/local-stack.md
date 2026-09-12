@@ -42,13 +42,13 @@ zentralen Compose-`.env` im Repo-Wurzelverzeichnis.
 Migrations laufen **nicht** im Start-CMD eines App-Services. Ein separater
 `migrate`-Schritt (eigener Compose-Service mit `restart: "no"`, der einmalig
 `packages/core`-Migrations fährt und dann exitet, **vor** dem Start der vier
-App-Services) — lokal wie in Prod (siehe `docs/06-infrastructure/DOCKER.md`).
+App-Services) — lokal wie in Prod (siehe `.docs/06-infrastructure/DOCKER.md`).
 
 ## compose.prod.yaml (Coolify, ADR-014)
 
 Vier App-Services (`website`, `shop`, `crm`, `portal`) analog zu `compose.yaml`, gebaut
 aus je einem `docker/<app>/Dockerfile` (Multi-Stage: `packages/core`-Deps → App-Build →
-Runtime, siehe `docs/06-infrastructure/DOCKER.md`). Kein eigener Proxy-Service — Coolify
+Runtime, siehe `.docs/06-infrastructure/DOCKER.md`). Kein eigener Proxy-Service — Coolify
 terminiert TLS und routet die vier Domains selbst.
 
 - Secrets/Domains kommen aus der Coolify-UI, **nicht** aus einer committeten Datei.

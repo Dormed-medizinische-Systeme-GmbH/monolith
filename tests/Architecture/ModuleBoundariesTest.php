@@ -9,7 +9,7 @@ use RecursiveIteratorIterator;
 
 /**
  * Enforces the modular-monolith boundaries described in
- * docs/01-architecture/PROJECT_STRUCTURE.md and ADR-005.
+ * .docs/01-architecture/PROJECT_STRUCTURE.md and ADR-005.
  *
  * Each app/Modules/<Name>/module.php declares the modules it may depend on.
  * Domain modules must not reach into the HTTP layer, and may only reference

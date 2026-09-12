@@ -9,7 +9,7 @@ paths:
 
 > Kurswechsel 2026-09-12 (ADR-012, ADR-016). Ersetzt das frühere zentrale
 > `config('domains.<ctx>')` + `App\Support\ApplicationContext`-Dispatch in einer
-> Codebasis vollständig. Details: `docs/01-architecture/MULTI_SUBDOMAIN.md`.
+> Codebasis vollständig. Details: `.docs/01-architecture/MULTI_SUBDOMAIN.md`.
 
 ## Eine Domain pro App
 

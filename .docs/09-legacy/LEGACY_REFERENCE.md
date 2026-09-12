@@ -48,4 +48,4 @@ Serviceverträge vermischen Vertrag, Gerät und technische Gerätekonfiguration.
 
 Die neue Architektur soll diese Vermischung reduzieren und fachliche Prozesse
 explizit modellieren. Die konkrete Zerlegung wird in `/grill-me` festgelegt und
-in `docs/04-domain/` + der ROADMAP dokumentiert.
+in `.docs/04-domain/` + der ROADMAP dokumentiert.
