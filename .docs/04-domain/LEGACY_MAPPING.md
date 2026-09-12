@@ -113,7 +113,7 @@ Trennung:
 ServiceContract
 Device
 DeviceConfiguration
-DeviceComponent
+Device (Komponente, parent_device_id — D-131)
 Maintenance
 ```
 

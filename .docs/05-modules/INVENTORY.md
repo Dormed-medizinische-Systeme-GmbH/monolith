@@ -29,8 +29,8 @@ Service   ──> Inventory, Core
 Sales     ──> Inventory, Core
 ```
 
-`Device` und `DeviceComponent` leben seit D-121 **hier**, nicht mehr im
-Servicemodul. Sonst entstünde ein Zyklus: `line_items` braucht einen Artikelbezug
+`Device` lebt seit D-121 **hier**, nicht mehr im Servicemodul; `DeviceComponent`
+ist mit D-131 ganz entfallen (Komponenten sind selbst Exemplare). Sonst entstünde ein Zyklus: `line_items` braucht einen Artikelbezug
 (Service → Inventory), und der Wareneingang erzeugt Geräte (Inventory → Service).
 Das verbietet `ARCHITECTURE.md` §5.
 
@@ -69,14 +69,15 @@ in der Spec.
 | --- | --- |
 | Artikelgruppen / Artikel / Feldkatalog | spezifiziert (D-099/D-100/D-110/D-111/D-115/D-119) |
 | Leistungsgruppen / Leistungen | spezifiziert (D-117) |
-| Serialisierte Exemplare (`Device`) | spezifiziert (D-099/D-121) |
+| Serialisierte Exemplare (`Device`) inkl. Komponenten | spezifiziert (D-099/D-121/D-131) |
 | Läger + Bestand (Ledger) | spezifiziert (D-101/D-102/D-112) |
-| Wareneingang | spezifiziert, Bestellbezug offen (D-120) |
+| Wareneingang | spezifiziert, bucht gegen Bestellpositionen (D-128) |
 | Umbuchung | spezifiziert (D-114) |
 | Reservierung / Leihgeräte | spezifiziert (D-106) |
 | Inventur | spezifiziert, UI/UX offen (D-113) |
+| Abholbeleg (Rücknahme beim Kunden) | spezifiziert (D-130) |
 | Lieferanten | Stamm beschlossen (D-103), Felder offen |
-| Einkauf / Bestellung | **offen** (D-120) |
+| Einkauf / Bestellung | spezifiziert — **volles** Bestellwesen (D-128) |
 | Lieferschein / Warenausgang | noch nicht gegrillt |
 
 ## Device Integration

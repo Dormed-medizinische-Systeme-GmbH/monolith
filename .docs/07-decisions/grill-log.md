@@ -2246,3 +2246,158 @@ Damit bleibt die Seitenleiste schmal und rollengerecht, ohne dass D-113
 unerfüllbar wird. Die zugehörigen Permissions sind entsprechend **feiner
 geschnitten** als ein pauschales `inventory.*` — die genaue Aufteilung fällt in
 die offene Permission-Definition aus D-125.
+
+---
+
+## Bereich: Inventory — zweite Runde (2026-09-13)
+
+Schließt die offenen Fäden aus der ersten Runde. Damit ist die Domäne inhaltlich
+durch; es bleibt nur noch D-107 (Fremdgeräte, eigener Durchgang beim Nutzer).
+
+### D-128 — Volles Bestellwesen (revidiert D-120, bestätigt D-103 im Original)
+
+**Status:** entschieden · **Datum:** 2026-09-13 · **revidiert D-120**
+
+Der Agent hatte eine **leichtgewichtige Bestellung** empfohlen (Lieferant,
+Positionen, erwartetes Lieferdatum, Status — ohne Abgleichmaschinerie, offene
+Restmenge berechnet statt gespeichert). Begründung war, dass bei
+bedarfsbezogener Beschaffung direkt beim Hersteller wenig abzugleichen ist, dass
+aber „ist bestellt, noch nicht da" irgendwo stehen muss, weil sonst
+`Article.min_stock` (D-115) und die Minusbestandsmeldung (D-112) dauerhaft Alarm
+schlagen und doppelt bestellt wird.
+
+**Der Nutzer hat sich für das volle Bestellwesen entschieden.** Damit gilt die
+ursprüngliche Fassung von D-103 wieder vollständig:
+
+- **`Supplier`** — eigenständiger Lieferantenstamm, strikt getrennt von
+  `companies` (Kreditoren ≠ Debitoren, unverändert aus D-103).
+- **`PurchaseOrder`** — Bestellkopf mit Lieferant, Bestelldatum, erwartetem
+  Liefertermin, Status; `n` Positionen (Artikel, Menge, vereinbarter EK).
+- **Wareneingang bucht gegen offene Bestellpositionen ab.** `GoodsReceipt`
+  referenziert die Bestellung; die Positionen verweisen auf Bestellpositionen.
+- **Teillieferungen** werden explizit verwaltet (offene Restmenge je
+  Bestellposition, Bestellung bleibt offen bis vollständig geliefert).
+- **Lieferterminverfolgung** und **Rechnungsprüfung gegen die Bestellung**
+  (erwarteter vs. berechneter Preis) sind Teil des Umfangs.
+
+**Hinweis zur offenen Restmenge:** auch hier wird die Menge **berechnet**
+(`bestellt − Σ eingegangen`) und nicht als Spalte geführt — D-093/D-102 gelten
+unverändert, das volle Bestellwesen ändert daran nichts.
+
+### D-129 — Nicht berechnete Positionen: Kennzeichen + Grund, **mit** Ausweis auf der Rechnung
+
+**Status:** entschieden · **Datum:** 2026-09-13 · **löst den offenen Punkt aus D-109**
+· **wirkt auf `BILLING.md`**
+
+Ein Teil wird verbaut, aber nicht berechnet — Garantie, Kulanz
+(`ServiceCase.goodwill`), oder abgedeckt durch `contract_type = full_service`
+(D-079). Ablauf:
+
+1. Es entsteht eine **normale Position** mit `article_id` und **echtem
+   Lagerabgang** (D-102). Das Teil ist verbraucht, egal wer es zahlt.
+2. Die Position trägt ein **Kennzeichen „nicht berechnen"** plus einen **Grund**
+   (`garantie` · `kulanz` · `vertrag`) — auswertbar, nicht nur ein Preis von 0.
+3. **Nutzerergänzung, wichtig:** die Position wird **in die Rechnung übernommen
+   und dort als „nicht berechnet" ausgewiesen** — sie verschwindet nicht.
+
+Punkt 3 ist der entscheidende Unterschied zur vorgeschlagenen Variante. Der Kunde
+sieht auf der **Rechnung**, welche Leistung er erhalten und was sie ihn nicht
+gekostet hat — nicht nur im Servicebericht.
+
+**Folge für `BILLING.md`:** `InvoiceItem` braucht dieselben zwei Felder
+(`is_chargeable`, `non_charge_reason`). `net_amount` und `tax_amount` sind bei
+solchen Positionen `0`; die Position zählt **nicht** in `net_total`/`tax_total`/
+`gross_total`, bleibt aber als Zeile mit Menge und Beschreibung erhalten. Die
+Unveränderlichkeit nach `gestellt` (D-093) gilt unverändert.
+
+**Auswertbarkeit ist der Punkt:** mit dem Grund am Datensatz lässt sich
+beantworten, was Kulanz und Garantie im Jahr gekostet haben. Mit `unit_price = 0`
+ginge das nicht.
+
+### D-130 — Abholbeleg: Rücknahme beim Kunden, nur für Exemplare
+
+**Status:** entschieden · **Datum:** 2026-09-13
+
+Ein defektes Teil wird beim Kunden ausgebaut und mitgenommen. Das erzeugt einen
+**Zugang im Reparaturlager** (`Warehouse.type = reparatur`, D-101) — über einen
+**eigenen Beleg**, konsistent zum Belegprinzip der Domäne.
+
+**`PickupNote` (Abholbeleg):**
+
+- wird **vom Techniker beim Kunden erstellt**,
+- wird **vor Ort unterschrieben** (Signaturfelder analog `MaintenanceReport`
+  D-045: `signature_image`, `signer_name`, `signed_at`),
+- wird **mitgenommen** (Ausdruck/PDF für den Kunden),
+- bucht die Positionen **automatisch auf das Reparaturlager**.
+
+**Die entscheidende Einschränkung (Nutzer wörtlich):** „um sie vom Kunden
+mitzunehmen, müssen diese beim Kunden existieren. Das heißt, es sind nur Geräte
+und Ausstattung davon betroffen, keine weiteren Artikel."
+
+Ein Abholbeleg kann also **ausschließlich `Device`-Exemplare referenzieren** —
+Geräte und deren Ausstattung. Nicht bestandsgeführte Kleinteile oder
+Verbrauchsmaterial am Kundenstandort sind **nicht** abholfähig, weil sie dort
+nie als Datensatz existiert haben.
+
+**Das passt exakt mit D-131 zusammen:** weil Komponenten (Sonden, Drucker, Wagen)
+dort selbst zu Exemplaren werden, ist „Gerät **und Ausstattung**" automatisch
+genau die Menge der Datensätze, die beim Kunden existieren. Ohne D-131 wäre die
+Ausstattung nicht abholfähig gewesen.
+
+**Buchungswirkung:** das Exemplar wechselt von `location_id` (Kundenstandort) auf
+`warehouse_id` (Reparaturlager) — dieselbe Mechanik wie jede andere
+Bestandsbewegung, mit `StockMovement.sourceable` auf den Abholbeleg.
+
+### D-131 — `DeviceComponent` entfällt: Komponenten sind selbst Exemplare (löst D-121-Offenpunkt)
+
+**Status:** entschieden · **Datum:** 2026-09-13 · **ersetzt D-034s `DeviceComponent`**
+
+Eine Sonde ist kein Attribut eines Geräts, sondern **ein physisches Einzelstück
+mit eigenem Lebenszyklus** — sie liegt im Lager, wird verkauft, angebaut,
+abgebaut, ersetzt, eingeschickt. Genau das ist ein Exemplar.
+
+**`DeviceComponent` entfällt ersatzlos.** Stattdessen bekommt `Device` ein
+`parent_device_id` (nullable, FK auf sich selbst):
+
+```text
+devices
+  id, article_id, serial_number
+  warehouse_id      ⎫
+  location_id       ⎬ genau EINES gesetzt (DB-CHECK)
+  parent_device_id  ⎭
+
+Ultraschallsystem   parent = null,   location_id = Praxis
+  ├─ Sonde 1        parent = System
+  ├─ Sonde 2        parent = System
+  └─ Drucker        parent = System
+```
+
+Die CHECK-Bedingung aus D-099 wird damit **dreiwertig**: ein Exemplar steht im
+Lager, beim Kunden, **oder** ist an einem anderen Exemplar verbaut. Der effektive
+Standort einer verbauten Komponente ergibt sich über die Elternkette.
+
+**Anbau = Umbuchung** (Lager → Gerät), **Ausbau = Umbuchung** (Gerät → Lager oder
+Reparaturlager via D-130). Keine Sonderlogik, dieselben Ledger-Zeilen wie alles
+andere.
+
+**Die Felder aus D-034 finden alle ein neues Zuhause** — das ist der Beleg, dass
+die Auflösung nichts verliert:
+
+| `DeviceComponent`-Feld (D-034) | neues Zuhause |
+| --- | --- |
+| `type` (`probe`/`printer`/`cart`/`gdt`/`other`) | **`ArticleGroup`** — die Katalogklassifikation (D-099/D-110) |
+| `article_number` | **`Article.article_number`** (D-099) |
+| `description` | **`Article.name`** |
+| `serial_number` | **`Device.serial_number`** |
+| `license` (nur `gdt`, ← `SONOGDT_LIZENZ`) | **benutzerdefiniertes Feld** mit `scope = item` an der Artikelgruppe „SonoGDT" (D-111/D-119) |
+| `position` (Sonde 1..5) | **`Device.position`** — Sortierung unter dem Elternexemplar |
+
+Der `license`-Fall ist bemerkenswert: ein Feld, das nur für **eine** Komponentenart
+existiert, war in der alten Struktur eine dauerhaft leere Spalte für alle anderen.
+Der Feldkatalog aus D-100/D-119 löst genau das — und zwar ohne Migration, wenn
+morgen eine weitere Komponentenart ein Sonderfeld braucht.
+
+**Preis:** `Device` wird die Tabelle für **alles Physische**. Das ist gewollt — es
+ist dieselbe Konsequenz wie in D-099, nur eine Ebene tiefer.
+
+**Folge für `SERVICE.md`:** der Abschnitt `DeviceComponent` entfällt.

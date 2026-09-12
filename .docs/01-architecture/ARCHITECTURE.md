@@ -138,7 +138,8 @@ Shop-App -> packages/core (nutzt Core, Billing, Inventory, …)
 Die Kanten `Service -> Inventory` und `Sales -> Inventory` stammen aus D-121:
 Positionen brauchen einen Katalogbezug (`line_items.article_id`,
 `OpportunityItem.article_id`). Damit der Graph azyklisch bleibt, liegen `Device`
-und `DeviceComponent` in `Inventory` — der Wareneingang erzeugt sie, Service
+in `Inventory` (`DeviceComponent` ist mit D-131 entfallen — Komponenten sind
+selbst Exemplare) — der Wareneingang erzeugt sie, Service
 konsumiert sie. Siehe [`../04-domain/INVENTORY.md`](../04-domain/INVENTORY.md).
 
 Keine zyklischen Modulabhängigkeiten ohne dokumentierte Begründung. Eine `apps/*`-App

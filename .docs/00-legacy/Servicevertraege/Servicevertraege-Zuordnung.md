@@ -3,6 +3,16 @@
 Legacy [`Servicevertraege-NEU.xml`](Servicevertraege-NEU.xml) · 83 Felder. Basis: D-034 – D-045.
 Synthese → `.docs/04-domain/SERVICE.md`.
 
+
+> **Nachtrag 2026-09-13 (D-131):** Die Spalte „Zielmodell" nennt für Sonden,
+> Drucker, Wagen und SonoGDT noch `DeviceComponent`. Dieses Modell **existiert
+> nicht mehr** — Komponenten sind seit D-131 **selbst Exemplare** (`Device` mit
+> `parent_device_id`). Für die Migration heißt das: je Komponente ein eigener
+> `Device`-Datensatz mit `article_id` (Artikelnummer → `Article`), `serial_number`
+> und `parent_device_id` auf das Hauptgerät; `SONOGDT_LIZENZ` wird ein
+> benutzerdefiniertes Feld mit `scope = item` (D-111/D-119). Autoritativ:
+> [`../../04-domain/INVENTORY.md`](../../04-domain/INVENTORY.md).
+
 | Feld | Typ | Label | Ziel | Notiz |
 | --- | --- | --- | --- | --- |
 | `ABWEICHENDE_RECHNUNG` | STRING(6) | Abweichende Rechnung | ServiceContract · billing_recipient? | → Rechnungsempfänger (D-004) — prüfen |

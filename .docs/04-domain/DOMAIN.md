@@ -16,7 +16,7 @@ haben ein eigenes autoritatives Dokument (Feldform, Enums, Regeln):
 | Scheduling: Termine | [`SCHEDULING.md`](SCHEDULING.md) | **spezifiziert** (D-046–050, D-088, D-090) |
 | Sales: Verkaufschancen | [`SALES.md`](SALES.md) | **spezifiziert** (D-051–055, D-086–087; `stage`/`probability`-Phasenliste D-089 vertagt) |
 | Billing: Rechnungen / Zahlungen / Mahnwesen | [`BILLING.md`](BILLING.md) | **spezifiziert** (D-056 – D-077; Bank-Import-Format & DATEV-Kontenrahmen offen) |
-| Inventory: Katalog / Lager / Bestand / Belege | [`INVENTORY.md`](INVENTORY.md) | **spezifiziert** (D-099 – D-121; Fremdgeräte D-107, Bestellwesen D-120 offen) |
+| Inventory: Katalog / Lager / Bestand / Belege | [`INVENTORY.md`](INVENTORY.md) | **spezifiziert** (D-099–D-121, D-128–D-131; nur Fremdgeräte D-107 offen) |
 | Dokumente, Portal, Shop | dieses Dokument | Discovery |
 
 ## Core
@@ -159,8 +159,13 @@ keine freistehende Rechnungsadresse ohne Company. Details: `BILLING.md`.
   und optionalem Regex als CHECK-Constraint (D-100/D-111/D-119).
 - ✅ Bestand als Bewegungs-Ledger statt Bestandsspalte (D-102, Folge aus D-093).
 - ✅ Leistungskatalog `OfferingGroup → Offering`, getrennt vom Artikelstamm (D-117).
-- ✅ Belegprinzip durchgezogen: Wareneingang, Umbuchung, Reservierung + Rückgabe,
-  Zählauftrag sind eigene Belege (D-106/D-113/D-114).
+- ✅ Belegprinzip durchgezogen: Wareneingang, Bestellung, Umbuchung, Reservierung +
+  Rückgabe, Zählauftrag und **Abholbeleg** sind eigene Belege
+  (D-106/D-113/D-114/D-128/D-130).
+- ✅ `DeviceComponent` entfällt — Komponenten sind **selbst Exemplare** mit
+  `parent_device_id` (D-131).
+- ✅ Garantie-/Kulanzteile: Position mit Lagerabgang, `is_chargeable = false` +
+  Grund, **auf der Rechnung als „nicht berechnet" ausgewiesen** (D-129).
 
 ### Noch zu grillen — vorgemerkte Bereiche
 
@@ -181,8 +186,7 @@ keine freistehende Rechnungsadresse ohne Company. Details: `BILLING.md`.
 - **Inventory:** Fremdgeräte ohne Artikelstamm — ist `Device.article_id` `NOT NULL`?
   **Eigener Detaildurchgang nötig**, Nutzer braucht Vorlauf; migrationsrelevant
   und **ohne** Schema-Abgleich zu beantworten, da D-108 nicht verfügbar (D-107).
-- **Inventory:** Bestellwesen ja/nein — Agent legt in der nächsten Runde eine
-  begründete Empfehlung vor (D-120).
+- ~~**Inventory:** Bestellwesen~~ — ✅ **volles Bestellwesen** (D-128, revidiert D-120).
 - **Inventory:** Sage/KHK-Artikelstamm-Export **nicht beschaffbar** (D-108).
   `INVENTORY.md` ist damit die einzige Domänen-Spec **ohne** Legacy-Ist-Referenz —
   die breit angelegte `Article`-Feldliste (D-115) muss aus der Nutzung heraus

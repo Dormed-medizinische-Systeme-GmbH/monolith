@@ -97,9 +97,20 @@ Live-Referenz mehr auf die Quelle).
 | `tax_category` | enum `standard_19` \| `reverse_charge` \| `export_tax_free` \| `other_tax_free` | – | je Position, nicht am Kopf (D-074) |
 | `tax_rate` | decimal(5,2) | – | z. B. `19.00` / `0.00` |
 | `tax_amount` | decimal(12,2) | – | |
+| `is_chargeable` | boolean | – | **neu (D-129)**, default `true` |
+| `non_charge_reason` | enum `garantie` \| `kulanz` \| `vertrag` | ✓ | **neu (D-129)**, Pflicht wenn `is_chargeable = false` |
 
 Bei `type = gutschrift`: identische Positionen wie das Original, Beträge negiert
 (D-069).
+
+**Nicht berechnete Positionen (D-129).** Garantie-, Kulanz- und
+Full-Service-Leistungen werden **auf der Rechnung ausgewiesen**, nicht
+weggelassen: die Position bleibt mit Menge und Beschreibung erhalten,
+`net_amount` und `tax_amount` sind `0`, und sie zählt **nicht** in
+`net_total`/`tax_total`/`gross_total`. Der Kunde sieht damit, welche Leistung er
+erhalten und was sie ihn nicht gekostet hat; der Grund am Datensatz macht
+auswertbar, was Kulanz und Garantie im Jahr gekostet haben. Die
+Unveränderlichkeit nach `gestellt` (D-093) gilt unverändert.
 
 ---
 

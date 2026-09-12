@@ -1,6 +1,6 @@
 # Domäne — Inventory (Warenwirtschaft / Katalog / Lager)
 
-Autoritative deklarative Spec. Entscheidungen **D-099 – D-121**
+Autoritative deklarative Spec. Entscheidungen **D-099 – D-121**, **D-128 – D-131**
 ([`../07-decisions/grill-log.md`](../07-decisions/grill-log.md)).
 Prinzipien: [`../05-modules/INVENTORY.md`](../05-modules/INVENTORY.md).
 
@@ -99,6 +99,26 @@ Eintrag:
 
 Eine so erfasste Position hat **weder** `article_id` **noch** `offering_id` — genau
 der Fall, für den `line_items.article_id` nullable bleiben muss.
+
+### Nicht berechnete Positionen (D-129)
+
+Ein Teil wird verbaut, aber nicht berechnet — Garantie, Kulanz
+(`ServiceCase.goodwill`) oder abgedeckt durch `contract_type = full_service` (D-079):
+
+1. Es entsteht eine **normale Position** mit `article_id` und **echtem
+   Lagerabgang**. Das Teil ist verbraucht, egal wer es zahlt.
+2. Die Position trägt `is_chargeable = false` plus `non_charge_reason`
+   (`garantie` · `kulanz` · `vertrag`) — **auswertbar**, nicht nur ein Preis von 0.
+3. Die Position wird **in die Rechnung übernommen und dort als „nicht berechnet"
+   ausgewiesen** (Nutzerergänzung) — sie verschwindet nicht.
+
+Punkt 3 ist der Kern: der Kunde sieht **auf der Rechnung**, welche Leistung er
+erhalten und was sie ihn nicht gekostet hat. Punkt 2 beantwortet die Frage, was
+Kulanz und Garantie im Jahr gekostet haben — mit `unit_price = 0` ginge das nicht.
+
+Folge für `BILLING.md`: `InvoiceItem` trägt dieselben zwei Felder; `net_amount`
+und `tax_amount` sind `0`, die Position zählt **nicht** in die Summen, bleibt aber
+als Zeile erhalten.
 
 ---
 
@@ -251,8 +271,8 @@ Nutzer unterscheidet fachlich nicht zwischen „Gerät im Lager" und „Device b
 Kunden" — es ist **ein** Datensatz mit Lebenszyklus vom Wareneingang bis zur
 Verschrottung. Die Seriennummer existiert damit genau **einmal** im System.
 
-> **Modulumzug (D-121):** `Device` und `DeviceComponent` ziehen von
-> `Modules\Service\` nach `Modules\Inventory\`. Sonst entstünde ein zyklischer
+> **Modulumzug (D-121):** `Device` zieht von `Modules\Service\` nach
+> `Modules\Inventory\` (`DeviceComponent` entfällt mit D-131 ganz). Sonst entstünde ein zyklischer
 > Modulgraph (`Service → Inventory` über `line_items.article_id`,
 > `Inventory → Service` über den Wareneingang), was `ARCHITECTURE.md` §5 verbietet.
 > Service verliert dabei keine Fachlichkeit — nur der Datensatz des physischen
@@ -271,9 +291,45 @@ Verschrottung. Die Seriennummer existiert damit genau **einmal** im System.
 | `form_factor` | **bleibt** | D-105 bestätigt D-063/D-080 ausdrücklich |
 | `imaging_type` | **bleibt** | D-105 |
 
-**DB-CHECK (ADR-007 / D-094):** genau **eines** von `location_id` / `warehouse_id`
-ist gesetzt. Ein Gerät steht entweder im Lager oder beim Kunden, nie beides, nie
-keines.
+| `parent_device_id` | **neu (D-131)**, FK → `devices`, nullable | Elternexemplar, wenn die Komponente verbaut ist |
+| `position` | **neu (D-131)**, smallint, nullable | Sortierung unter dem Elternexemplar (ersetzt `DeviceComponent.position`, „Sonde 1..5") |
+
+**DB-CHECK (ADR-007 / D-094), dreiwertig (D-131):** genau **eines** von
+`location_id` / `warehouse_id` / `parent_device_id` ist gesetzt. Ein Exemplar steht
+im Lager, beim Kunden, **oder** ist an einem anderen Exemplar verbaut — nie
+mehreres, nie nichts.
+
+### Komponenten sind selbst Exemplare (D-131)
+
+`DeviceComponent` aus D-034 **entfällt ersatzlos**. Eine Sonde ist kein Attribut
+eines Geräts, sondern ein physisches Einzelstück mit eigenem Lebenszyklus: sie
+liegt im Lager, wird verkauft, angebaut, abgebaut, ersetzt, eingeschickt.
+
+```text
+Ultraschallsystem   parent = null,   location_id = Praxis
+  ├─ Sonde 1        parent = System
+  ├─ Sonde 2        parent = System
+  └─ Drucker        parent = System
+```
+
+**Anbau = Umbuchung** (Lager → Gerät), **Ausbau = Umbuchung** (Gerät → Lager oder
+Reparaturlager via D-130). Keine Sonderlogik, dieselben Ledger-Zeilen wie alles
+andere. Der effektive Standort einer verbauten Komponente ergibt sich über die
+Elternkette.
+
+Die alten `DeviceComponent`-Felder finden alle ein neues Zuhause:
+
+| `DeviceComponent`-Feld (D-034) | neues Zuhause |
+| --- | --- |
+| `type` (`probe`/`printer`/`cart`/`gdt`/`other`) | **`ArticleGroup`** — Katalogklassifikation (D-099/D-110) |
+| `article_number` | **`Article.article_number`** |
+| `description` | **`Article.name`** |
+| `serial_number` | **`Device.serial_number`** |
+| `license` (nur `gdt`) | **benutzerdefiniertes Feld**, `scope = item`, an der Artikelgruppe „SonoGDT" (D-111/D-119) |
+| `position` (Sonde 1..5) | **`Device.position`** |
+
+Der `license`-Fall zeigt, warum der Feldkatalog trägt: ein Feld, das nur für **eine**
+Komponentenart existiert, war vorher eine dauerhaft leere Spalte für alle anderen.
 
 **Warum `form_factor` am Exemplar bleibt (D-105):** Die Preisfindung für die
 Wartungspauschale (`service_prices.form_factor`) bleibt so unabhängig davon, ob
@@ -363,10 +419,10 @@ Bringt Artikel ins Lager. Kopf mit Lieferantenbezug, Datum, Ziellager;
 
 Es wird **immer ein bestimmtes Lager bebucht** (Nutzer explizit).
 
-> **Arbeitsannahme, nicht final (D-120):** Wareneingang ist derzeit ein
-> **eigenständiger** Vorgang mit Lieferantenbezug, **ohne** Abgleich gegen offene
-> Bestellpositionen. Die Frage „Bestellwesen ja/nein" ist zurückgestellt; siehe
-> Offene Punkte.
+**Der Wareneingang bucht gegen offene Bestellpositionen ab** (D-128): er
+referenziert eine `PurchaseOrder`, seine Positionen verweisen auf
+Bestellpositionen. Ein Wareneingang ohne Bestellbezug bleibt für Sonderfälle
+möglich (Rücklieferung, Direktbezug).
 
 ### `Supplier` — Lieferantenstamm (D-103, gültig)
 
@@ -378,6 +434,28 @@ Typ-Diskriminator aufzuweichen.
 
 Eine Firma, die beides ist, existiert damit bewusst zweimal — Dublettenrisiko wird
 gegen die klare Trennung eingetauscht.
+
+### `PurchaseOrder` — Bestellung (D-128)
+
+Der Nutzer hat sich gegen die empfohlene leichtgewichtige Variante und **für das
+volle Bestellwesen** entschieden.
+
+| Feld | Typ | Notiz |
+| --- | --- | --- |
+| `number` | string | Nummernkreis |
+| `supplier_id` | FK → `suppliers` | |
+| `ordered_at` | date | |
+| `expected_at` | date | erwarteter Liefertermin — Grundlage der Terminverfolgung |
+| `status` | enum `offen` \| `teilweise_geliefert` \| `geliefert` \| `storniert` | |
+| `n` Positionen | | Artikel, Menge, vereinbarter EK |
+
+Umfang: **Teillieferungen** (Bestellung bleibt offen, bis vollständig geliefert),
+**Lieferterminverfolgung** über `expected_at`, **Rechnungsprüfung gegen die
+Bestellung** (erwarteter vs. berechneter Preis).
+
+> **Offene Restmenge wird berechnet**, nicht gespeichert:
+> `bestellt − Σ eingegangen` je Bestellposition. D-093/D-102 gelten unverändert —
+> das volle Bestellwesen ändert daran nichts.
 
 ### `StockTransfer` — Umbuchung (D-114)
 
@@ -399,6 +477,33 @@ Techniker).
 **UI-Vorgabe (Nutzer):** Umbuchung funktioniert als **Massenaktion in der
 Tabellenansicht** — Mehrfachmarkierung mehrerer Zeilen **und** Einzelsatz-Aktion,
 nicht nur ein separates Formular.
+
+### `PickupNote` — Abholbeleg (D-130)
+
+Ein defektes Teil wird beim Kunden ausgebaut und mitgenommen. Das erzeugt einen
+**Zugang im Reparaturlager** (`Warehouse.type = reparatur`) über einen eigenen Beleg.
+
+- wird **vom Techniker beim Kunden erstellt**,
+- wird **vor Ort unterschrieben** — Signaturfelder analog `MaintenanceReport`
+  (D-045): `signature_image`, `signer_name`, `signed_at`,
+- wird **mitgenommen** (Ausdruck/PDF für den Kunden),
+- bucht die Positionen **automatisch auf das Reparaturlager**.
+
+> **Nur Exemplare sind abholfähig.** Nutzer wörtlich: „um sie vom Kunden
+> mitzunehmen, müssen diese beim Kunden existieren. Das heißt, es sind nur Geräte
+> und Ausstattung davon betroffen, keine weiteren Artikel." Ein Abholbeleg kann
+> ausschließlich `Device`-Exemplare referenzieren — nicht bestandsgeführte
+> Kleinteile am Kundenstandort haben dort nie als Datensatz existiert und sind
+> daher nicht abholfähig.
+
+**Das greift mit D-131 ineinander:** weil Komponenten (Sonden, Drucker, Wagen) dort
+selbst zu Exemplaren werden, ist „Gerät **und Ausstattung**" automatisch genau die
+Menge der Datensätze, die beim Kunden existieren. Ohne D-131 wäre die Ausstattung
+nicht abholfähig gewesen.
+
+**Buchungswirkung:** das Exemplar wechselt von `location_id` auf `warehouse_id`
+(Reparaturlager) — dieselbe Mechanik wie jede andere Bewegung, mit
+`StockMovement.sourceable` auf den Abholbeleg.
 
 ### `Reservation` + `ReservationReturn` — Leihgeräte (D-106)
 
@@ -480,6 +585,9 @@ sind entsprechend angepasst:
 | `SERVICE.md` — Offene Punkte #7 | gelöst | D-109 |
 | `SALES.md` — `OpportunityItem` | `product_id` → `article_id` (+ `offering_id`); Katalog existiert jetzt | D-099, D-117 |
 | `SALES.md` — Offene Punkte #5 | gelöst | D-099 |
+| `SERVICE.md` — `DeviceComponent` | **entfällt ersatzlos** — Komponenten sind selbst Exemplare mit `parent_device_id` | D-131 |
+| `SERVICE.md` — `line_items` | `is_chargeable`, `non_charge_reason` neu | D-129 |
+| `BILLING.md` — `InvoiceItem` | `is_chargeable`, `non_charge_reason` neu; Position mit 0 zählt nicht in die Summen | D-129 |
 | `05-modules/INVENTORY.md` | Status nicht mehr „spätere Ausbaustufe" | D-099 ff. |
 | `ARCHITECTURE.md` §5 | Modulgraph: `Service → Inventory`, `Sales → Inventory` | D-121 |
 
@@ -491,9 +599,10 @@ sind entsprechend angepasst:
 | --- | --- | --- |
 | 1 | **Fremdgeräte ohne Artikelstamm** — ist `Device.article_id` `NOT NULL` oder nullable? Dormed wartet Geräte, die es nie verkauft hat | **eigener Detaildurchgang**, Nutzer braucht Vorlauf. Ohne Schema-Abgleich zu beantworten (D-108 entfällt), migrationsrelevant (D-107) |
 | 2 | ~~Sage/KHK-Artikelstamm-Export als Ist-Referenz~~ | ⛔ **nicht beschaffbar** (D-108). Abgleich nach D-098-Verfahren entfällt auf unbestimmte Zeit |
-| 3 | **Bestellwesen ja/nein** — Agent legt begründete Empfehlung vor, nicht nur Optionsliste | nächste Runde (D-120) |
-| 4 | **D-109 „etwas mehr Komplexität"** — Garantie-/Kulanzteile ohne Position, Rückgabe unverbrauchter Teile ins Lager, verbaut aber nicht abgerechnet | nächste Runde (D-109) |
-| 5 | **`DeviceComponent` vs. serialisiertes Exemplar** — eine Sonde ist heute eine Zeile am Gerät, könnte aber ein seriennummernpflichtiger Artikel im Lager sein, der beim Einbau ans Gerät wandert. Beides parallel wäre eine Dublette | nächste Runde (D-121) |
+| 3 | ~~Bestellwesen ja/nein~~ | ✅ **volles Bestellwesen** (D-128, revidiert D-120) |
+| 4 | ~~Garantie-/Kulanzteile, verbaut aber nicht abgerechnet~~ | ✅ gelöst (D-129) |
+| 4a | ~~Ausgebaute Defektteile~~ | ✅ gelöst — Abholbeleg ins Reparaturlager (D-130) |
+| 5 | ~~`DeviceComponent` vs. serialisiertes Exemplar~~ | ✅ gelöst — Komponenten **sind** Exemplare (D-131) |
 | 6 | **UI/UX-Verpackung der Inventur** — geführter Fenster-Flow, Aufgabenzuweisung, Meldeweg | Nutzer: „die Frage ist nur, wie man das am Ende im UI und per UX verpackt" (D-113) |
 | 7 | **Reduktion der `Article`-Feldliste** — bewusst breit angelegt, Streichungen folgen | laufend, je Streichung eine D-NNN (D-115) |
 | 8 | Nummernkreise für die neuen Belege (GoodsReceipt, StockTransfer, Reservation, …) | Format analog D-067 bei Umsetzung |

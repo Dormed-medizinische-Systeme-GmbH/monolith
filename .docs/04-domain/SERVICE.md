@@ -8,8 +8,8 @@ Prinzipien: [`../05-modules/SERVICE.md`](../05-modules/SERVICE.md).
 
 Modul: `packages/core/src/Modules/Service/` (Namespace `Dormed\Core\Modules\Service\`, `depends_on: [Core, Inventory]`, ADR-013 — Inventory neu durch D-109/D-121).
 
-> **`Device` und `DeviceComponent` leben ab D-121 in `Modules\Inventory\`**, nicht
-> mehr hier. Grund ist die Zyklusauflösung: `line_items` braucht einen Artikelbezug
+> **`Device` lebt ab D-121 in `Modules\Inventory\`**, nicht mehr hier
+> (`DeviceComponent` ist mit D-131 ganz entfallen). Grund ist die Zyklusauflösung: `line_items` braucht einen Artikelbezug
 > (Service → Inventory), und der Wareneingang erzeugt Geräte (Inventory → Service).
 > Fachlich bleibt Service vollständig: `ServiceContract`, `Maintenance`,
 > `MaintenanceReport`, `MeasurementProtocol`, `ServiceCase`, `line_items`,
@@ -24,9 +24,8 @@ Checkliste + Messprotokoll + Rechnungspositionen. Zerlegung:
 
 ```
 Company 1──n Location 1──n Device ──0..1── ServiceContract
-                              │ 1
                               │ n
-                        DeviceComponent
+                              └── Device (Komponenten, parent_device_id — D-131)
 
 Maintenance (= Anfahrt, 1 Company/Location)
    └─ 1..n MaintenanceDevice ──1── Device (Gerät MIT Vertrag)
@@ -97,20 +96,17 @@ Praxis-Software-Name.
 
 ---
 
-## DeviceComponent
+## ~~DeviceComponent~~ — entfällt (D-131)
 
-Zubehör/Baugruppen eines Device, `n` je Device, **typisiert** (D-034). Ersetzt
-`SONDE1..5_*`, `PRINTER_*`, `WAGEN_*`, `SONOGDT_*`.
-
-| Feld | Typ | Null | Notiz |
-| --- | --- | :-: | --- |
-| `device_id` | FK → `devices` | – | cascade |
-| `type` | enum `probe` \| `printer` \| `cart` \| `gdt` \| `other` | – | Sonde / Drucker / Wagen / SonoGDT |
-| `article_number` | string | ✓ | |
-| `description` | string | ✓ | |
-| `serial_number` | string | ✓ | |
-| `license` | string | ✓ | nur `gdt` (← `SONOGDT_LIZENZ`) |
-| `position` | smallint | ✓ | Reihenfolge (Sonde 1..5) |
+> **Ersatzlos aufgelöst.** Zubehör/Baugruppen (Sonde, Drucker, Wagen, SonoGDT) sind
+> **keine Zeilen am Gerät mehr**, sondern **selbst Exemplare** (`Device`) mit
+> `parent_device_id`. Eine Sonde liegt im Lager, wird verkauft, angebaut, abgebaut,
+> ersetzt, eingeschickt — das ist ein eigener Lebenszyklus, kein Attribut.
+>
+> Anbau und Ausbau sind gewöhnliche Umbuchungen. Autoritativ:
+> [`INVENTORY.md`](INVENTORY.md) — dort steht auch, wohin jedes einzelne
+> D-034-Feld gewandert ist (`type` → `ArticleGroup`, `license` →
+> benutzerdefiniertes Feld mit `scope = item`, …).
 
 ---
 
@@ -373,10 +369,18 @@ Polymorph an `Maintenance` **oder** `ServiceCase` (D-043).
 | `quantity` | decimal(10,2) | – | bei seriennummernpflichtigen Exemplaren immer 1 |
 | `unit` | string | ✓ | Stk / Std / Pauschale — aus `Article.unit` / `Offering.unit` |
 | `unit_price` | decimal(12,2) | ✓ | netto, **gesnapshottet** aus dem Katalog (D-104) |
+| `is_chargeable` | boolean | – | **neu (D-129)**, default `true`. `false` ⇒ verbaut, aber nicht berechnet |
+| `non_charge_reason` | enum `garantie` \| `kulanz` \| `vertrag` | ✓ | **neu (D-129)**, Pflicht wenn `is_chargeable = false` |
 
 Alle drei neuen FKs sind nullable: eine „Sonstiges"-Position (`diverse`, D-118) hat
 weder `article_id` noch `offering_id`, und eine Katalogposition ohne Bestandsbezug
 (Leistung) hat keine `stock_movement_id`.
+
+**Nicht berechnete Positionen (D-129):** Garantie-, Kulanz- und
+Full-Service-Leistungen erzeugen eine **normale Position mit echtem Lagerabgang**,
+tragen aber `is_chargeable = false` + Grund. Sie werden **in die Rechnung
+übernommen und dort als „nicht berechnet" ausgewiesen** — der Kunde sieht, was er
+erhalten hat und was es ihn nicht gekostet hat. Details: [`INVENTORY.md`](INVENTORY.md).
 
 **Keine** Summen-/Steuerfelder hier. Bei Einsatzabschluss + Freigabe → Übergabe an
 Billing, das die `Invoice` erstellt und einfriert (D-043). Legacy `TICKET_GESAMT_*`,
