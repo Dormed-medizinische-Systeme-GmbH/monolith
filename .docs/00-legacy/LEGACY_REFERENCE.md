@@ -51,9 +51,9 @@ stammen aus dem aktuellen System und dienen als fachliche **Ist-Referenz**
   mit D-097), Messprotokoll-/Checklisten-Felder (`Schutzklasse 1/2 IEGA/IEPA/…`,
   vier `Mängel …`-Booleans, Sicht-/Funktionskontroll-Punkte) entsprechen 1:1
   `MeasurementProtocol`/`MaintenanceReport` (D-038/D-044), „Fahrtzone Wartung"
-  taucht real als eigene Rechnungsposition auf. **Real beobachtete `Status`-Werte
-  weichen von D-083 ab** — s. offene Rückfrage in `grill-log.md` (D-083 evtl. zu
-  revidieren).
+  taucht real als eigene Rechnungsposition auf. Real beobachtete `Status`-Werte
+  weichen von D-083 ab (nur 2 Zeilen, keine belastbare Grundlage) — geprüft und
+  bewusst nicht revidiert (D-098).
 
 ## Kernerkenntnisse
 

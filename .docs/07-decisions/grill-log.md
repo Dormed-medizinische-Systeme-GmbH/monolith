@@ -1417,3 +1417,15 @@ uneinheitlichen Mischung `decimal(10,2)`/`decimal(12,2)` in den einzelnen
 diese") — **nicht abschließend**, kann bei Bedarf um weitere Werte ergänzt
 werden (jede Ergänzung = eigene D-NNN-Entscheidung + CHECK-Constraint-Migration,
 D-094).
+
+### D-098 — D-083 bestätigt trotz abweichender Stichprobe in Tickets.csv
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+`00-legacy/Tickets/Tickets.csv` (2 Beispielzeilen) zeigt reale `Status`-Werte
+„offen"/„abgerechnet / geschlossen" plus ein separates Bool-Feld „Warte auf
+Rückmeldung vom Kunden" — auf den ersten Blick ein Widerspruch zu D-083 (ein
+einziges 5-Werte-Enum inkl. `wartet_auf_kunde` als Status-Wert). **Geprüft und
+bewusst nicht revidiert**: die Stichprobe (2 Zeilen) ist zu klein, um die
+gesamte Werteliste zuverlässig abzuleiten — D-083 bleibt bestehen. Bei mehr
+repräsentativen Daten (oder der echten Werteliste wie bei D-089) erneut prüfen.
