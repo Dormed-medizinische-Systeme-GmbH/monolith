@@ -17,9 +17,12 @@ paths:
 ## Zielbild
 
 `compose.yaml` = Dev-Stack mit **vier** App-Services (`website`, `shop`, `crm`,
-`portal` — je eigenes Laravel-Projekt aus `apps/*`) + **einem** `pgsql`-Service
-(Postgres 17), geteilt von allen vier. Kein Supabase (ADR-001). Ziel weiterhin:
-`docker compose up -d --build` startet alles.
+`portal` — je eigenes Laravel-Projekt aus `apps/*`, Octane/FrankenPHP, ADR-022) +
+je einem `<app>-reverb`-Service wo Realtime gebraucht wird (ADR-024) + **einem**
+`pgsql`-Service (Postgres 17, geteilt von allen vier) + **einem** `minio`-Service
+(S3-kompatibel, ADR-025, vorerst ohne konkrete Nutzung). Kein Supabase (ADR-001).
+Aktuell nur `crm` + `crm-reverb` aktiv befüllt (ADR-020), die übrigen drei App-Services
+sind Platzhalter. Ziel weiterhin: `docker compose up -d --build` startet alles.
 
 ## DB-Credentials
 

@@ -239,3 +239,69 @@ Status: Accepted (2026-09-12)
 Die bisherigen Coolify-Staging-Domains (`dormed-{crm,portal,shop}.everding.it`,
 `.ai/rules/local-stack.md`) bleiben für Test/Staging bestehen — die `dormed.de`-Domains
 sind das Produktions-Ziel.
+
+Lokal (Dev): `dormed.test` als Basis-Domain (analog `dormed.de`), Subdomains
+`crm.dormed.test` / `portal.dormed.test` / `shop.dormed.test` / `website.dormed.test` —
+je auf `127.0.0.1` in `/etc/hosts`. Details: `.docs/01-architecture/MULTI_SUBDOMAIN.md`,
+`.docs/02-development/LOCAL_DEVELOPMENT.md`.
+
+## ADR-022 — Laravel Octane als App-Server, Driver FrankenPHP
+
+Status: Accepted (2026-09-12)
+
+Alle Apps laufen hinter **Laravel Octane** statt `php-fpm`/`artisan serve` für
+Performance (persistenter Application-Bootstrap zwischen Requests). Als Octane-Treiber:
+**FrankenPHP** (`php artisan octane:install --server=frankenphp`) — Begründung:
+
+- Läuft als einzelnes statisches Binary, offizielles Docker-Image
+  (`dunglas/frankenphp`), keine zusätzliche Extension-Kompilation wie bei Swoole.
+- Ist Laravels aktuell empfohlener Octane-Standard für neue Projekte.
+- Bringt HTTP/2 und eingebaute Static-File-Auslieferung mit, passt gut zum
+  Coolify-Reverse-Proxy-Setup (ADR-014).
+
+Gilt zunächst für `apps/crm` (aktueller Bau-Fokus, ADR-020); die übrigen Apps
+übernehmen denselben Server, sobald sie aktiv gebaut werden.
+
+## ADR-023 — Laravel Fortify als Auth-Backend für CRM (Login-only)
+
+Status: Accepted (2026-09-12)
+
+`apps/crm` nutzt **Laravel Fortify** (headless Auth-Backend) statt der bisherigen
+Breeze-Scaffolding-Controller — passend zu Inertia.js + Svelte (ADR-019), da Fortify
+keine eigenen Blade-Views vorschreibt, sondern nur Routen/Actions liefert, die die
+App selbst rendert (`Fortify::loginView(fn () => Inertia::render('Auth/Login'))`).
+
+Feature-Umfang bewusst **minimal**, passend zu D-032 (kein Self-Service):
+**nur Login** aktiviert. Registrierung, Passwort-Reset-Self-Service und E-Mail-
+Verifizierung bleiben **deaktiviert** — Nutzeranlage/Passwort-Reset laufen weiterhin
+über die Admin-Einladungsfunktion (`.docs/03-security/IDENTITY_RBAC.md`).
+
+## ADR-024 — Reverb: eigener Service pro App, keine geteilte Instanz
+
+Status: Accepted (2026-09-12)
+
+Laravel Reverb (`.docs/06-infrastructure/REALTIME.md`) läuft als **eigener,
+langlebiger Prozess** neben dem jeweiligen Octane-App-Prozess (nicht im selben
+Prozess/Container-Command wie der HTTP-Server) — analog zu Laravels eigenem
+Reverb-Betriebsmodell. Jede App, die Realtime braucht, bekommt bei Bedarf ihren
+eigenen Reverb-Service (kein einzelner, von allen vier Apps geteilter Reverb-Prozess)
+— konsistent mit „keine direkte Kommunikation zwischen den Apps" (ADR-011): Reverb
+gehört zur jeweiligen App, nicht zu `packages/core`. Aktuell nur für `apps/crm`
+relevant (ADR-020).
+
+## ADR-025 — MinIO/S3-Object-Storage als Compose-Service (vorbereitend, ohne aktuelle Nutzung)
+
+Status: Accepted (2026-09-12)
+
+Ein **MinIO**-Service (S3-kompatibel, `.docs/06-infrastructure/STORAGE.md` nennt ihn
+bereits als Kandidaten) wird als Compose-Service vorgesehen — **aktuell ohne
+konkreten Verwendungszweck**, rein infrastrukturelle Vorbereitung. Geplante spätere
+Nutzung:
+
+- Produktbilder (Website/Landingpage, Shop, CRM-Produktverwaltung im Management-Bereich)
+- Foto-Dokumentation von Service-/Wartungseinsätzen (`MaintenanceReport`/`ServiceCase`,
+  `.docs/04-domain/SERVICE.md` „Fotos/Nachweise → documents, polymorph am Report")
+
+Ein Bucket/eine Nutzung wird erst angelegt, wenn der jeweilige fachliche Bereich
+(Inventory bzw. Documents) konkret gegrillt wird (ADR-010) — der Service steht schon,
+damit spätere Slices ihn direkt nutzen können, ohne Infrastruktur nachzuziehen.

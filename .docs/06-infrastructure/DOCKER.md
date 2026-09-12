@@ -1,25 +1,31 @@
 # Docker
 
-> **Kurswechsel 2026-09-12** (ADR-011, ADR-014, ADR-015). Vier App-Container statt
-> einem, Coolify bleibt die Plattform (kein eigenständiges Docker Swarm), Migrations
-> laufen als separater Schritt.
+> **Kurswechsel 2026-09-12** (ADR-011, ADR-014, ADR-015, ADR-022–ADR-025). Vier
+> App-Container statt einem, Coolify bleibt die Plattform (kein eigenständiges Docker
+> Swarm), Migrations laufen als separater Schritt, App-Server ist Octane/FrankenPHP,
+> plus Reverb- und MinIO-Services.
 
 ## Container-Layout
 
-Ein Container pro App, plus Postgres, plus Proxy — alle vier Apps nach identischem
-Muster:
+Ein Container pro App (Octane/FrankenPHP, ADR-022), plus Postgres, plus MinIO, plus
+Reverb je App die es braucht — alle vier Apps nach identischem Muster, sobald aktiv
+gebaut (aktuell nur `crm`, ADR-020):
 
 ```text
 compose.yaml / compose.prod.yaml
-├── website
-├── shop
-├── crm
-├── portal
-└── postgres     (eine Instanz, eine DB, geteilt von allen vier Apps)
+├── website          (Platzhalter, noch nicht aktiv gebaut)
+├── shop             (Platzhalter, noch nicht aktiv gebaut)
+├── crm              (Octane/FrankenPHP, aktueller Bau-Fokus)
+├── crm-reverb       (eigener Reverb-Prozess für crm, ADR-024)
+├── portal           (Platzhalter, noch nicht aktiv gebaut)
+├── migrate          (Einmal-Container, fährt packages/core-Migrations, ADR-015)
+├── postgres         (eine Instanz, eine DB, geteilt von allen vier Apps)
+└── minio            (S3-kompatibler Object Storage, ADR-025 — vorbereitend, ohne
+                      aktuelle Nutzung)
 ```
 
-Optional lokal später: `redis`, `reverb`, `minio`, `mailpit` — nur hinzufügen, wenn
-Entwicklungsbedarf besteht.
+Optional lokal später: `redis`, `mailpit` — nur hinzufügen, wenn Entwicklungsbedarf
+besteht.
 
 **Orchestrierung: Coolify** (ADR-014). Coolify verwaltet die vier Container + die
 TLS-Terminierung selbst — **kein** eigenständiger `docker stack deploy`/Swarm-Betrieb,
@@ -54,10 +60,11 @@ COPY apps/crm /app
 COPY --from=core-deps /core /packages/core
 RUN composer install --no-dev --optimize-autoloader
 
-# Stage 3: Runtime
-FROM php:8.4-fpm AS runtime
+# Stage 3: Runtime — FrankenPHP (Octane, ADR-022)
+FROM dunglas/frankenphp:php8.4 AS runtime
 COPY --from=app-build /app /var/www/html
 COPY --from=app-build /packages/core /var/www/packages/core
+CMD ["php", "artisan", "octane:frankenphp"]
 ```
 
 Effekt: Ändert sich nur App-Code (Stage 2), bleibt der Core-Layer (Stage 1) im
@@ -79,6 +86,22 @@ müssen neu gebaut werden (ADR-011/ARCHITECTURE.md §1).
 
 PostgreSQL läuft als eigener Container mit persistentem Volume, geteilt von allen vier
 Apps. Die Datenbank darf bei `docker compose down` nicht unbeabsichtigt gelöscht werden.
+
+## Reverb (ADR-024)
+
+Pro App, die Realtime braucht, ein eigener Reverb-Service (`<app>-reverb`), gestartet
+mit `php artisan reverb:start` — **kein** gemeinsamer Reverb-Prozess für alle vier
+Apps. Läuft im selben Image wie die App (gleicher Build, anderes Start-Kommando),
+braucht aber einen eigenen exponierten Port für die WebSocket-Verbindung. Aktuell nur
+für `crm` relevant (ADR-020).
+
+## MinIO (ADR-025)
+
+Ein Service `minio` (Image `minio/minio`), S3-kompatibel, mit persistentem Volume.
+Aktuell **ohne konkreten Verwendungszweck** — Zugangsdaten/Bucket-Konvention werden
+festgelegt, sobald ein fachlicher Bereich (Inventory: Produktbilder; Documents:
+Service-/Wartungsfotos) ihn tatsächlich braucht. Laravels `s3`-Filesystem-Disk zeigt
+lokal auf den `minio`-Servicenamen statt auf AWS.
 
 ## Migrations im Deployment (ADR-015)
 
