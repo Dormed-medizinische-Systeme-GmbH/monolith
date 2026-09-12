@@ -1293,3 +1293,59 @@ unterschiedlich geschnitten sein können.
 Dormed wartet überwiegend Ultraschall-/Sonographiesysteme — **ein einziger,
 universeller Prüfkatalog** für alle Geräte. `checklist_templates.device_category`
 entfällt ersatzlos (war „optional — Templates je Systemklasse" in `SERVICE.md`).
+
+### D-086 — Opportunity.lead_source: 6 Werte
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+`messe` · `empfehlung` · `website_anfrage` · `kaltakquise` ·
+`bestandskunde_cross_upsell` · `sonstige`.
+
+### D-087 — `DORMEDABTEILUNG` verworfen
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+Deprecated im Altsystem, keine Übernahme — kein `product_area`-Feld, keine
+Dublette zur Abteilungs-/Rollenstruktur (D-031).
+
+### D-088 — Appointment.type (freie Termine): 3 Werte
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+`kundenbesuch` · `interne_besprechung` · `sonstiges`.
+
+### D-089 — Opportunity.stage/probability: Phasenliste steht noch aus
+
+**Status:** offen (Rückfrage) · **Datum:** 2026-09-12
+
+Legacy `DistributionPhase` (Feld „Phase") ist im XML-Export nur als Spalten-Definition
+vorhanden, **nicht** die eigentliche Phasen-/Prozent-Konfigurationsliste (lag im
+Altsystem in einer separaten, nicht exportierten Konfigurationstabelle). Nutzer liefert
+die reale Liste (Phase → %) nach — bis dahin bleiben die 6 vorläufigen `stage`-Werte
+aus D-051 (`lead`·`qualifiziert`·`angebot`·`verhandlung`·`gewonnen`·`verloren`) sowie
+`probability` als freies Feld (0–100 %, nicht fest an `stage` gekoppelt) bestehen.
+
+### D-090 — Appointment.status: 3 Werte
+
+**Status:** entschieden · **Datum:** 2026-09-12 · revidiert den SCHEDULING.md-Vorschlag
+
+`vorlaeufig` · `fixiert` · `storniert` — ersetzt den ursprünglichen Vorschlag
+(`geplant`/`bestaetigt`/`durchgefuehrt`/`abgesagt`). Kein eigener
+„durchgeführt"-Zustand am Termin — die tatsächliche Durchführung wird vom
+fachlichen Vorgang (`Maintenance.performed_at`, `ServiceCase`, …) getragen, nicht
+vom Kalender-Termin selbst.
+
+### D-091 — MaintenanceReport.operating_status: bestätigt
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+`in_betrieb` · `eingeschraenkt` · `ausser_betrieb` bestätigt, unverändert.
+
+### D-092 — `DO_SVV_PRAXISSW*` (14 Praxis-IT-Felder) → Location, nicht Device
+
+**Status:** entschieden · **Datum:** 2026-09-12 · löst CORE.md/SERVICE.md offenen Punkt
+
+Das Praxis-Netzwerk (Server-IP, Passwort, Gateway, Subnetz, Ports,
+Praxis-EDV-ASP, Speicher-/Arbeitslisten-AE-Titel+Port) ist standort-, nicht
+gerätebezogen — mehrere Geräte am selben Standort teilen sich dasselbe
+Praxis-Netz. Die 14 Felder werden `Location`-Felder, nicht `Device`-Felder.

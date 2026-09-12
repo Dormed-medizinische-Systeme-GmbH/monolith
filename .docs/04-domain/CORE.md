@@ -154,6 +154,21 @@ die Location** (D-007), nicht die Company.
 | `name` | string | – | z. B. „Hauptstandort", „Praxis Nord" |
 | `notes` | text | ✓ | |
 | `is_primary` | boolean | – | genau eine je Company = Hauptstandort |
+| — Praxis-Netzwerk (D-092, ← `DO_SVV_PRAXISSW*`, 14 Legacy-Felder, standort- nicht gerätebezogen) — | | | |
+| `practice_software` | string | ✓ | ← `DO_SVV_PRAXISSW` |
+| `practice_it_notes` | text | ✓ | ← `_BEMERKUNG` |
+| `network_server_user` | string | ✓ | ← `_BENUTZER` |
+| `network_gateway` | string | ✓ | ← `_GATE` |
+| `practice_hardware_asp` | string | ✓ | Hardware-Ansprechpartner ← `_HWASP` |
+| `network_server_ip` | string | ✓ | ← `_IP` |
+| `practice_it_asp` | string | ✓ | IT-Ansprechpartner ← `_ITASP` |
+| `network_storage_path` | string | ✓ | Netzspeicher ← `_NETZSPEICHER` |
+| `network_server_password` | string (verschlüsselt) | ✓ | ← `_PASSWORT` |
+| `storage_ae_title` | string | ✓ | DICOM Storage ← `_STOR_AETITEL` |
+| `storage_port` | integer | ✓ | ← `_STOR_PORT` |
+| `network_subnet_mask` | string | ✓ | ← `_SUB` |
+| `worklist_port` | integer | ✓ | ← `_WL_PORT` |
+| `worklist_ae_title` | string | ✓ | DICOM Worklist ← `_WL_TITLE` |
 
 **Beziehungen**: `company()` `belongsTo`, `address()` `morphOne` `Address`.
 
@@ -237,7 +252,7 @@ Gelegenheit nachgezogen werden.
 | 3 | `title` vs `name_suffix` endgültig zusammenlegen? | Person, später |
 | 4 | Fahrtzonen-Modell: Zonen-**Definition** (Preise/Struktur bereits in `SERVICE.md`) | Bereich Service (offener Punkt 1b) |
 | 5 | ~~Melder = `ServiceCase.reported_by` → CompanyContact (Pflicht)~~ | ✅ gelöst, s. `SERVICE.md` |
-| 6 | Device / Praxis-IT (19 Legacy-Felder, `DO_SVV_PRAXISSW*` …) | Bereich Service/Device |
+| 6 | ~~Device / Praxis-IT (`DO_SVV_PRAXISSW*`)~~ | ✅ gelöst — vollständig `Location` (D-092) |
 | 7 | Geocoding-Provider & Trigger | Bereich Integrationen |
 | 8 | Lieferanten/Kreditoren | Späterer Bereich (ROADMAP) |
 | 9 | Company-Verbünde/Konzern | Nicht-Scope bis realer Fall (D-006) |

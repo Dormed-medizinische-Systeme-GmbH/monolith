@@ -25,7 +25,7 @@ Endzuständen `gewonnen` / `verloren` (D-051).
 | `owner_id` | FK → `users` | ✓ | verantwortliche Person (← `PersonInCharge`); Default kommt von `Company.responsible_sales_id`, das wiederum aus `sales_territories` per PLZ vorbelegt wird (D-084) — manuell überschreibbar |
 | `customer_budget` | decimal(12,2) | ✓ | ← `BUDGET` |
 | `payment_terms` | string | ✓ | ← `ZAHLUNGKONDITIONEN` |
-| `lead_source` | enum/Lookup | ✓ | Werte **offen** (← `Source`) |
+| `lead_source` | enum `messe` \| `empfehlung` \| `website_anfrage` \| `kaltakquise` \| `bestandskunde_cross_upsell` \| `sonstige` | ✓ | ← `Source` (D-086) |
 | `opened_at` | date | – | ← `Start_dt` |
 | `expected_close_at` | date | ✓ | ← `end_dt` |
 | `competitor` | string | ✓ | ← `Competitors` / `DO_VC_MITBEWERBER` |
@@ -94,8 +94,9 @@ Schlägt `Company.responsible_sales_id` bei Company-Anlage automatisch vor (D-01
 
 | # | Punkt | Wohin |
 | --- | --- | --- |
-| 1 | `stage`-, `lead_source`-Enum-Werte | Rückfrage Nutzer |
-| 2 | `DORMEDABTEILUNG` („Bereich") — Produktbereich vs. Abteilung, behalten? | Rückfrage Nutzer |
+| 1 | `stage`/`probability`-Phasenliste (Legacy `DistributionPhase` inkl. %) | Rückfrage Nutzer, folgt (D-089) |
+| 2 | ~~`DORMEDABTEILUNG`~~ | ✅ verworfen (D-087) |
+| 3 | ~~`lead_source`-Enum-Werte~~ | ✅ gelöst (D-086) |
 | 3 | `discount` / `unit_cost` an `OpportunityItem` — wirklich nötig? | Rückfrage Nutzer |
 | 4 | Produktkatalog (`products`) | Bereich Inventory |
 | 5 | Angebots-PDF-Erzeugung | Bereich Dokumente |

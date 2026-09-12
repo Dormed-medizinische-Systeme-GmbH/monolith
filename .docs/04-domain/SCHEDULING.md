@@ -19,8 +19,8 @@ haben (Diagnose-Besuch, Reparatur-Besuch).
 | --- | --- | :-: | --- |
 | `schedulable_type` / `schedulable_id` | morph | ✓ | `Maintenance` · `ServiceCase` · `Opportunity` · `null` (freier Termin) |
 | `title` | string | – | |
-| `type` | enum | – | Werte **offen** (`wartung` · `servicefall` · `besuch` · `besprechung` · `sonstige`) — bei gesetztem `schedulable` meist ableitbar |
-| `status` | enum | – | `geplant` · `bestaetigt` · `durchgefuehrt` · `abgesagt` (Werte offen) |
+| `type` | enum `kundenbesuch` \| `interne_besprechung` \| `sonstiges` | – | D-088 — nur für **freie** Termine relevant (`schedulable = null`); bei gesetztem `schedulable` durch den Vorgang bestimmt |
+| `status` | enum `vorlaeufig` \| `fixiert` \| `storniert` | – | D-090. Kein eigener „durchgeführt"-Zustand — trägt der fachliche Vorgang |
 | `starts_at` | datetime | – | ← `start_dt` |
 | `ends_at` | datetime | – | ← `End_dt` (Dauer abgeleitet) |
 | `all_day` | boolean | – | default `false` (← `DayAppointment`) |
@@ -59,7 +59,7 @@ haben (Diagnose-Besuch, Reparatur-Besuch).
 
 | # | Punkt | Wohin |
 | --- | --- | --- |
-| 1 | `type`- und `status`-Enum-Werte | Rückfrage Nutzer |
+| 1 | ~~`type`- und `status`-Enum-Werte~~ | ✅ gelöst (D-088/D-090) |
 | 2 | Serien-Umsetzung (Master/Occurrences vs. Expansion) | Slice-Detail |
 | 3 | Outlook/Graph-Zwei-Wege-Sync | ROADMAP-Slice (mit SSO, D-049) |
 | 4 | Volles Reminder-/Benachrichtigungssystem | Plattform, später |

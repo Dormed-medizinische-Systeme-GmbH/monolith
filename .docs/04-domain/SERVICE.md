@@ -72,8 +72,10 @@ Das medizintechnische System (Ultraschallgerät …). Steht an einer `Location`
 | `worklist_port` | integer | ✓ | ← `SYSTEM_WORKLIST(E)_PORT(_NEW)` |
 
 Der `DO_SVV_PRAXISSW*`-Block aus CORE.md (D-001-Ausnahme, 14 Felder Praxis-IT) →
-in Runde „Device/Praxis-IT" noch zuzuordnen: teils Device (dieses hier), teils
-`Location` (Praxis-Netz allgemein). **Offen.**
+vollständig **`Location`** (Praxis-Netzwerk ist standort-, nicht gerätebezogen,
+D-092) — nicht Device. Felder: Server-IP/-Passwort/-Gateway/-Subnetz, Storage-/
+Worklist-Port+Titel (Praxis-weit), Praxis-EDV-ASP, Netzspeicher, Bemerkung,
+Praxis-Software-Name.
 
 ---
 
@@ -251,7 +253,7 @@ Der strukturierte Wartungsbericht (D-038). **Kein** `visual_check_1..N`.
 | `checklist_template_version` | integer | – | eingefroren |
 | `outcome` | enum `keine_maengel` \| `maengel` \| `maengel_gefahr` \| `ausserbetriebnahme` | – | ← `TICKET_ABSCHLUSS_1..4` |
 | `defects_note` | text | ✓ | ← `TICKET_ABSCHLUSS_MAENGEL` |
-| `operating_status` | enum `in_betrieb` \| `eingeschraenkt` \| `ausser_betrieb` | – | SERVICE.md Betriebsstatus |
+| `operating_status` | enum `in_betrieb` \| `eingeschraenkt` \| `ausser_betrieb` | – | bestätigt (D-091) |
 | — Kundenbestätigung (D-045) — | | | |
 | `signature_image` | binär/Datei | ✓ | |
 | `signer_name` | string | ✓ | |
@@ -358,9 +360,9 @@ Billing, das die `Invoice` erstellt und einfriert (D-043). Legacy `TICKET_GESAMT
 | 1 | ~~ServiceContract `contract_type`/`status`-Enum-Werte~~ | ✅ gelöst (D-079/D-081) |
 | 1a | ~~`Maintenance`- und `ServiceCase`-`status`-Enum-Werte~~ | ✅ gelöst (D-082/D-083) |
 | 1b | ~~`travel_zones`-Zonen-Definition~~ | ✅ gelöst — PLZ-Von-Bis, automatisch (D-084) |
-| 2 | `DO_SVV_PRAXISSW*` (14 Praxis-IT-Felder aus D-001) → Device vs. Location aufteilen | Rückfrage Nutzer |
+| 2 | ~~`DO_SVV_PRAXISSW*` Device vs. Location~~ | ✅ gelöst — Location (D-092) |
 | 3 | ~~Templates je `device_category`~~ | ✅ gelöst — ein universeller Katalog (D-085) |
-| 4 | `MaintenanceReport.operating_status`-Werte final (aktuell `in_betrieb`/`eingeschraenkt`/`ausser_betrieb`) | Rückfrage Nutzer |
+| 4 | ~~`MaintenanceReport.operating_status`-Werte~~ | ✅ bestätigt (D-091) |
 | 5 | ~~Übergabe-Mechanismus line_items → Invoice~~ | ✅ gelöst, siehe `BILLING.md` (D-057/D-066) |
 | 6 | `Termine.xml` — Terminplanung für Maintenance/ServiceCase | ✅ gelöst, siehe `SCHEDULING.md` |
 | 7 | Ersatzteile/Lager (Teile in line_items) | Bereich Inventory (nächster) |
