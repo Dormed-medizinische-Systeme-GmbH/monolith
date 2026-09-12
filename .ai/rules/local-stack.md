@@ -3,58 +3,63 @@ paths:
   - compose.yaml
   - compose.prod.yaml
   - docker/**
-  - phpunit.xml
+  - apps/*/phpunit.xml
   - .env.example
 ---
 
 # Lokaler Docker-Stack
 
-`compose.yaml` = minimaler Dev-Stack: `app` (Laravel via `php artisan serve`) +
-`pgsql` (Postgres 17). Kein Supabase. Ziel: `docker compose up -d --build` startet alles.
+> Kurswechsel 2026-09-12 (ADR-011, ADR-014, ADR-015). Das bisherige Ein-App-Setup
+> (`app` + `pgsql`) ist mit ADR-018 verworfen. Dieser Abschnitt beschreibt den
+> **Zielzustand**, der noch aufgebaut werden muss — `compose.yaml`/`docker/**` existieren
+> zum Zeitpunkt dieser Notiz noch im alten Zustand oder gar nicht.
+
+## Zielbild
+
+`compose.yaml` = Dev-Stack mit **vier** App-Services (`website`, `shop`, `crm`,
+`portal` — je eigenes Laravel-Projekt aus `apps/*`) + **einem** `pgsql`-Service
+(Postgres 17), geteilt von allen vier. Kein Supabase (ADR-001). Ziel weiterhin:
+`docker compose up -d --build` startet alles.
 
 ## DB-Credentials
 
-Eine Quelle: der `DB_*`-Block in `.env`. `pgsql` bekommt `POSTGRES_*` per
-`${DB_DATABASE|DB_USERNAME|DB_PASSWORD}`-Substitution (Compose liest dafür dieselbe
-`.env`). `DB_HOST` muss der Compose-Servicename `pgsql` sein.
+Eine Quelle: der `DB_*`-Block in der `.env` **je App** (jede App hat ihre eigene `.env`,
+da eigenständiges Laravel-Projekt) — alle zeigen auf denselben `pgsql`-Servicenamen und
+dieselbe Datenbank. `pgsql` bekommt `POSTGRES_*` per `${...}`-Substitution aus einer
+zentralen Compose-`.env` im Repo-Wurzelverzeichnis.
 
-## Fallen
+## Fallen (aus dem alten Setup übernommen, gelten weiterhin je App)
 
-- **Kein `env_file: .env` im `app`-Service.** Laravel liest `.env` selbst vom
-  Bind-Mount. Injiziert man die Keys als echte Container-Env-Vars, überschreiben
-  sie die `<env>`-Werte in `phpunit.xml` (PHPUnit ersetzt keine bereits gesetzte
-  Variable) → die ganze Testsuite läuft dann gegen `local` / pgsql statt
-  `testing` / sqlite und Session-/CSRF-Tests brechen (419, „not authenticated").
-- **`user: "${WWWUSER:-1000}:${WWWGROUP:-1000}"`** im `app`-Service, sonst gehören
-  im Bind-Mount erzeugte Dateien (`composer install`, `artisan make:*`) root.
-- Das Base-Image (`laravelsail/php84-composer`) hat **kein Node** und **kein
-  `pdo_pgsql`**. `pdo_pgsql` wird in `docker/app/Dockerfile` nachinstalliert.
-  Frontend-Assets (`npm run build`) müssen außerhalb des Containers gebaut werden;
-  bis dahin liefern alle `@vite`-Views (login, register, dashboard, profile) im
-  Dev-Server einen `ViteException`/500. Tests umgehen das via `withoutVite()` in
-  `tests/TestCase.php`.
+- **Kein `env_file: .env`** im App-Service. Laravel liest `.env` selbst vom Bind-Mount.
+  Injizierte Container-Env-Vars überschreiben sonst `<env>`-Overrides in `phpunit.xml`.
+- **`user: "${WWWUSER:-1000}:${WWWGROUP:-1000}"`** in jedem App-Service, sonst gehören im
+  Bind-Mount erzeugte Dateien root.
+- Das Base-Image braucht `pdo_pgsql` nachinstalliert (kein Standard in
+  `laravelsail/php84-composer` o. ä.).
 
-## phpunit.xml
+## Migrations (ADR-015)
 
-`APP_URL=http://localhost` und `SESSION_DOMAIN=null` sind gesetzt, damit HTTP-Tests
-gegen `localhost` laufen (die `.env` hat `SESSION_DOMAIN=.dormed.test` für die
-geteilte Subdomain-Session). Kontext-Route-Tests mit voller URL aufrufen.
+Migrations laufen **nicht** im Start-CMD eines App-Services. Ein separater
+`migrate`-Schritt (eigener Compose-Service mit `restart: "no"`, der einmalig
+`packages/core`-Migrations fährt und dann exitet, **vor** dem Start der vier
+App-Services) — lokal wie in Prod (siehe `docs/06-infrastructure/DOCKER.md`).
 
-## compose.prod.yaml (Coolify Test/Staging)
+## compose.prod.yaml (Coolify, ADR-014)
 
-Eigener Stack für das Coolify-Deployment, gebaut aus `docker/app-prod/Dockerfile`
-(Multi-Stage: composer `--no-dev` → `npm run build` → `php:8.4-cli` + `pdo_pgsql`).
-Nicht mit `compose.yaml` (Dev) vermischen.
+Vier App-Services (`website`, `shop`, `crm`, `portal`) analog zu `compose.yaml`, gebaut
+aus je einem `docker/<app>/Dockerfile` (Multi-Stage: `packages/core`-Deps → App-Build →
+Runtime, siehe `docs/06-infrastructure/DOCKER.md`). Kein eigener Proxy-Service — Coolify
+terminiert TLS und routet die vier Domains selbst.
 
-- Runtime ist `php artisan serve` – nur test-tauglich; für echten Traffic auf
-  FrankenPHP / php-fpm+nginx wechseln.
-- `pgsql` hat ein Named Volume `pgsql-data` (Coolify persistiert das), keinen `ports:`-Eintrag.
-- Migrationen laufen im Container-Start-CMD (`migrate --force`), plus `package:discover`.
-- Secrets/Domains kommen aus der Coolify-UI (Environment Variables), **nicht** aus
-  einer committeten Datei. Pflicht: `APP_KEY`, `APP_URL`, `DOMAIN_CRM/PORTAL/SHOP`,
-  `SESSION_DOMAIN`, `DB_PASSWORD`.
-- Subdomains: alle drei `https://dormed-{crm,portal,shop}.everding.it` in Coolify
-  beim `app`-Service als Domains eintragen (nutzt das Server-Wildcard `*.everding.it`).
-- `bootstrap/app.php` hat `trustProxies(at: '*')` – nötig hinter Coolifys Traefik,
-  damit HTTPS/Secure-Cookies erkannt werden.
-- `.dockerignore` hält `.env`, `vendor`, `node_modules`, `tests`, `docs` aus dem Build-Kontext.
+- Secrets/Domains kommen aus der Coolify-UI, **nicht** aus einer committeten Datei.
+  Pflicht je App: `APP_KEY`, `APP_URL`, `DB_PASSWORD`; für Portal/Shop zusätzlich
+  identischer `APP_KEY` + `SESSION_DOMAIN` (Cross-App-Login, ADR-016).
+- `bootstrap/app.php` je App: `trustProxies(at: '*')` — nötig hinter Coolifys Traefik.
+- `.dockerignore` hält `.env`, `vendor`, `node_modules`, `tests`, `docs` aus dem
+  Build-Kontext jeder App.
+
+## Noch zu bauen
+
+Dieses Zielbild ist zum Zeitpunkt dieser Notiz **nicht** umgesetzt — das ist ein
+separater, noch zu bestätigender Ausführungsschritt (ADR-018: erst Skelett aufsetzen,
+dann Altcode/Alt-Compose ersetzen).

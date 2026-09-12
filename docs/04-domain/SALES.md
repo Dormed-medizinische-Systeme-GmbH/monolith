@@ -4,7 +4,7 @@ Autoritative deklarative Spec. Entscheidungen **D-051 – D-055**
 ([`../07-decisions/grill-log.md`](../07-decisions/grill-log.md)). Feld-Herkunft:
 [`../09-legacy/xml/Verkaufschancen-Felder.md`](../09-legacy/xml/Verkaufschancen-Felder.md) (34 F.).
 
-Modul: `app/Modules/Sales/` (`depends_on: [Core]`).
+Modul: `packages/core/src/Modules/Sales/` (Namespace `Dormed\Core\Modules\Sales\`, `depends_on: [Core]`, ADR-013).
 
 ## Grundsatz
 

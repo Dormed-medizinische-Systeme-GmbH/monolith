@@ -5,7 +5,7 @@ Adressen-Zerlegung (`/grill-me`, Entscheidungen **D-001 – D-025** im
 [`../07-decisions/grill-log.md`](../07-decisions/grill-log.md); Feld-für-Feld
 Herkunft in [`../09-legacy/xml/Adressen-Zuordnung.md`](../09-legacy/xml/Adressen-Zuordnung.md)).
 
-Modul: `app/Modules/Crm/` (Namespace `App\Modules\Crm\`). Diese Spec legt **Felder,
+Modul: `packages/core/src/Modules/Crm/` (Namespace `Dormed\Core\Modules\Crm\`, ADR-013). Diese Spec legt **Felder,
 Typen, Beziehungen, Regeln** fest — nicht den Code-Stil.
 
 ## Grundsatz
@@ -242,7 +242,7 @@ Unfallchirurgie · Sanitätshaus · Heilpraktiker · Phlebologie · Neurologen.
 
 ## Slice-Anpassungen (bestehender CRM-Code)
 
-Der bestehende `app/Modules/Crm/`-Slice (Company/Person/Location/CompanyContact/
+Der bestehende `packages/core/src/Modules/Crm/`-Slice (Company/Person/Location/CompanyContact/
 Address) ist **strukturell kompatibel**, muss aber angepasst werden:
 - Person nicht mehr frei anlegbar → nur nested unter Company (D-002).
 - Company: neue Felder (Bank, Recht/Steuer, `name_addition`, `medical_specialty_id`,

@@ -1,50 +1,57 @@
 # Lokale Entwicklung
 
+> **Kurswechsel 2026-09-12** (ADR-011, ADR-015, ADR-020). Kein einzelner `app`-Container
+> mehr — vier App-Container + ein separater Migrations-Schritt. Aktueller Bau-Fokus:
+> `packages/core` + `apps/crm` (ADR-020); die übrigen drei Container existieren vorerst
+> nur als architektonischer Platzhalter.
+
 ## Ziel
 
 Die komplette technische Basis soll lokal mit Docker Compose startbar sein.
 
-Minimaler Stack:
+Zielstack (ADR-011, `docs/06-infrastructure/DOCKER.md`):
 
 ```text
-Laravel/PHP container
-PostgreSQL container
+website container   (apps/website, Blade — Platzhalter)
+shop container       (apps/shop, Inertia+Svelte — Platzhalter, Migration später)
+crm container        (apps/crm, Inertia+Svelte — aktueller Bau-Fokus)
+portal container     (apps/portal — Platzhalter)
+postgres container   (eine Instanz, geteilt von allen vier)
 ```
 
-Weitere Container werden erst hinzugefügt, wenn ein konkreter Bedarf besteht.
+Weitere Container (redis, reverb, minio, mailpit) werden erst hinzugefügt, wenn ein
+konkreter Bedarf besteht.
 
 ## Anforderungen
 
-Ein neuer Entwickler soll nach Installation von Docker mit einem dokumentierten Ablauf ungefähr folgendes ausführen können:
+Ein neuer Entwickler soll nach Installation von Docker mit einem dokumentierten Ablauf
+ungefähr folgendes ausführen können:
 
 ```bash
 cp .env.example .env
 docker compose up -d --build
 ```
 
-Der `app`-Container bootstrappt sich beim ersten Start selbst (`composer install`,
-`php artisan key:generate` falls nötig, `php artisan migrate`) und startet dann
-`php artisan serve` auf Port 8000.
-
-Danach:
+Migrations laufen **nicht** mehr im Boot eines App-Containers, sondern als separater
+Einmal-Schritt gegen `packages/core/database/migrations` (ADR-015):
 
 ```bash
-docker compose exec app php artisan db:seed
+docker compose run --rm migrate
+docker compose exec crm php artisan db:seed
 ```
 
-## Subdomains
+## Domains (lokal)
 
-Die Anwendung bedient drei Kontext-Subdomains (siehe
-`docs/01-architecture/MULTI_SUBDOMAIN.md`). Lokal müssen sie auf `127.0.0.1`
-zeigen – einmalig in `/etc/hosts` eintragen:
+Jede App bedient ihre eigene Domain (kein zentrales Subdomain-Dispatch mehr, ADR-012 —
+siehe `docs/01-architecture/MULTI_SUBDOMAIN.md`). Lokal auf `127.0.0.1` zeigen lassen –
+einmalig in `/etc/hosts` eintragen:
 
 ```text
-127.0.0.1 dormed.test crm.dormed.test portal.dormed.test shop.dormed.test
+127.0.0.1 crm.dormed.test portal.dormed.test shop.dormed.test website.dormed.test
 ```
 
-Aufruf: `http://crm.dormed.test:8000`, `http://portal.dormed.test:8000`,
-`http://shop.dormed.test:8000`. Die Hosts sind über `DOMAIN_CRM` / `DOMAIN_PORTAL`
-/ `DOMAIN_SHOP` in `.env` konfigurierbar.
+Live-Domains (Prod, ADR-021): `dormed.de` (Website), `my.dormed.de` (Portal),
+`shop.dormed.de` (Shop), `crm.dormed.de` (CRM).
 
 ## Environment
 

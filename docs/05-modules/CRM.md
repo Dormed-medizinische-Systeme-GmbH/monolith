@@ -8,9 +8,10 @@ Es ist der beste Kandidat für den ersten vertikalen Slice nach dem technischen 
 
 ## Code-Ort
 
-Domänencode liegt unter `app/Modules/Crm/` (Namespace `App\Modules\Crm\`,
-Abhängigkeit: nur `Core` — siehe `app/Modules/Crm/module.php`). Die HTTP-Schicht
-(`crm.`-Kontext) liegt in `app/Http/Controllers/Crm/` und ruft das Modul auf.
+Domänencode liegt unter `packages/core/src/Modules/Crm/` (Namespace
+`Dormed\Core\Modules\Crm\`, Abhängigkeit: nur `Core` — siehe
+`packages/core/src/Modules/Crm/module.php`, ADR-013). Die HTTP-Schicht liegt in der
+eigenständigen `apps/crm`-App (`apps/crm/app/Http/Controllers/`) und ruft das Modul auf.
 Struktur/Regeln: `docs/01-architecture/PROJECT_STRUCTURE.md`, `.ai/rules/architecture.md`.
 
 ## Erste Ausbaustufe

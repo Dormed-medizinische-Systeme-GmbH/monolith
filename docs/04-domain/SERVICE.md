@@ -6,7 +6,7 @@ Autoritative deklarative Spec. Entscheidungen **D-034 – D-045**
 [`../09-legacy/xml/Tickets-Zuordnung.md`](../09-legacy/xml/Tickets-Zuordnung.md).
 Prinzipien: [`../05-modules/SERVICE.md`](../05-modules/SERVICE.md).
 
-Modul: `app/Modules/Service/` (Namespace `App\Modules\Service\`, `depends_on: [Core]`).
+Modul: `packages/core/src/Modules/Service/` (Namespace `Dormed\Core\Modules\Service\`, `depends_on: [Core]`, ADR-013).
 
 ## Grundsatz
 

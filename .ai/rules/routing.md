@@ -1,46 +1,41 @@
 ---
 paths:
-  - routes/**
-  - bootstrap/app.php
-  - app/Http/Middleware/**
-  - config/domains.php
-  - app/Support/ApplicationContext.php
+  - apps/*/routes/**
+  - apps/*/bootstrap/app.php
+  - apps/*/app/Http/Middleware/**
 ---
 
-# Routing & Application Context
+# Routing & Cross-App-Login
 
-## Multi-Subdomain-Struktur (ADR-003)
+> Kurswechsel 2026-09-12 (ADR-012, ADR-016). Ersetzt das frühere zentrale
+> `config('domains.<ctx>')` + `App\Support\ApplicationContext`-Dispatch in einer
+> Codebasis vollständig. Details: `docs/01-architecture/MULTI_SUBDOMAIN.md`.
 
-Eine Codebasis, drei Kontext-Subdomains: `crm`, `portal`, `shop`. Host-Namen
-**ausschließlich** aus `config('domains.<ctx>')` (env `DOMAIN_CRM` / `DOMAIN_PORTAL`
-/ `DOMAIN_SHOP`), nie hart kodieren. Werte ohne Port – Route-Host-Matching nutzt
-`Request::getHost()`.
+## Eine Domain pro App
 
-- Kontext-Routen gehören in `routes/<ctx>.php`. Registrierung zentral in
-  `bootstrap/app.php` über `withRouting(then: ...)`: Schleife über die drei
-  Kontexte, je `Route::middleware('web')->domain(config("domains.$ctx"))->as("$ctx.")->group(...)`.
-- `routes/web.php` ist host-unabhängig (Auth via `routes/auth.php`, Profil,
-  `/dashboard`). Es wird **vor** `then:` registriert – dort darf keine URI liegen,
-  die eine Kontext-Route mit gleichem Pfad beschattet. Deshalb kein `/` in `web.php`;
-  die `welcome`-Fallback-Route steht am Ende des `then:`-Callbacks.
-- Neue geteilte, für jeden Kontext geltende Routen ⇒ `web.php` / `auth.php`.
-  Kontextspezifisch ⇒ die passende `routes/<ctx>.php`.
+Jede der vier Apps (`apps/website|shop|crm|portal`) bedient **ihre eigene** Domain über
+ihr **eigenes** Laravel-Routing. Kein Host-Matching, kein `->domain(...)`-Constraint
+nötig — die App kennt nur einen Host. `routes/web.php` in jeder App ist die normale
+Laravel-Struktur, keine Kontext-Aufteilung mehr wie früher `routes/{crm,portal,shop}.php`
+in einer einzigen Codebasis.
 
-## Application Context
+## Subdomain/App ist KEINE Sicherheitsgrenze
 
-`App\Support\ApplicationContext` (Enum) + `App\Http\Middleware\ResolveApplicationContext`
-(an `web`-Gruppe angehängt) lösen den Kontext aus dem Host, binden ihn im Container
-und teilen ihn als `$applicationContext` an alle Views. Unbekannter Host ⇒ `null`.
+Dass eine Route nur in `apps/crm` existiert, ist kein Autorisierungsersatz. Jede Aktion
+braucht zusätzlich eine fachliche Prüfung (Policy / Gate / Query-Scope) — sowohl in der
+App als auch im aufgerufenen Core-Modul. Kein Vertrauen auf den Hostnamen oder die
+App-Zugehörigkeit für Berechtigungen.
 
-## Subdomain ist KEINE Sicherheitsgrenze
+## Cross-App-Login (ADR-016)
 
-Dass eine Route auf `portal.*` nicht registriert ist, ist kein Autorisierungsersatz.
-Jede Aktion braucht zusätzlich eine fachliche Prüfung (Policy / Gate / Query-Scope).
-Kein Vertrauen auf den Hostnamen für Berechtigungen.
+- **`apps/crm`**: eigene, komplett getrennte Session/Nutzertabelle. Kein Cross-App-Cookie.
+- **`apps/portal`** + **`apps/shop`**: teilen sich einen Kundenlogin. Gleicher
+  `SESSION_DOMAIN` (führender Punkt) + gleicher `APP_KEY` + gemeinsame `sessions`-Tabelle
+  in Postgres — **nur** für diese beiden Apps.
+- **`apps/website`**: überwiegend anonym, eigener `APP_KEY`/eigene Session falls
+  überhaupt ein Login vorkommt.
 
-## Session
+## Session (Portal/Shop)
 
-`SESSION_DOMAIN=.dormed.test` (führender Punkt) hält eine Session über alle
-Subdomains. In `phpunit.xml` ist `SESSION_DOMAIN=null` – Tests laufen gegen
-`localhost`; HTTP-Tests für Kontext-Routen mit vollständiger URL aufrufen
-(`$this->get('http://crm.dormed.test/')`).
+`SESSION_DOMAIN=.dormed.test` (führender Punkt) hält eine Session über Portal + Shop. In
+`phpunit.xml` je App `SESSION_DOMAIN=null` — Tests laufen gegen `localhost`.
