@@ -2,7 +2,7 @@
 
 Autoritative deklarative Spec. Entscheidungen **D-051 – D-055**
 ([`../07-decisions/grill-log.md`](../07-decisions/grill-log.md)). Feld-Herkunft:
-[`../09-legacy/xml/Verkaufschancen-Felder.md`](../09-legacy/xml/Verkaufschancen-Felder.md) (34 F.).
+[`../00-legacy/xml/Verkaufschancen-Felder.md`](../00-legacy/xml/Verkaufschancen-Felder.md) (34 F.).
 
 Modul: `packages/core/src/Modules/Sales/` (Namespace `Dormed\Core\Modules\Sales\`, `depends_on: [Core]`, ADR-013).
 
@@ -97,7 +97,7 @@ Schlägt `Company.responsible_sales_id` bei Company-Anlage automatisch vor (D-01
 | 1 | `stage`/`probability`-Phasenliste (Legacy `DistributionPhase` inkl. %) | Rückfrage Nutzer, folgt (D-089) |
 | 2 | ~~`DORMEDABTEILUNG`~~ | ✅ verworfen (D-087) |
 | 3 | ~~`lead_source`-Enum-Werte~~ | ✅ gelöst (D-086) |
-| 3 | `discount` / `unit_cost` an `OpportunityItem` — wirklich nötig? | Rückfrage Nutzer |
-| 4 | Produktkatalog (`products`) | Bereich Inventory |
-| 5 | Angebots-PDF-Erzeugung | Bereich Dokumente |
-| 6 | Sales-Aktivitäten (Anrufe/Mails/Notizen-Timeline) | Bereich Communication (später) |
+| 4 | `discount` / `unit_cost` an `OpportunityItem` — wirklich nötig? | Rückfrage Nutzer |
+| 5 | Produktkatalog (`products`) | Bereich Inventory |
+| 6 | Angebots-PDF-Erzeugung | Bereich Dokumente |
+| 7 | Sales-Aktivitäten (Anrufe/Mails/Notizen-Timeline) | Bereich Communication (später) |

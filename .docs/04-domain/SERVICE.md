@@ -2,8 +2,8 @@
 
 Autoritative deklarative Spec. Entscheidungen **D-034 – D-045**
 ([`../07-decisions/grill-log.md`](../07-decisions/grill-log.md)). Feld-Herkunft:
-[`../09-legacy/xml/Servicevertraege-Zuordnung.md`](../09-legacy/xml/Servicevertraege-Zuordnung.md),
-[`../09-legacy/xml/Tickets-Zuordnung.md`](../09-legacy/xml/Tickets-Zuordnung.md).
+[`../00-legacy/xml/Servicevertraege-Zuordnung.md`](../00-legacy/xml/Servicevertraege-Zuordnung.md),
+[`../00-legacy/xml/Tickets-Zuordnung.md`](../00-legacy/xml/Tickets-Zuordnung.md).
 Prinzipien: [`../05-modules/SERVICE.md`](../05-modules/SERVICE.md).
 
 Modul: `packages/core/src/Modules/Service/` (Namespace `Dormed\Core\Modules\Service\`, `depends_on: [Core]`, ADR-013).
