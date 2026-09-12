@@ -14,7 +14,7 @@ Diese Datei dokumentiert die Rolle der bereitgestellten Altdefinitionen.
 | --- | --- | --- | --- | --- | --- |
 | Address/Kontakte | [`Adressen/`](Adressen/) | [`Adressen.xml`](Adressen/Adressen.xml) (356 Spalten) | [`Adressen-Felder.md`](Adressen/Adressen-Felder.md) | [`Adressen-Zuordnung.md`](Adressen/Adressen-Zuordnung.md) | [`Kontakte.csv`](Adressen/Kontakte.csv) |
 | Serviceverträge | [`Servicevertraege/`](Servicevertraege/) | [`Servicevertraege-NEU.xml`](Servicevertraege/Servicevertraege-NEU.xml) (83 Spalten) | [`Servicevertraege-NEU-Felder.md`](Servicevertraege/Servicevertraege-NEU-Felder.md) | [`Servicevertraege-Zuordnung.md`](Servicevertraege/Servicevertraege-Zuordnung.md) | [`Servicevertraege.csv`](Servicevertraege/Servicevertraege.csv) |
-| Tickets | [`Tickets/`](Tickets/) | [`Tickets.xml`](Tickets/Tickets.xml) (112 Spalten) | [`Tickets-Felder.md`](Tickets/Tickets-Felder.md) | [`Tickets-Zuordnung.md`](Tickets/Tickets-Zuordnung.md) | — |
+| Tickets | [`Tickets/`](Tickets/) | [`Tickets.xml`](Tickets/Tickets.xml) (112 Spalten) | [`Tickets-Felder.md`](Tickets/Tickets-Felder.md) | [`Tickets-Zuordnung.md`](Tickets/Tickets-Zuordnung.md) | [`Tickets.csv`](Tickets/Tickets.csv) |
 | Termine | [`Termine/`](Termine/) | [`Termine.xml`](Termine/Termine.xml) (25 Spalten) | [`Termine-Felder.md`](Termine/Termine-Felder.md) | — | [`Kalendaransicht.png`](Termine/Kalendaransicht.png) (Screenshot der Kalenderansicht im Altsystem) |
 | Verkaufschancen | [`Verkaufschancen/`](Verkaufschancen/) | [`Verkaufschancen.xml`](Verkaufschancen/Verkaufschancen.xml) (34 Spalten) | [`Verkaufschancen-Felder.md`](Verkaufschancen/Verkaufschancen-Felder.md) | — | — |
 
@@ -46,6 +46,14 @@ stammen aus dem aktuellen System und dienen als fachliche **Ist-Referenz**
   `Verantwortlicher Sales` und `Verantwortlicher (Sales)` sind zwei separate
   Spalten mit demselben Wert — Legacy-Dublette, unkritisch (D-016 nutzt ohnehin
   nur ein Zielfeld).
+- **`Tickets/Tickets.csv`** (2 Beispielzeilen). Gleicher Encoding-Defekt,
+  unverändert abgelegt. Bestätigt real: `Typ` = „Allgemeiner Support" (deckt sich
+  mit D-097), Messprotokoll-/Checklisten-Felder (`Schutzklasse 1/2 IEGA/IEPA/…`,
+  vier `Mängel …`-Booleans, Sicht-/Funktionskontroll-Punkte) entsprechen 1:1
+  `MeasurementProtocol`/`MaintenanceReport` (D-038/D-044), „Fahrtzone Wartung"
+  taucht real als eigene Rechnungsposition auf. **Real beobachtete `Status`-Werte
+  weichen von D-083 ab** — s. offene Rückfrage in `grill-log.md` (D-083 evtl. zu
+  revidieren).
 
 ## Kernerkenntnisse
 
