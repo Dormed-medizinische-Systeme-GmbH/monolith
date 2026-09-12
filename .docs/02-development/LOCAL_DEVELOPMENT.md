@@ -43,11 +43,12 @@ docker compose exec crm php artisan db:seed
 ## Domains (lokal)
 
 Jede App bedient ihre eigene Domain (kein zentrales Subdomain-Dispatch mehr, ADR-012 —
-siehe `.docs/01-architecture/MULTI_SUBDOMAIN.md`). Lokal auf `127.0.0.1` zeigen lassen –
-einmalig in `/etc/hosts` eintragen:
+siehe `.docs/01-architecture/MULTI_SUBDOMAIN.md`). Website läuft **ohne** Subdomain
+direkt auf der Basis-Domain (wie `dormed.de` live). Lokal auf `127.0.0.1` zeigen lassen
+– einmalig in `/etc/hosts` eintragen:
 
 ```text
-127.0.0.1 crm.dormed.test portal.dormed.test shop.dormed.test website.dormed.test
+127.0.0.1 dormed.test crm.dormed.test portal.dormed.test shop.dormed.test
 ```
 
 Live-Domains (Prod, ADR-021): `dormed.de` (Website), `my.dormed.de` (Portal),

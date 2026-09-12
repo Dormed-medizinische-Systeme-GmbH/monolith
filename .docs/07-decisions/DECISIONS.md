@@ -240,8 +240,9 @@ Die bisherigen Coolify-Staging-Domains (`dormed-{crm,portal,shop}.everding.it`,
 `.ai/rules/local-stack.md`) bleiben für Test/Staging bestehen — die `dormed.de`-Domains
 sind das Produktions-Ziel.
 
-Lokal (Dev): `dormed.test` als Basis-Domain (analog `dormed.de`), Subdomains
-`crm.dormed.test` / `portal.dormed.test` / `shop.dormed.test` / `website.dormed.test` —
+Lokal (Dev): `dormed.test` als Basis-Domain (analog `dormed.de`) bedient **die
+Website** direkt, ohne Subdomain (genau wie `dormed.de` live keine Subdomain hat).
+Zusätzlich Subdomains `crm.dormed.test` / `portal.dormed.test` / `shop.dormed.test` —
 je auf `127.0.0.1` in `/etc/hosts`. Details: `.docs/01-architecture/MULTI_SUBDOMAIN.md`,
 `.docs/02-development/LOCAL_DEVELOPMENT.md`.
 

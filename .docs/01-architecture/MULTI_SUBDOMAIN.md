@@ -72,15 +72,17 @@ aufgerufenen Core-Modul. Kein Vertrauen auf „das läuft ja eh nur in `apps/crm
 
 ## Lokale Entwicklung
 
-Basis-Domain lokal weiterhin `dormed.test` (reserviert, kein echtes DNS). In `/etc/hosts`:
+Basis-Domain lokal weiterhin `dormed.test` (reserviert, kein echtes DNS) — bedient
+**die Website direkt, ohne Subdomain-Präfix** (genau wie `dormed.de` live keine
+Subdomain hat, ADR-021). In `/etc/hosts`:
 
 ```text
-127.0.0.1 crm.dormed.test portal.dormed.test shop.dormed.test website.dormed.test
+127.0.0.1 dormed.test crm.dormed.test portal.dormed.test shop.dormed.test
 ```
 
 Jede App läuft in ihrem eigenen Container (siehe `compose.yaml`,
 `../06-infrastructure/DOCKER.md`) und akzeptiert nur ihren eigenen Host — kein
-host-generischer `php artisan serve`-Container mehr, der für alle drei zuständig ist.
+host-generischer `php artisan serve`-Container mehr, der für alle vier zuständig ist.
 
 ## Cookies / Sessions — Details
 
