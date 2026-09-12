@@ -8,11 +8,11 @@ Rohe `gwconnect`-Objektdefinitionen aus dem aktuell produktiven CRM
 
 | Roh-XML | Feld-Inventar | Objekt | Spalten (Custom) | Neues Zielkonzept (grob) |
 | --- | --- | --- | --- | --- |
-| [`Adressen.xml`](Adressen.xml) | [`Adressen-Felder.md`](Adressen-Felder.md) | `Address` (ADR) | 356 (176) | Company / Person / CompanyContact / Address / Location |
-| [`Servicevertraege-NEU.xml`](Servicevertraege-NEU.xml) | [`Servicevertraege-NEU-Felder.md`](Servicevertraege-NEU-Felder.md) | `SV` (SV) | 83 (83) | ServiceContract / Device / DeviceConfiguration / Maintenance |
-| [`Tickets.xml`](Tickets.xml) | [`Tickets-Felder.md`](Tickets-Felder.md) | `TICKETS` (TICK) | 112 (112) | ServiceCase / Maintenance / Serviceposition / Diagnose … |
-| [`Termine.xml`](Termine.xml) | [`Termine-Felder.md`](Termine-Felder.md) | `APPOINTMENT` (APP) | 25 (1) | Appointment (Scheduling, getrennt von Fachvorgang) |
-| [`Verkaufschancen.xml`](Verkaufschancen.xml) | [`Verkaufschancen-Felder.md`](Verkaufschancen-Felder.md) | `GWOPPORTUNITY` (GWOP) | 34 (9) | SalesOpportunity |
+| [`Adressen.xml`](../xml/Adressen.xml) | [`Adressen-Felder.md`](Adressen-Felder.md) | `Address` (ADR) | 356 (176) | Company / Person / CompanyContact / Address / Location |
+| [`Servicevertraege-NEU.xml`](../xml/Servicevertraege-NEU.xml) | [`Servicevertraege-NEU-Felder.md`](Servicevertraege-NEU-Felder.md) | `SV` (SV) | 83 (83) | ServiceContract / Device / DeviceConfiguration / Maintenance |
+| [`Tickets.xml`](../xml/Tickets.xml) | [`Tickets-Felder.md`](Tickets-Felder.md) | `TICKETS` (TICK) | 112 (112) | ServiceCase / Maintenance / Serviceposition / Diagnose … |
+| [`Termine.xml`](../xml/Termine.xml) | [`Termine-Felder.md`](Termine-Felder.md) | `APPOINTMENT` (APP) | 25 (1) | Appointment (Scheduling, getrennt von Fachvorgang) |
+| [`Verkaufschancen.xml`](../xml/Verkaufschancen.xml) | [`Verkaufschancen-Felder.md`](Verkaufschancen-Felder.md) | `GWOPPORTUNITY` (GWOP) | 34 (9) | SalesOpportunity |
 
 Die `*-Felder.md` sind die **lesbare Vorverdauung** (Feld, Typ, Label, Custom-Flag,
 Cluster nach Namenspräfix). Die Spalte `Entscheidung` steht auf `offen` und wird

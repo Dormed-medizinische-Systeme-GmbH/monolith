@@ -3,7 +3,7 @@
 Autoritative deklarative Spec für den Kern des CRM. Entstanden aus der
 Adressen-Zerlegung (`/grill-me`, Entscheidungen **D-001 – D-025** im
 [`../07-decisions/grill-log.md`](../07-decisions/grill-log.md); Feld-für-Feld
-Herkunft in [`../00-legacy/xml/Adressen-Zuordnung.md`](../00-legacy/xml/Adressen-Zuordnung.md)).
+Herkunft in [`../00-legacy/mapping/Adressen-Zuordnung.md`](../00-legacy/mapping/Adressen-Zuordnung.md)).
 
 Modul: `packages/core/src/Modules/Crm/` (Namespace `Dormed\Core\Modules\Crm\`, ADR-013). Diese Spec legt **Felder,
 Typen, Beziehungen, Regeln** fest — nicht den Code-Stil.

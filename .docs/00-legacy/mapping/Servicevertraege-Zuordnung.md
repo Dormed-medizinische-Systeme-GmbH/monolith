@@ -1,6 +1,6 @@
 # ServiceContract / Device — Feld-Zuordnung
 
-Legacy [`Servicevertraege-NEU.xml`](Servicevertraege-NEU.xml) · 83 Felder. Basis: D-034 – D-045.
+Legacy [`Servicevertraege-NEU.xml`](../xml/Servicevertraege-NEU.xml) · 83 Felder. Basis: D-034 – D-045.
 Synthese → `.docs/04-domain/SERVICE.md`.
 
 | Feld | Typ | Label | Ziel | Notiz |

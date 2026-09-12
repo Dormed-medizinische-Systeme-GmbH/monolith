@@ -1,6 +1,6 @@
 # Legacy-Felder — GWOPPORTUNITY (Verkaufschancen)
 
-Quelle: [`Verkaufschancen.xml`](Verkaufschancen.xml) · 34 Spalten · 9 Custom · 11 Pflicht
+Quelle: [`Verkaufschancen.xml`](../xml/Verkaufschancen.xml) · 34 Spalten · 9 Custom · 11 Pflicht
 
 **Ist-Analyse (ADR-004).** `Entscheidung` wird in `/grill-me` gesetzt: `übernehmen` (in welches Zielmodell/-feld) · `verwerfen` · `offen`.
 

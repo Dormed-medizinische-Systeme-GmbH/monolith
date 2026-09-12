@@ -6,7 +6,7 @@ Diese Datei dokumentiert die Rolle der bereitgestellten Altdefinitionen.
 
 Die rohen Schema-Exporte liegen unter [`xml/`](xml/) (CAS genesisWorld
 `gwconnect`-Objektdefinitionen aus dem produktiven CRM, nur Feld-**Definitionen**,
-keine Beispieldaten). Lese-Anleitung und Inventar: [`xml/README.md`](xml/README.md).
+keine Beispieldaten). Lese-Anleitung und Inventar: [`mapping/README.md`](mapping/README.md).
 
 | Objekt | Datei | Spalten |
 | --- | --- | --- |

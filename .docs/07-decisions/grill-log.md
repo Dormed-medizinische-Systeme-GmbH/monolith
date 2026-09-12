@@ -12,7 +12,7 @@ Status je Eintrag: `entschieden` · `offen (Rückfrage)` · `Entscheidungspunkt 
 
 > **Status: abgeschlossen & synthetisiert (2026-09-08).** Ergebnis:
 > [`../04-domain/CORE.md`](../04-domain/CORE.md) (autoritative Spec) +
-> [`../00-legacy/xml/Adressen-Zuordnung.md`](../00-legacy/xml/Adressen-Zuordnung.md)
+> [`../00-legacy/mapping/Adressen-Zuordnung.md`](../00-legacy/mapping/Adressen-Zuordnung.md)
 > (356 Felder klassifiziert). Alle „Offene Fachfragen" zu Core aus `DOMAIN.md`
 > beantwortet. Rest-Offen (in `CORE.md` gelistet): 2 Nutzer-Rückfragen (Hdin/USVE,
 > Auto-Hauptstandort), Rest an Bereich Service/Integrationen/ROADMAP übergeben.
@@ -507,7 +507,7 @@ Kostenstelle, Ein-/Austrittsdatum, extern-Flag (HR-System, nicht CRM).
 
 > **Status: synthetisiert (2026-09-08).** Ergebnis:
 > [`../04-domain/SERVICE.md`](../04-domain/SERVICE.md) +
-> `../00-legacy/xml/{Servicevertraege,Tickets}-Zuordnung.md`. Offen: Enum-Werte
+> `../00-legacy/mapping/{Servicevertraege,Tickets}-Zuordnung.md`. Offen: Enum-Werte
 > (contract_type/status/…), `DO_SVV_PRAXISSW*`-Aufteilung, Template-Kategorien,
 > State-Machine-Übergänge → nächste Runde. Termine → Bereich Scheduling.
 
