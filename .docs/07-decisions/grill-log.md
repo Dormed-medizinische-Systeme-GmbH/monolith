@@ -1182,3 +1182,57 @@ Verkaufsvorgang stammen.
 > [`../04-domain/BILLING.md`](../04-domain/BILLING.md). Entscheidungen D-056 – D-077.
 > Offene Rest-Punkte (Bank-Import-Format, Kontenrahmen/DATEV-Detail,
 > Mahngebühren/-zinsen später) in `BILLING.md` gelistet.
+
+---
+
+## Bereich: Rand-Klärungen Core/Service (Runde 2026-09-12)
+
+Schließt verbleibende „Rückfrage Nutzer"-Punkte in bereits synthetisierten Bereichen,
+bevor neue Bereiche (Inventory/Documents/Communication) aufgemacht werden — macht
+`CORE.md`/`SERVICE.md` stichfest für die erste Umsetzungsrunde (ADR-020).
+
+### D-078 — Auto-„Hauptstandort"-Location bei Company-Neuanlage: bestätigt
+
+**Status:** entschieden · **Datum:** 2026-09-12 · bestätigt `CORE.md` D-007
+
+Bei jeder Company-Neuanlage wird automatisch eine `Location` „Hauptstandort" mit einer
+Kopie der Sitzadresse erzeugt, danach unabhängig editierbar/löschbar.
+
+### D-079 — ServiceContract.contract_type: genau 2 Werte
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+`full_service` (inkl. Reparaturen/Ersatzteile) und `wartung` (nur planmäßige Wartung,
+Störungen werden extra abgerechnet — Sonderkonditionen auf Mehraufwand, D-060). Keine
+weiteren Vertragsstufen.
+
+### D-080 — Geräteklassen: zwei unabhängige Achsen, Wartungspauschale nur nach Bauform
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **revidiert D-063** (Geräteklassen-Teil)
+
+- Geräte werden real über eine **Matrix aus zwei Achsen** klassifiziert: **Bauform**
+  (`portabel` \| `standgeraet`) × **Bildgebung** (`schwarzweiss` \| `farbdoppler`) — 4
+  Kombinationen, aktuell im Altsystem als flache Liste geführt (z. B. „portables
+  Farbdopplersystem").
+- **Preisrelevant ist ausschließlich die Bauform**: `standgeraet` ist teurer als
+  `portabel`. Die Bildgebung (`imaging_type`) hat **keine** Preiswirkung — rein
+  katalog-/anzeigerelevant.
+- D-063s „genau 2 Klassen × Tarifstufe → 4 Werte" bleibt für die **Preisliste**
+  korrekt (2 `form_factor`-Werte × 2 Tarifstufen) — klargestellt: die preisrelevante
+  Achse heißt `form_factor`, nicht `device_class`. `Device` bekommt zusätzlich
+  `imaging_type` als reines Katalogfeld ohne Preisbezug.
+
+### D-081 — ServiceContract.status: 5 reale Werte
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **revidiert** den SERVICE.md-Vorschlag
+
+Reale Werte aus dem operativen Geschäft (nicht die ursprünglich vorgeschlagenen
+`entwurf`/`ausgelaufen`):
+
+- `offen` — Entwurf/Verhandlung, noch nicht unterschrieben.
+- `aktiv`
+- `gekuendigt`
+- `verschrottet` — Gerät wurde außer Betrieb genommen/entsorgt.
+- `kein_interesse` — Kunde lehnt nach Auslaufen/Kündigung einen Neuabschluss explizit ab.
+
+Kein Bezug zur Opportunity-Pipeline — alle fünf sind echte `ServiceContract`-Zustände.

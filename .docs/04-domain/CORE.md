@@ -65,7 +65,7 @@ Kunden** (Lieferanten/Kreditoren = späterer Bereich, D-008). Companies sind fla
 
 **Regeln**
 - Bei Neuanlage wird automatisch eine `Location` „Hauptstandort" mit einer Kopie
-  der Sitzadresse erzeugt; danach unabhängig editierbar (D-007). **Zu bestätigen.**
+  der Sitzadresse erzeugt; danach unabhängig editierbar (D-007, **bestätigt D-078**).
 - Rechnungsadresse einer *ausgestellten* Rechnung wird in Billing historisiert —
   nicht hier (D-004).
 
@@ -210,7 +210,10 @@ Vom Nutzer pflegbare Liste. `Company.medical_specialty_id` → hierauf.
 Orthopäden · Dermatologen · Veterinäre · Radiologen · Chirurgen · Kardiologen ·
 HNO · Sportmedizin · USVE · Bahnarzt · Rheumatologen · Hebammen · Werksarzt ·
 Unfallchirurgie · Sanitätshaus · Heilpraktiker · Phlebologie · Neurologen.
-→ „Hdin" und „USVE" sind unklare Abkürzungen (offen).
+„Hdin"/„USVE" sind unklare Legacy-Abkürzungen — **nicht blockierend**: es sind
+opake, nur anzeige-/filterrelevante Labels ohne funktionale Bedeutung im Zielmodell
+(analog D-005 bei `role`); Klärung der genauen Bedeutung ist optional und kann bei
+Gelegenheit nachgezogen werden.
 
 ---
 
@@ -229,11 +232,11 @@ Unfallchirurgie · Sanitätshaus · Heilpraktiker · Phlebologie · Neurologen.
 
 | # | Punkt | Wohin |
 | --- | --- | --- |
-| 1 | „Hdin" / „USVE" Fachrichtungs-Abkürzungen | Rückfrage Nutzer |
-| 2 | Auto-„Hauptstandort"-Location bei Company-Anlage bestätigen | Rückfrage Nutzer |
+| 1 | ~~„Hdin" / „USVE" Fachrichtungs-Abkürzungen~~ | ✅ nicht blockierend, s. o. |
+| 2 | ~~Auto-„Hauptstandort"-Location bei Company-Anlage~~ | ✅ bestätigt (D-078) |
 | 3 | `title` vs `name_suffix` endgültig zusammenlegen? | Person, später |
-| 4 | Fahrtzonen-Modell (Zonen, Preise, Geocoding-Zuordnung) | Bereich Service |
-| 5 | Melder = `ServiceCase.reported_by` → CompanyContact (Pflicht) | Bereich Service |
+| 4 | Fahrtzonen-Modell: Zonen-**Definition** (Preise/Struktur bereits in `SERVICE.md`) | Bereich Service (offener Punkt 1b) |
+| 5 | ~~Melder = `ServiceCase.reported_by` → CompanyContact (Pflicht)~~ | ✅ gelöst, s. `SERVICE.md` |
 | 6 | Device / Praxis-IT (19 Legacy-Felder, `DO_SVV_PRAXISSW*` …) | Bereich Service/Device |
 | 7 | Geocoding-Provider & Trigger | Bereich Integrationen |
 | 8 | Lieferanten/Kreditoren | Späterer Bereich (ROADMAP) |

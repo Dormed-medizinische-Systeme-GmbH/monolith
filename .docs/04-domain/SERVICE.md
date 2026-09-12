@@ -47,7 +47,8 @@ Das medizintechnische System (Ultraschallgerät …). Steht an einer `Location`
 | Feld | Typ | Null | Notiz |
 | --- | --- | :-: | --- |
 | `service_contract_id` | FK → `service_contracts` | ✓ | nullable, unique (D-064). Gesetzt ⇒ Tarifstufe `contract` |
-| `device_class` | enum `1` \| `2` | – | Geräteklasse, bestimmt Wartungspauschale (D-063). Namen offen |
+| `form_factor` | enum `portabel` \| `standgeraet` | – | Bauform — bestimmt die Wartungspauschale (D-063/D-080): `standgeraet` teurer als `portabel` |
+| `imaging_type` | enum `schwarzweiss` \| `farbdoppler` | – | Bildgebung — **rein katalog-/anzeigerelevant**, keine Preiswirkung (D-080). Kombination ergibt die Katalog-Klasse, z. B. „portables Farbdopplersystem" |
 | `location_id` | FK → `locations` | – | Gerätestandort |
 | `manufacturer` | string | – | ← `SYSTEM_HERSTELLER` |
 | `model_name` | string | ✓ | Kategorie/Bezeichnung ← `SYSTEM_BEZEICHNUNG` |
@@ -101,8 +102,8 @@ Die Servicevereinbarung für genau ein Device.
 | --- | --- | :-: | --- |
 | `company_id` | FK → `companies` | – | Vertragspartner |
 | `number` | string | – | Nummernkreis (← `GWAUTONUM`) |
-| `contract_type` | enum | – | Vertragsart — Werte **offen** (Full-Service / Wartung / …) |
-| `status` | enum | – | `aktiv` · `gekuendigt` · `ausgelaufen` · `entwurf` — Werte **offen** |
+| `contract_type` | enum `full_service` \| `wartung` | – | Full-Service = inkl. Reparaturen/Ersatzteile; Wartung = nur planmäßige Wartung, Störungen extra (D-079) |
+| `status` | enum `offen` \| `aktiv` \| `gekuendigt` \| `verschrottet` \| `kein_interesse` | – | `offen` = Entwurf/Verhandlung, noch nicht unterschrieben; `verschrottet` = Gerät außer Betrieb genommen; `kein_interesse` = Kunde lehnt nach Auslaufen/Kündigung explizit einen Neuabschluss ab (D-081) |
 | `signed_on` | date | ✓ | ← `VERTRAGS_DATUM` |
 | `cancelled_at` | date | ✓ | Kündigungsdatum |
 | `full_service_ends_at` | date | ✓ | ← `VERTRAG_FS_ENDE` |
@@ -141,9 +142,9 @@ Vertrags. **Keine** Wirkung auf bestehende Verträge, **keine** Wirkung auf die 
 | Feld | Typ | Notiz |
 | --- | --- | --- |
 | `item` | enum `maintenance_flat` \| `hourly_rate` \| … | |
-| `device_class` | enum `1` \| `2` (nullable) | nur bei `maintenance_flat` |
+| `form_factor` | enum `portabel` \| `standgeraet` (nullable) | nur bei `maintenance_flat` — **einzige** preisrelevante Geräte-Achse (D-080). `imaging_type` (schwarzweiß/Farbdoppler) hat **keine** Preiswirkung, ist rein katalog-/anzeigerelevant |
 | `tier` | enum `contract` \| `standard` | |
-| `amount` | decimal(10,2) | z. B. `hourly_rate/contract` = 25 €, `/standard` = 30 € |
+| `amount` | decimal(10,2) | z. B. `hourly_rate/contract` = 25 €, `/standard` = 30 €; `maintenance_flat`: `standgeraet` teurer als `portabel` |
 
 - `maintenance_flat` → wird bei Vertragserstellung in `ServiceContract.maintenance_price`
   **kopiert/fixiert**. Ab dann trägt der Vertrag den Preis.
@@ -344,7 +345,9 @@ Billing, das die `Invoice` erstellt und einfriert (D-043). Legacy `TICKET_GESAMT
 
 | # | Punkt | Wohin |
 | --- | --- | --- |
-| 1 | `contract_type`- und `status`-Enum-Werte (ServiceContract, Maintenance, ServiceCase) | Rückfrage Nutzer |
+| 1 | ~~ServiceContract `contract_type`/`status`-Enum-Werte~~ | ✅ gelöst (D-079/D-081) |
+| 1a | `Maintenance`- und `ServiceCase`-`status`-Enum-Werte (State-Machine-Übergänge) | Rückfrage Nutzer |
+| 1b | `travel_zones`-Zonen-Definition (PLZ-Bereiche vs. manuell je Company) | Rückfrage Nutzer |
 | 2 | `DO_SVV_PRAXISSW*` (14 Praxis-IT-Felder aus D-001) → Device vs. Location aufteilen | Rückfrage Nutzer |
 | 3 | Templates je `device_category` — welche Kategorien? | Rückfrage Nutzer |
 | 4 | Betriebsstatus-Werte, State-Machine-Übergänge final | Rückfrage Nutzer |
