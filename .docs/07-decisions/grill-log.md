@@ -2106,3 +2106,143 @@ nur benannt, **nicht** vorentschieden):
 **Einordnung:** gehört zum Bereich **Communication**, der noch nicht gegrillt ist
 (auch `SALES.md` #7, Aktivitäten-Timeline, hängt dort). Dieser Punkt ist das
 **stärkste Argument, Communication vor Documents zu grillen**.
+
+---
+
+## Bereich: Navigation & Cockpit (Runde 2026-09-13)
+
+Vom Nutzer eingebracht mit einer Bildreferenz (schmale vertikale Seitenleiste,
+Icon über Label, `•••`-Overflow am Ende). Ergebnis:
+[`../09-ui/NAVIGATION.md`](../09-ui/NAVIGATION.md). Revidiert dabei zwei Punkte der
+bestehenden Identitäts-Spec (D-124/D-125).
+
+### D-123 — Abteilungsspezifische Seitenleiste, aus dem Permission-Katalog abgeleitet
+
+**Status:** entschieden · **Datum:** 2026-09-13
+
+Die Navigation ist eine **schmale vertikale Seitenleiste** mit Blöcken, die durch
+**Separatoren** getrennt sind. Die Blöcke werden **dynamisch nach der Abteilung
+des eingeloggten Users** ein- oder ausgeblendet.
+
+**Fixe Struktur, unabhängig von der Abteilung:**
+
+| Position | Einträge | Sichtbar für |
+| --- | --- | --- |
+| **oben** | **Cockpit**, **Kalender** | **alle** |
+| Mitte | fachliche Blöcke, durch Separatoren getrennt | je Abteilung |
+| **unten** | **⚙ Einstellungen** | **alle** |
+
+**Sichtbarkeit = Berechtigung (Nutzer folgt der Empfehlung).** Jeder Nav-Eintrag
+deklariert die Permission, die er benötigt; gerendert wird über
+`PermissionService::can()` (D-030). Es gibt **keine** zweite, parallele
+Rolle→Blöcke-Konfiguration.
+
+Das ist der entscheidende Punkt: „nur Backoffice und Management bekommen die
+Warenwirtschaft" wird **nicht** als Menü-Regel gepflegt, sondern **fällt aus dem
+Permission-Katalog heraus**. Damit können Menü und tatsächliche Rechte nicht
+auseinanderlaufen, und ein Direktlink auf eine nicht sichtbare Route liefert
+konsequent 403 statt einer Seite, die im Menü fehlt.
+
+**Warenwirtschaftsblock** (Nutzervorgabe, nur `backoffice` / `management` /
+`geschaeftsfuehrung`): Wareneingang · Inventur · Artikel · Leistungen · Items.
+
+### D-124 — Genau **eine** Rolle je Mitarbeiter (revidiert D-031)
+
+**Status:** entschieden · **Datum:** 2026-09-13 · **revidiert D-031 / `IDENTITY_RBAC.md`**
+
+Nutzer: „anpassen auf eine Rolle pro Mitarbeiter. Das ist nach heutigem Stand
+falsch mit mehreren Rollen."
+
+`IDENTITY_RBAC.md` führte Rollen als **`belongsToMany` über `role_user`** mit
+`is_primary` als Anzeige-Rolle. Das wird ersetzt durch eine **einfache
+Zugehörigkeit**:
+
+- `users.role_id` → FK auf `roles`, **NOT NULL** (jeder aktive User hat genau eine Rolle).
+- Pivot `role_user` **entfällt**, `is_primary` entfällt ersatzlos.
+- `roles()` `belongsToMany` → `role()` `belongsTo`.
+
+**Folge:** die Frage „welche Rolle bestimmt das Cockpit bei Mehrfachrollen"
+entfällt vollständig — es gibt keine Mehrfachrollen. Der Nutzer hat das
+ausdrücklich so begründet („somit ist die Antwort auf deine Frage eindeutig").
+
+**Hinweis für den SSO-Slice (D-029):** der geplante Entra-`roles`-Claim-Sync nach
+`role_user` muss entsprechend auf ein **einzelnes** Rollen-Mapping umgestellt
+werden. Mehrere App-Rollen in Entra für einen Nutzer sind dann ein Fehlerfall,
+kein Normalfall — ist vor dem SSO-Slice zu klären.
+
+### D-125 — Rollenliste revidiert: 5 Rollen; `accounting` und `it` ersatzlos gestrichen
+
+**Status:** entschieden · **Datum:** 2026-09-13 · **revidiert D-031**
+
+D-031 hatte sechs Rollen. Die reale Abteilungsstruktur laut Nutzer sind **fünf**,
+„hart definiert ohne Dynamik":
+
+| `key` | Abteilung | Umfang |
+| --- | --- | --- |
+| `geschaeftsfuehrung` | Geschäftsführung | **Vollzugriff** (`['*']`) — erbt die bisherige `management`-Zeile aus D-031 |
+| `management` | Management | operative Leitungsebene: fachlicher Vollzugriff, **ohne** Systemadministration und ohne sensible Auswertungen |
+| `backoffice` | Backoffice | Stammdaten, Warenwirtschaft, **Billing** (neu), Papierkorb (D-023) |
+| `sales` | Vertrieb | Companies, Kontakte, Verkaufschancen |
+| `service` | Service | Companies (lesen), Servicefälle, Wartungen, Termine |
+
+**Gestrichen (ersatzlos, Nutzer explizit):**
+
+- **`accounting`** → `billing.*` (Rechnungen, Zahlungen, Mahnwesen) wandert zu
+  **`backoffice`**. Ebenso der Inventur-Zählauftrag fürs Zentrallager, den D-113
+  der „Buchhaltung" zuweist — Zuständiger ist künftig `backoffice`.
+  **`BILLING.md` und D-113 sind entsprechend zu lesen.**
+- **`it`** → ersetzt durch den `is_admin`-Bootstrap-Bypass aus D-028. Kein eigener
+  Rollen-Eintrag mehr.
+
+**Schlüsselwahl:** `geschaeftsfuehrung` statt eines englischen Kürzels, weil
+`executive`/`management` im deutschsprachigen Alltag dauerhaft verwechselbar wären.
+
+**Offen:** die **genauen Permissions je Abteilung** — Nutzer: „müssen später
+nochmal definiert werden". Die Rolle→Permissions-Map in `config/authorization.php`
+bleibt bis dahin der Stand aus `IDENTITY_RBAC.md`, um `geschaeftsfuehrung` ergänzt
+und um `accounting`/`it` bereinigt. Permissions stecken weiterhin **im Code**,
+nicht im UI (Nutzer bestätigt) — D-030 unverändert.
+
+### D-126 — Cockpit: je Rolle im Code definiert, mit Daten des Users gefiltert
+
+**Status:** entschieden · **Datum:** 2026-09-13
+
+Das **Cockpit** (= Dashboard) ist für **jede** Abteilung vorhanden, aber
+**inhaltlich je Rolle verschieden**. Es besteht **hauptsächlich aus Listen und
+Kennzahlen** (Nutzer).
+
+- **Definiert im Code, je Rolle** — ein festes Kachel-Set pro Abteilung, keine
+  UI-Konfigurierbarkeit. Änderung = Deployment. Bewusst **nicht** der Weg des
+  benutzerdefinierten Feldkatalogs (D-100): ein Kachel-Baukasten wäre ein eigenes
+  Teilsystem, das den Bau erheblich verzögern würde.
+- **Befüllt mit den Daten des Users**, über Filter — z. B. „meine offenen
+  Servicefälle", „meine Termine", „meine Verkaufschancen".
+
+**Wichtige Abgrenzung:** diese Nutzerfilterung ist eine **Anzeigeentscheidung**,
+keine Autorisierung. Sie ist konsistent mit **D-016** (`responsible_*_id` ist
+„rein informativ, keine AuthZ") — ein Vertriebler *sieht* im Cockpit seine
+Verkaufschancen, *darf* aber weiterhin alle sehen. Das Cockpit ist eine Abkürzung
+in den Alltag, keine Sichtbarkeitsgrenze.
+
+### D-127 — Techniker bekommen keinen Warenwirtschaftsblock; Inventur läuft übers Cockpit
+
+**Status:** entschieden · **Datum:** 2026-09-13 · **löst den Konflikt D-113 ↔ D-123**
+
+**Der Konflikt:** D-123 gibt die Warenwirtschaft (inkl. **Inventur**) nur an
+`backoffice`/`management`/`geschaeftsfuehrung`. D-113 verlangt aber, dass der
+**Techniker die Inventur seines eigenen Lagers einreicht**, und D-109 gibt ihm
+Lesezugriff auf seinen Bestand.
+
+**Die Auflösung (Nutzerentscheidung):** Der Techniker bekommt **keinen**
+Nav-Eintrag für Warenwirtschaft — die Seitenleiste bleibt exakt wie in D-123
+beschrieben. Sein Zugang zur Warenwirtschaft ist **ausschließlich kontextuell**:
+
+1. **Offene Inventur** → erscheint als **Aufgabe/Kachel in seinem Cockpit** (D-126),
+   nicht als Menüpunkt.
+2. **Sein Bestand** → ausschließlich im **Positionsmodal** beim Einsatz (D-109),
+   nicht als eigene Ansicht.
+
+Damit bleibt die Seitenleiste schmal und rollengerecht, ohne dass D-113
+unerfüllbar wird. Die zugehörigen Permissions sind entsprechend **feiner
+geschnitten** als ein pauschales `inventory.*` — die genaue Aufteilung fällt in
+die offene Permission-Definition aus D-125.

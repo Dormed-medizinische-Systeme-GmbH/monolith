@@ -30,12 +30,13 @@ Composer-Package `dormed/core`, PSR-4 `Dormed\Core\`, Struktur nach
 
 1. `packages/core/composer.json` (`type: library`, keine eigene Laravel-Installation).
 2. Modul **`Core`** (`src/Modules/Core/`, `depends_on: []`): `module.php`,
-   `Models/User.php`, `Models/Role.php` (+ Pivot `role_user`), `PermissionService`
-   — Felder exakt nach `IDENTITY_RBAC.md`.
+   `Models/User.php`, `Models/Role.php`, `PermissionService` — Felder exakt nach
+   `IDENTITY_RBAC.md`. **Kein Pivot `role_user`** (D-124): `users.role_id` als
+   NOT-NULL-FK, `role()` `belongsTo`. Rollen-Seed = die 5 aus D-125.
 3. Modul **`Crm`** (`src/Modules/Crm/`, `depends_on: [Core]`): `module.php`,
    Models `Company`/`Person`/`CompanyContact`/`Address`/`Location`/
    `ContactChannel`/`Consent`/`MedicalSpecialty` — Felder exakt nach `CORE.md`.
-4. `database/migrations/`: `users`, `roles`, `role_user`, `cache`, `jobs`
+4. `database/migrations/`: `users`, `roles`, `cache`, `jobs`
    (Standard-Laravel) + `companies`, `people`, `company_contacts`, `addresses`,
    `locations`, `contact_channels`, `consents`, `medical_specialties`.
 5. `tests/Architecture/ModuleBoundariesTest` (portiert aus dem alten Repo-Stand,

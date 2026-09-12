@@ -29,7 +29,8 @@ Diese Dokumentation beschreibt Zielarchitektur, Projektstruktur, Entwicklungsreg
 17. `07-decisions/DECISIONS.md` (ADRs)
 18. `07-decisions/grill-log.md` (chronologisches Entscheidungsprotokoll, D-001–)
 19. `08-implementation/IMPLEMENTATION_SEQUENCE.md` · `AGENT_WORKFLOW.md`
-20. `00-legacy/LEGACY_REFERENCE.md` (nur bei Migrations-/Altdaten-Fragen)
+20. `09-ui/NAVIGATION.md` (Seitenleiste + Cockpit je Abteilung, D-123–D-127)
+21. `00-legacy/LEGACY_REFERENCE.md` (nur bei Migrations-/Altdaten-Fragen)
 
 ## Dokumentationsprinzip
 

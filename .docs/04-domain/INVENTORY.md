@@ -436,7 +436,8 @@ InventoryCount (Inventurlauf)          ← monatlich, Scheduler, zum Stichtag
    └── n InventoryCountSheet (Zählauftrag je Lager)
           ├─ warehouse_id
           ├─ assigned_user_id   Techniker für sein Lager,
-          │                     Buchhaltung fürs Zentrallager
+          │                     backoffice fürs Zentrallager (D-125:
+          │                     Rolle accounting ersatzlos gestrichen)
           ├─ status: offen → eingereicht → gebucht
           └─ n Zählpositionen (Artikel bzw. Exemplar, Ist-Menge)
                  │
@@ -449,7 +450,9 @@ InventoryCount (Inventurlauf)          ← monatlich, Scheduler, zum Stichtag
   darunter je aktivem Lager einen Zählauftrag mit Zuständigem (Nutzer: „definitiv
   Scheduler").
 - Der Zuständige erfasst Ist-Mengen (bzw. bestätigt/vermisst Exemplare) und reicht
-  ein.
+  ein. **Der Techniker bekommt dafür keinen Nav-Eintrag** — seine offene Inventur
+  erscheint als Aufgabe/Kachel im Cockpit (D-127,
+  [`../09-ui/NAVIGATION.md`](../09-ui/NAVIGATION.md)).
 - Beim Buchen entsteht **je Differenz eine Ledger-Zeile** mit Referenz auf den
   Zählauftrag. Die geforderte Nachvollziehbarkeit — „wer bucht was minus in den
   monatlichen Inventuren" — ist damit vollständig **aus dem Ledger** auswertbar;

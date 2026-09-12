@@ -69,7 +69,7 @@ DB::statement("ALTER TABLE service_contracts ADD CONSTRAINT service_contracts_st
 - Fremdschlüssel: `<singular_tabellenname>_id` (`company_id`, `service_contract_id`).
 - Pivot-Tabellen: alphabetisch sortierte Singular-Namen (`company_contacts` ist die
   Ausnahme — eigenständige Entität mit eigenen Feldern, kein reines Pivot; echte
-  Pivots ohne Zusatzfelder: `role_user`, `payment_invoice`, `maintenance_devices`
+  Pivots ohne Zusatzfelder: `payment_invoice`, `service_case_devices`; `maintenance_devices`
   bereits Entität mit Zusatzfeldern → eigener Name statt `maintenances_devices`).
 - Boolesche Spalten: `is_*` / `has_*`-Präfix wo sinnvoll (`is_primary`, `is_active`).
 - Zeitstempel: `*_at` (Timestamp) vs. `*_date`/`*_on` (reines Datum ohne Uhrzeit) —
@@ -100,7 +100,7 @@ Prozentsätze/Stundensätze-Prozent: `decimal(5,2)`.
 
 - `SoftDeletes` (`deleted_at`) auf **jedem** fachlichen Modell inkl. Pivots mit
   Zusatzfeldern (`company_contacts`, `maintenance_devices`, …) — nicht auf reinen
-  Pivots ohne Zusatzfelder (`role_user`).
+  Pivots ohne Zusatzfelder (`payment_invoice`, `service_case_devices`).
 - `created_by` / `updated_by` via `TracksBlame` (portiert nach `packages/core/src/Support/`).
 - `created_at` / `updated_at` Standard-Laravel-Timestamps überall.
 
