@@ -316,7 +316,7 @@ Kein Bündeln von Verträgen wie bei `Maintenance`.
 | `location_id` | FK → `locations` | ✓ | |
 | `number` | string | – | Nummernkreis |
 | `reported_by` | FK → `company_contacts` | – | **Pflicht**, Melder muss bestehender Kontakt sein (CORE.md) |
-| `type` | enum | – | ← `GWSTYPE` — Werte **offen** |
+| `type` | enum `allgemeiner_service` \| `telefonischer_support` \| `geraeteausfall` \| `netzwerkproblem` | – | ← `GWSTYPE` (D-097, Liste erweiterbar) |
 | `status` | enum `neu` \| `zugewiesen` \| `in_bearbeitung` \| `wartet_auf_kunde` \| `abgeschlossen` \| `storniert` | – | ← `GWSSTATUS`/`WARTEAURUECKMELDUNG` (D-083). `storniert` als Endzustand von jedem Nicht-Abschluss-Zustand aus erreichbar |
 | `assigned_technician_id` | FK → `users` | ✓ | bei Erstellung automatisch aus `service_territories` vorbelegt (D-082/D-084), Übergang `neu → zugewiesen` bleibt ein eigener Schritt (D-083) |
 | `escalated_at` | datetime | ✓ | ← `TICKET_TICKETESCALATIONSTIME1` |

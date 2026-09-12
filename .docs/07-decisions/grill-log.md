@@ -1406,3 +1406,13 @@ Alle Geld-Spalten über alle Bereiche hinweg `decimal(12,2)` (statt der bisher
 uneinheitlichen Mischung `decimal(10,2)`/`decimal(12,2)` in den einzelnen
 `04-domain/*.md`-Tabellen). Prozentsätze (Stundensatz-Faktoren, Rabatt) bleiben
 `decimal(5,2)`.
+
+### D-097 — ServiceCase.type: vorläufige Werteliste, nicht abschließend
+
+**Status:** entschieden (Liste erweiterbar) · **Datum:** 2026-09-12
+
+`allgemeiner_service` · `telefonischer_support` · `geraeteausfall` ·
+`netzwerkproblem`. Vom Nutzer ausdrücklich als Startpunkt markiert ("erstmal
+diese") — **nicht abschließend**, kann bei Bedarf um weitere Werte ergänzt
+werden (jede Ergänzung = eigene D-NNN-Entscheidung + CHECK-Constraint-Migration,
+D-094).

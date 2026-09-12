@@ -40,9 +40,11 @@ Endzuständen `gewonnen` / `verloren` (D-051).
 `items()` `hasMany` `OpportunityItem`, `appointments()` `morphMany` (D-046),
 `serviceContract()` `hasOne` `ServiceContract` (nullable Rückverweis, D-053).
 
-**Abgeleitet** (nicht gespeichert, D-052): `total_amount` = Σ `items`,
-`weighted_amount` = `total_amount × probability/100`, `marginal_return`
-(Deckungsbeitrag) = Σ (`quantity × (unit_price − unit_cost)`).
+**Abgeleitet** (nicht gespeichert, D-052): je Position `net_line_amount` =
+`quantity × unit_price × (1 − discount_percent/100)`; `total_amount` = Σ
+`net_line_amount`, `weighted_amount` = `total_amount × probability/100`,
+`marginal_return` (Deckungsbeitrag) = Σ (`quantity × (unit_price × (1 −
+discount_percent/100) − unit_cost)`).
 
 ## OpportunityItem
 
@@ -97,7 +99,7 @@ Schlägt `Company.responsible_sales_id` bei Company-Anlage automatisch vor (D-01
 | 1 | `stage`/`probability`-Phasenliste (Legacy `DistributionPhase` inkl. %) | Rückfrage Nutzer, folgt (D-089) |
 | 2 | ~~`DORMEDABTEILUNG`~~ | ✅ verworfen (D-087) |
 | 3 | ~~`lead_source`-Enum-Werte~~ | ✅ gelöst (D-086) |
-| 4 | `discount` / `unit_cost` an `OpportunityItem` — wirklich nötig? | Rückfrage Nutzer |
+| 4 | ~~`discount`/`unit_cost` an `OpportunityItem`~~ | ✅ beide nötig — `unit_cost` für `marginal_return`, `discount_percent` fließt in `net_line_amount` (D-052-Formel präzisiert) |
 | 5 | Produktkatalog (`products`) | Bereich Inventory |
 | 6 | Angebots-PDF-Erzeugung | Bereich Dokumente |
 | 7 | Sales-Aktivitäten (Anrufe/Mails/Notizen-Timeline) | Bereich Communication (später) |

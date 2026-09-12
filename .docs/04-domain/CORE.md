@@ -250,7 +250,7 @@ Gelegenheit nachgezogen werden.
 | 1 | ~~„Hdin" / „USVE" Fachrichtungs-Abkürzungen~~ | ✅ nicht blockierend, s. o. |
 | 2 | ~~Auto-„Hauptstandort"-Location bei Company-Anlage~~ | ✅ bestätigt (D-078) |
 | 3 | `title` vs `name_suffix` endgültig zusammenlegen? | Person, später |
-| 4 | Fahrtzonen-Modell: Zonen-**Definition** (Preise/Struktur bereits in `SERVICE.md`) | Bereich Service (offener Punkt 1b) |
+| 4 | ~~Fahrtzonen-Modell: Zonen-Definition~~ | ✅ gelöst — PLZ-Von-Bis, automatisch (D-084, `SERVICE.md`) |
 | 5 | ~~Melder = `ServiceCase.reported_by` → CompanyContact (Pflicht)~~ | ✅ gelöst, s. `SERVICE.md` |
 | 6 | ~~Device / Praxis-IT (`DO_SVV_PRAXISSW*`)~~ | ✅ gelöst — vollständig `Location` (D-092) |
 | 7 | Geocoding-Provider & Trigger | Bereich Integrationen |

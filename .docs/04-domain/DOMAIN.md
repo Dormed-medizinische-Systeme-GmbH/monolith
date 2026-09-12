@@ -11,10 +11,10 @@ haben ein eigenes autoritatives Dokument (Feldform, Enums, Regeln):
 
 | Bereich | Spec | Status |
 | --- | --- | --- |
-| Core: Company / Person / Adresse | [`CORE.md`](CORE.md) | **spezifiziert** (D-001 – D-025) |
-| Service: Device / Vertrag / Wartung / Servicefall | [`SERVICE.md`](SERVICE.md) | **spezifiziert** (D-034 – D-045; einige Enum-Werte offen) |
-| Scheduling: Termine | [`SCHEDULING.md`](SCHEDULING.md) | **spezifiziert** (D-046 – D-050) |
-| Sales: Verkaufschancen | [`SALES.md`](SALES.md) | **spezifiziert** (D-051 – D-055) |
+| Core: Company / Person / Adresse | [`CORE.md`](CORE.md) | **spezifiziert** (D-001–025, D-078, D-092) |
+| Service: Device / Vertrag / Wartung / Servicefall | [`SERVICE.md`](SERVICE.md) | **spezifiziert** (D-034–045, D-059–065, D-079–085, D-091, D-097) |
+| Scheduling: Termine | [`SCHEDULING.md`](SCHEDULING.md) | **spezifiziert** (D-046–050, D-088, D-090) |
+| Sales: Verkaufschancen | [`SALES.md`](SALES.md) | **spezifiziert** (D-051–055, D-086–087; `stage`/`probability`-Phasenliste D-089 vertagt) |
 | Billing: Rechnungen / Zahlungen / Mahnwesen | [`BILLING.md`](BILLING.md) | **spezifiziert** (D-056 – D-077; Bank-Import-Format & DATEV-Kontenrahmen offen) |
 | Dokumente, Inventory, Portal, Shop | dieses Dokument | Discovery |
 
