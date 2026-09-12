@@ -294,7 +294,7 @@ Störung / Serviceeinsatz — **nicht** aus dem Wartungszyklus (D-039). Betrifft
 
 **Keine Kostenableitung aus dem Vertrag** (D-060). Alle Positionen ad-hoc
 (Teile per Kostenvoranschlag, Arbeitszeit `hourly_rate` nach Tarifstufe des
-jeweiligen Geräts). Fahrtzone: aus `Company`, einmal je Anfahrt (**zu bestätigen**).
+jeweiligen Geräts). Fahrtzone: aus `Company`, einmal je Anfahrt (bestätigt, D-076).
 Kein Bündeln von Verträgen wie bei `Maintenance`.
 
 | Feld | Typ | Null | Notiz |
@@ -348,9 +348,9 @@ Billing, das die `Invoice` erstellt und einfriert (D-043). Legacy `TICKET_GESAMT
 | 2 | `DO_SVV_PRAXISSW*` (14 Praxis-IT-Felder aus D-001) → Device vs. Location aufteilen | Rückfrage Nutzer |
 | 3 | Templates je `device_category` — welche Kategorien? | Rückfrage Nutzer |
 | 4 | Betriebsstatus-Werte, State-Machine-Übergänge final | Rückfrage Nutzer |
-| 5 | Übergabe-Mechanismus line_items → Invoice (Sammelrechnung?) | Bereich Billing |
-| 6 | `Termine.xml` — Terminplanung für Maintenance/ServiceCase | Bereich Scheduling (nächster) |
-| 7 | Ersatzteile/Lager (Teile in line_items) | Bereich Inventory |
+| 5 | ~~Übergabe-Mechanismus line_items → Invoice~~ | ✅ gelöst, siehe `BILLING.md` (D-057/D-066) |
+| 6 | `Termine.xml` — Terminplanung für Maintenance/ServiceCase | ✅ gelöst, siehe `SCHEDULING.md` |
+| 7 | Ersatzteile/Lager (Teile in line_items) | Bereich Inventory (nächster) |
 | 8 | Qualifizierte e-Signatur | späterer Slice |
 | 9 | Offline-Wartungsbericht | späterer ROADMAP-Slice (D-041) |
 

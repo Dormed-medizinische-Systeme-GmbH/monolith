@@ -15,7 +15,8 @@ haben ein eigenes autoritatives Dokument (Feldform, Enums, Regeln):
 | Service: Device / Vertrag / Wartung / Servicefall | [`SERVICE.md`](SERVICE.md) | **spezifiziert** (D-034 – D-045; einige Enum-Werte offen) |
 | Scheduling: Termine | [`SCHEDULING.md`](SCHEDULING.md) | **spezifiziert** (D-046 – D-050) |
 | Sales: Verkaufschancen | [`SALES.md`](SALES.md) | **spezifiziert** (D-051 – D-055) |
-| Billing, Dokumente, Inventory, Portal, Shop | dieses Dokument | Discovery |
+| Billing: Rechnungen / Zahlungen / Mahnwesen | [`BILLING.md`](BILLING.md) | **spezifiziert** (D-056 – D-077; Bank-Import-Format & DATEV-Kontenrahmen offen) |
+| Dokumente, Inventory, Portal, Shop | dieses Dokument | Discovery |
 
 ## Core
 
@@ -101,7 +102,8 @@ Company A
 
 Ein Service kann an Location B stattfinden, während die Rechnung an eine zentrale Adresse geht.
 
-Ob der Rechnungsempfänger immer dieselbe Company ist, ist als Fachfrage noch offen.
+Rechnungsempfänger ist **immer** eine `Company` (`billing_company_id`, D-066) —
+keine freistehende Rechnungsadresse ohne Company. Details: `BILLING.md`.
 
 ## Offene Fachfragen
 
@@ -117,9 +119,15 @@ Ob der Rechnungsempfänger immer dieselbe Company ist, ist als Fachfrage noch of
   Location hat ihre eigene Adresse (Gerätestandort). Lieferadresse = eine
   Location (D-003 / D-007 / D-014).
 
-### Service / Sales / Billing — noch offen
+### Billing — geklärt (siehe `BILLING.md` / `grill-log.md` D-056–D-077)
 
-- Kann ein Rechnungsempfänger auch eine freistehende Adresse ohne Company sein?
-  (Annahme aktuell: immer Company.)
-- Fahrtzonen-Modell (Zonen, Preise) — Bereich Service.
-- „Melder" eines Servicefalls — Bereich Service (`ServiceCase.reported_by` → CompanyContact).
+- ✅ Rechnungsempfänger ist immer eine `Company`, nie eine freistehende Adresse (D-066).
+- ✅ Sage/KHK vollständig abgelöst, keine Sync-Brücke (D-068).
+- ✅ Zahlungsabgleich, Mahnwesen, Storno/Gutschrift, e-Rechnungs-Detailfelder (D-069–D-074).
+
+### Service / Sales — noch offen
+
+- Fahrtzonen-Modell: Zonen-**Definition** (PLZ-Bereiche vs. manuell je Company) —
+  Bereich Service, `SERVICE.md` offener Punkt.
+- „Melder" eines Servicefalls — bereits gelöst (`ServiceCase.reported_by` →
+  CompanyContact, `CORE.md`/`SERVICE.md`).

@@ -1034,3 +1034,151 @@ service_prices (manuell) → Angebot (Opportunity) → angenommen/Auftrag
 
 **Revidiert:** `SERVICE.md` `ServiceContract.billing_company_id` → entfällt;
 `CORE.md` `Company.billing_company_id` ergänzen.
+
+### D-067 — Rechnungsnummernkreis: jährlich, `RE-{Jahr}-{lfd.}` / `GS-{Jahr}-{lfd.}`
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+- Nummernkreis pro Kalenderjahr, Reset zum 1.1. Format `RE-2026-000123`.
+- Gutschriften (D-069) haben einen **eigenen** Nummernkreis/Präfix: `GS-2026-000045`.
+- Erfüllt §14 UStG (fortlaufend, lückenlos, eindeutig) — lückenlos **je Jahr und
+  Beleg-Typ** (Rechnung/Gutschrift getrennt gezählt).
+
+### D-068 — Sage/KHK komplett abgelöst; Monolith übernimmt Fakturierung UND Zahlungsverfolgung vollständig
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **revidiert D-056, D-009**
+
+- **Keine Übergangsbrücke mehr.** D-056s „Sage bleibt für Zahlungseingang/Mahnwesen,
+  Status-Rücksync ins CRM" ist **hinfällig** — Sage/KHK hat **keine Relevanz mehr** in
+  diesem Programm.
+- Der Monolith macht **von Anfang an** Rechnungsstellung, Zahlungsabgleich (D-071) und
+  Mahnwesen (D-072) vollständig selbst — kein Sync, keine Doppelerfassung.
+- **Vollwertige Buchhaltung** (Kontenrahmen, GuV/BWA) bleibt trotzdem **extern** beim
+  Steuerberater-Büro — der Monolith exportiert nur periodisch DATEV-fähige
+  Buchungssätze (D-075). Das ist die Antwort auf D-056s offene strategische Frage.
+- **Konsequenz für D-009** (`Company.khk_matchcode`/`debitor_number`) → D-073.
+
+### D-069 — Storno/Gutschrift: Vollstorno erzeugt automatisch eine Gutschrift
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+- Eine bereits **gestellte** (eingefrorene) Rechnung wird nie nachträglich verändert.
+  Storno = **Vollstorno**: erzeugt automatisch einen Gutschrift-Beleg (Negativ-Beleg,
+  identische Positionen, negierte Beträge) mit Rückverweis `credited_invoice_id` auf
+  die Original-Rechnung. Original-Status → `storniert`.
+- **Kein** reines Statusflag ohne Beleg (nicht GoBD-konform für bereits versendete
+  Rechnungen).
+- **Keine Teil-Gutschriften** jetzt (nur einzelne Positionen gutschreiben) — nur
+  Vollstorno. Teil-Gutschriften wären ein späterer Ausbau (ADR-010).
+- `invoices.type` = `rechnung` | `gutschrift` (eine Tabelle, kein separates Modell).
+
+### D-070 — Leistungsdatum: Einzeldatum, automatisch aus der Quelle
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+- `Invoice.service_date` (Einzeldatum, kein Zeitraum) — automatisch übernommen aus
+  `Maintenance.performed_at` bzw. `ServiceCase.finalized_at`. Kein manuelles Feld,
+  kein Zeitraum-Paar.
+- Passt zum Modell „1 Anfahrt = 1 Tag = 1 Rechnung" (D-059/D-066).
+
+### D-071 — Zahlungsabgleich: automatisierter Kontoauszug-Import, Matching per Rechnungsnummer, n:m Zahlung↔Rechnung
+
+**Status:** entschieden (Import-Format offen) · **Datum:** 2026-09-12
+
+- **Import**: Bank-Kontoauszug-Import, Format **noch offen** (CAMT.053 wahrscheinlich,
+  ggf. MT940) — Datenmodell bewusst **format-unabhängig** gehalten (ein
+  `bank_statement_imports`-Log mit `format`-Feld, der eigentliche Parser ist
+  austauschbar).
+- **Matching**: automatisch per Rechnungsnummer im Verwendungszweck; kein Treffer →
+  Warteschlange „nicht zugeordnet" zur manuellen Zuordnung durch die Buchhaltung.
+- **`payments` ↔ `invoices` als n:m** (Pivot `payment_invoice` mit `amount` je
+  Zuordnung) — bildet sowohl Sammelüberweisungen (eine Zahlung deckt mehrere
+  Rechnungen, z. B. Managementgesellschaft, D-004/D-066) als auch Teilzahlungen
+  (mehrere Zahlungen auf eine Rechnung) ab.
+- `Invoice.payment_status` (abgeleitet aus den zugeordneten `payments`): `offen` ·
+  `teilbezahlt` · `bezahlt` · `ueberfaellig` (Fälligkeit überschritten, unbezahlt).
+
+### D-072 — Mahnwesen: 3 Stufen, manuell ausgelöst, keine automatische Gebühr/Zins-Berechnung
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+- Stufen: **Zahlungserinnerung → 1. Mahnung → 2. Mahnung**. Danach manueller Übergang
+  zu Inkasso **außerhalb** des Systems (kein Inkasso-Workflow im Monolithen).
+- Jede Stufe wird **manuell** ausgelöst (kein automatischer Cron-Versand) —
+  serverseitig erzwungene Reihenfolge (kein Sprung `keine → mahnung_2`,
+  Business-Workflow-Guard analog `IDENTITY_RBAC.md`).
+- **Keine** automatische Mahngebühr- oder Verzugszins-Berechnung jetzt (§288 BGB) —
+  späterer Ausbau bei Bedarf (ADR-010).
+- `Invoice.dunning_level` (enum `keine` \| `zahlungserinnerung` \| `mahnung_1` \|
+  `mahnung_2`), `last_dunning_sent_at`.
+
+### D-073 — KHK-Felder revidiert: `khk_matchcode` verworfen, `debitor_number` wird interne Kundennummer
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **revidiert D-009**
+
+- `Company.khk_matchcode` → **verworfen** (keine Fremdsystem-Verknüpfung mehr nötig,
+  D-068).
+- `Company.debitor_number` → **bleibt**, aber ohne Sage/KHK-Bezug: eine **eigene,
+  interne Kundennummer** (Referenz auf Rechnungen/Kommunikation). Format/Vergabe
+  (manuell vs. automatisch fortlaufend) → Detail bei Umsetzung, kein Sync-Mechanismus
+  mehr nötig.
+
+### D-074 — e-Rechnung: Leitweg-ID optional, USt-Kategorien mehrwertig, Zahlungsmittel Überweisung + Lastschrift
+
+**Status:** entschieden · **Datum:** 2026-09-12 · konkretisiert D-058
+
+- **Leitweg-ID** (B2G-Routing-ID): optionales, nullable Feld (auf `Invoice`, ggf.
+  gespeist aus `Company`) für die seltenen öffentlichen Auftraggeber (Bahnarzt,
+  Werksarzt, `medical_specialties`-Werte aus D-019).
+- **USt-Kategorien**: nicht nur 19 % Regelsteuersatz — zusätzlich seltene Sonderfälle
+  (Auslandskunden/Export, Reverse Charge). `invoice_items.tax_category` (enum
+  `standard_19` \| `reverse_charge` \| `export_tax_free` \| `other_tax_free`),
+  `tax_rate`, `tax_amount` je Position (nicht am Invoice-Kopf, da innerhalb einer
+  Rechnung theoretisch gemischt).
+- **Zahlungsmittel**: `ueberweisung` \| `lastschrift`. Bei Lastschrift zusätzlich
+  `sepa_mandate_reference` (+ Mandatsdatum) — Feld auf `Company` oder `Invoice`,
+  Detail bei Umsetzung.
+
+### D-075 — Buchhaltung bleibt extern; Monolith exportiert periodisch DATEV-fähige Buchungssätze
+
+**Status:** entschieden · **Datum:** 2026-09-12 · beantwortet D-056s offene strategische Frage
+
+- **Kein** eigenes `Accounting`-Modul (Kontenrahmen, GuV/BWA, ELSTER) im Monolithen.
+  Das bleibt beim Steuerberater-Büro / dessen Tool.
+- Der Monolith liefert **periodisch einen DATEV-fähigen Buchungssatz-Export**
+  (Rechnungen + Zahlungen) — dafür braucht jede `invoice_items`-Position perspektivisch
+  ein **Erlöskonto** (Buchungskonto-Zuordnung, Detail/Kontenrahmen bei Umsetzung).
+- Kein Rückfluss (keine Daten kommen vom Steuerberater-Tool zurück in den Monolithen).
+
+### D-076 — ServiceCase-Fahrtzone bestätigt: analog Maintenance, einmal je Anfahrt
+
+**Status:** entschieden · **Datum:** 2026-09-12 · bestätigt D-060s offenen Punkt
+
+Wie `Maintenance` (D-059): **eine** Fahrtzonenpauschale je `ServiceCase`-Anfahrt, aus
+`Company.travel_zone_id` abgeleitet — unabhängig davon, wie viele Geräte im Case
+betroffen sind (D-060). Kein Bündeln mehrerer Verträge wie bei `Maintenance` bleibt
+unverändert (ServiceCase ist weiterhin sein eigenes Ding).
+
+### D-077 — Vertragsloses Device: entsteht über Verkauf ODER Direkterfassung im Service
+
+**Status:** entschieden · **Datum:** 2026-09-12 · löst D-064s offenen Punkt
+
+Ein `Device` ohne `service_contract_id` (D-064) entsteht auf **zwei** zulässigen Wegen:
+
+1. **Verkauf** (gewonnene Opportunity, D-053): Gerät entsteht aus dem Sales-Flow, auch
+   ohne begleitenden Servicevertrag.
+2. **Direkterfassung im Service**: Techniker/Innendienst legt das Gerät „on the fly"
+   beim ersten `ServiceCase` an (häufigster Fall: Kunde meldet ein Altgerät, das noch
+   nicht im System ist).
+
+Beide Wege sind gleichberechtigt — kein Zwang, jedes Gerät müsse aus einem
+Verkaufsvorgang stammen.
+
+---
+
+## Bereich: Domäne — Billing — Status
+
+> **Status: abgeschlossen & synthetisiert (2026-09-12).** Ergebnis:
+> [`../04-domain/BILLING.md`](../04-domain/BILLING.md). Entscheidungen D-056 – D-077.
+> Offene Rest-Punkte (Bank-Import-Format, Kontenrahmen/DATEV-Detail,
+> Mahngebühren/-zinsen später) in `BILLING.md` gelistet.

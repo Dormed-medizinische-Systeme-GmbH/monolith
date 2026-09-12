@@ -33,8 +33,7 @@ Kunden** (Lieferanten/Kreditoren = späterer Bereich, D-008). Companies sind fla
 | `name_addition` | string | ✓ | Adresszusatz, „zweiter Namensteil" (← `CompName2`, D-021) |
 | `medical_specialty_id` | FK → `medical_specialties` | ✓ | Fachrichtung (D-019) |
 | `notes` | text | ✓ | Schlagworte (← `Notes`) |
-| `debitor_number` | string | ✓ | Debitorennummer Sage/KHK (← `AdrNumber`, D-009) |
-| `khk_matchcode` | string | ✓ | KHK-Matchcode (← `ADRKHKMATCHCODE`, D-009) |
+| `debitor_number` | string | ✓ | Eigene interne Kundennummer, **kein** Fremdsystem-Bezug mehr (← `AdrNumber`, D-009, revidiert D-073) |
 | `avv_status` | enum `none` \| `signed` | – | Auftragsverarbeitungsvertrag (← `AVV`, D-013) |
 | `avv_signed_at` | date | ✓ | — |
 | `responsible_sales_id` | FK → `users` | ✓ | Verantwortlich Vertrieb, **informativ**, keine AuthZ (D-016) |
@@ -246,7 +245,7 @@ Der bestehende `packages/core/src/Modules/Crm/`-Slice (Company/Person/Location/C
 Address) ist **strukturell kompatibel**, muss aber angepasst werden:
 - Person nicht mehr frei anlegbar → nur nested unter Company (D-002).
 - Company: neue Felder (Bank, Recht/Steuer, `name_addition`, `medical_specialty_id`,
-  `debitor_number`, `khk_matchcode`, `avv_*`, `responsible_*_id`, `billing_company_id`,
+  `debitor_number`, `avv_*`, `responsible_*_id`, `billing_company_id`,
   `travel_zone`).
 - Address: `house_number` bereits vorhanden; `district`/`state`/`po_box*`/Geocoding/
   `verified_*` ergänzen.
