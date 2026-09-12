@@ -1429,3 +1429,397 @@ einziges 5-Werte-Enum inkl. `wartet_auf_kunde` als Status-Wert). **Geprüft und
 bewusst nicht revidiert**: die Stichprobe (2 Zeilen) ist zu klein, um die
 gesamte Werteliste zuverlässig abzuleiten — D-083 bleibt bestehen. Bei mehr
 repräsentativen Daten (oder der echten Werteliste wie bei D-089) erneut prüfen.
+
+---
+
+## Bereich: Inventory / Warenwirtschaft (Runde 2026-09-12)
+
+Erste Grill-Runde zur bis dahin nur als „spätere Ausbaustufe" markierten Domäne
+(`../05-modules/INVENTORY.md`). Ausgelöst durch die zwei hängenden Referenzen aus
+bereits fertigen Specs: `OpportunityItem.product_id → products` (`SALES.md` #5) und
+Ersatzteile in `line_items` (`SERVICE.md` #7).
+
+**Besonderheit:** Für diesen Bereich existiert **kein** Legacy-Export. Der
+Artikelstamm liegt in Sage/KHK, das mit D-068 ersatzlos abgelöst wird — es gibt
+also weder ein `*.xml`-Schema noch eine `*.csv`-Stichprobe wie bei Adressen/
+Tickets/Serviceverträgen. Diese Runde beruht ausschließlich auf Nutzerangaben;
+ein späterer Abgleich gegen einen echten Sage-Artikelstamm-Export ist
+ausdrücklich vorgesehen (siehe D-108).
+
+**Scope-Korrektur:** Der vorgeschlagene „Minimalschnitt" (nur Katalog + Positions-
+Referenz, Lager vertagt) wurde vom Nutzer **verworfen** — die reale Ist-Situation
+ist bereits eine vollständige Warenwirtschaft (Artikelgruppen, Artikel, Bestand,
+seriennummernpflichtige Exemplare, mehrere Läger, Umbuchung, Wareneingang). Der
+Grundsatz „Keine Vorab-Übermodellierung" aus `INVENTORY.md` greift hier nicht:
+es wird nichts auf Vorrat modelliert, sondern ein produktiv genutzter Prozess
+abgebildet.
+
+### D-099 — Dreistufiger Aufbau: ArticleGroup → Article → Exemplar; `article_number` am Artikel
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **revidiert D-034** (Device-Feldliste)
+
+Der Warenstamm ist dreistufig:
+
+```
+ArticleGroup (Artikelgruppe, definiert das Feldset — D-100)
+    └── Article (Artikelstamm: article_number, Bezeichnung, Preise, is_serial_tracked)
+            └── Exemplar (nur wenn is_serial_tracked: physisches Einzelstück mit Seriennummer)
+```
+
+- **`article_number` gehört zum `Article`, nicht zum Exemplar** (Nutzer explizit).
+  Das **revidiert** die `Device`-Feldliste aus D-034/`SERVICE.md`: `article_number`
+  (und analog `manufacturer` / `model_name`) sind dort heute Exemplar-Felder und
+  wandern auf den `Article`. Das Exemplar trägt `article_id` + `serial_number`.
+- **Kein separates `InventoryItem` neben `Device`.** Der Nutzer unterscheidet
+  fachlich nicht zwischen „Gerät im Lager" und „Device beim Kunden" — es ist
+  **ein** Datensatz mit Lebenszyklus. Konsequenz für `SERVICE.md`:
+  `Device.location_id` wird **nullable** und bekommt ein Gegenstück
+  `warehouse_id`; genau eines von beiden ist gesetzt (DB-CHECK, ADR-007/D-094).
+  Die Seriennummer existiert damit genau einmal im System, die Historie vom
+  Wareneingang bis zur Verschrottung ist lückenlos.
+- Nicht seriennummernpflichtige Artikel haben **keine** Exemplare — ihr Bestand
+  ist reine Menge je Lager (D-102).
+
+**Offen:** ob `Device.article_id` `NOT NULL` sein kann — hängt an den Fremdgeräten
+(D-107).
+
+### D-100 — Benutzerdefinierter Feldkatalog je Artikelgruppe (bewusste Ausnahme zu D-094)
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **Ausnahme zu D-094**
+
+Die Zusatzfelder eines Artikels/Exemplars (MAC-Adresse, Ausstattung, Baujahr, …)
+sind **fest je Artikelgruppe**, die Feldliste selbst ist aber **im UI pflegbar**:
+in der Bearbeitungsmaske der Artikelgruppe wird ein Feld hinzugefügt, benannt und
+mit einer **Typvorgabe** versehen (z. B. `MAC-Adresse` → `string`, `Baujahr` →
+`date`), plus Feldoptionen wie `mandatory`. Alle Artikel/Exemplare dieser Gruppe
+erben das Feld.
+
+Das ist eine **bewusste Ausnahme** zu D-094 (VARCHAR + CHECK-Constraint, jede
+Wertelisten-Änderung = eigene Migration): benutzerdefinierte Felder können per
+Definition keine Migration je Änderung haben, sonst wäre die Anforderung nicht
+erfüllbar. Die Ausnahme ist **eng begrenzt** auf diesen Feldkatalog — alle
+fachlich festen Enums (Status, Bewegungsarten, Lagertypen …) bleiben unter D-094.
+
+**Konkrete Form (unterstützte Feldtypen, Feldoptionen, Speicherung EAV vs. JSONB)
+ist noch offen** und wird in der nächsten Runde dieses Bereichs entschieden.
+
+### D-101 — Vier Lagertypen, alle systemisch geführt
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+`Warehouse` deckt alle vier vom Nutzer bestätigten Arten ab:
+
+1. **Zentrallager** — ein oder mehrere physische Hauptläger.
+2. **Technikerlager** — je Techniker ein eigenes Lager. **Korrektur des Nutzers
+   (2026-09-12): das Lager hängt am `User`, nicht am Fahrzeug** — ein Techniker
+   hat sein Lager unabhängig davon, in welchem Auto er gerade sitzt. Teile-
+   entnahme beim Kunden ist eine Abbuchung von genau diesem Lager.
+3. **Leih-/Austauschgeräte-Pool** — Gerät steht beim Kunden, gehört weiter Dormed
+   (Bezug zu `ServiceCase.loan_device_required`). Führung siehe D-106.
+4. **Kommissions-/Reparaturlager** — physisch vorhanden, aber nicht frei
+   verfügbar: Kundengeräte in Reparatur, Retouren, Defektbestand.
+
+Unterschieden über `Warehouse.type` (Enum unter D-094) + `responsible_user_id`
+(nullable, gesetzt beim Typ Technikerlager). Ein Lager ist **kein**
+`Location` — `locations` sind Kundenstandorte (D-007), Läger sind Dormed-intern.
+
+### D-102 — Bestand als Bewegungs-Ledger, keine gespeicherte Bestandszahl
+
+**Status:** entschieden (aus D-093 abgeleitet, keine Nutzer-Rückfrage nötig) · **Datum:** 2026-09-12
+
+Der Bestand je Artikel und Lager wird **nicht** als Spalte geführt, sondern als
+Summe über einen unveränderlichen Bewegungs-Ledger (`stock_movements`: Artikel
+oder Exemplar, Quell-/Ziellager, Menge, Bewegungsart, Beleg-Referenz, Zeitpunkt).
+Direkte Konsequenz aus **D-093**, das denormalisierte Cache-Spalten ausdrücklich
+streicht („bei Performance-Bedarf später eine Materialized View, keine
+denormalisierte Spalte") — dieselbe Begründung wie bei `ServiceContract.next_due_at`.
+
+Jeder bestandsverändernde Vorgang (Wareneingang, Umbuchung, Entnahme, Rückgabe,
+Inventurdifferenz) erzeugt Ledger-Zeilen und ändert nie eine Bestandszahl direkt.
+Für seriennummernpflichtige Artikel ist die Menge je Bewegung immer 1 und das
+Exemplar referenziert.
+
+### D-103 — Bestellwesen inklusive; `suppliers` als eigene Tabelle, nicht als Company-Typ
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **bestätigt D-002** (Company = nur Kunden)
+
+Wareneingang läuft **mit** vorgelagertem Bestellwesen: Lieferant → Bestellung mit
+Positionen → Wareneingang bucht gegen offene Bestellpositionen ab, Teillieferungen
+möglich.
+
+Der Lieferantenstamm ist eine **eigenständige `suppliers`-Tabelle** — ausdrücklich
+**nicht** ein `type`-Feld auf `Company`. Begründung des Nutzers: strikte Trennung
+zwischen **Kreditoren** (Lieferanten) und **Debitoren** (Kunden). Das lässt D-002
+(„Company ist der zentrale Ankerpunkt, aktuell nur Kunden") unangetastet, statt es
+durch einen Typ-Diskriminator aufzuweichen. Eine Firma, die beides ist, existiert
+damit bewusst zweimal — Dublettenrisiko wird gegen die klare Trennung eingetauscht.
+
+### D-104 — Artikel trägt Listenverkaufspreis + Einkaufspreis; Positionen snapshotten
+
+**Status:** entschieden · **Datum:** 2026-09-12 · analog D-065
+
+Der `Article` trägt einen **Listenverkaufspreis** und einen **Einkaufspreis**.
+Keine Preislisten-Tabelle mit Gültigkeitszeiträumen oder Kunden-/Mengenstaffeln.
+
+Beim Einfügen in eine Position (`OpportunityItem`, `line_items`) wird der Preis
+**gesnapshottet** — exakt dasselbe Muster wie `ServiceContract.maintenance_price`
+(D-065) und die Invoice-Snapshots (D-093): eine spätere Preisänderung am Artikel
+wirkt **nie** rückwirkend auf bestehende Angebote, Einsätze oder Rechnungen.
+Der Einkaufspreis versorgt zusätzlich `OpportunityItem.unit_cost` und damit den
+Deckungsbeitrag (`marginal_return`, D-052).
+
+`service_prices` (Wartungspauschale, Stundensatz — D-062/D-065) und `travel_zones`
+bleiben davon **unberührt**: das sind Dienstleistungspreise, keine Artikelpreise,
+und sie behalten ihre eigene Mechanik.
+
+### D-105 — `form_factor` / `imaging_type` bleiben am Exemplar
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **bestätigt D-063/D-080**
+
+Trotz des neuen Artikelstamms wandern Bauform (`portabel`/`standgeraet`) und
+Bildgebung (`schwarzweiss`/`farbdoppler`) **nicht** auf den `Article` und **nicht**
+in den benutzerdefinierten Feldkatalog (D-100), sondern bleiben Felder am
+Exemplar (`Device`). D-063/D-080 gelten unverändert.
+
+Damit bleibt die Preisfindung für die Wartungspauschale (`service_prices.form_factor`)
+unabhängig davon, ob ein gewartetes Gerät überhaupt einen Artikel-Datensatz hat
+(siehe D-107) — und sie greift nie auf ein im UI frei definierbares Feld zu.
+
+### D-106 — Leihgerät = Reservierung mit Rückbuchung (Detailform offen)
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+Ein Leihgerät beim Kunden wird **nicht** über einen bloßen Status am Exemplar
+geführt, sondern über eine **Reservierung**: ein eigener Vorgang, der das Exemplar
+aus dem verfügbaren Bestand nimmt und es dem Kunden/Standort zuordnet. Die
+Rückgabe hebt die Reservierung auf.
+
+**Die Rückgabe ist ein eigener Beleg** (`reservation_returns`), nicht ein Feld am
+Reservierungsobjekt — Nutzer folgt der Empfehlung. `n` Rückgaben je Reservierung,
+eigener Nummernkreis, FK auf die Reservierung. Begründung:
+
+1. **Teilrückgaben.** Umfasst eine Reservierung mehrere Exemplare (Gerät + Sonde +
+   Wagen), kann ein `zurueck_am`-Feld „zwei von drei zurück" nicht abbilden.
+2. **Belegprinzip, das im Projekt schon gilt.** Billing mutiert eine Rechnung nie,
+   ein Storno ist ein eigenes Dokument (D-069–D-074). Nur ein eigener Beleg hat
+   eine eigene Nummer, die im Dokument referenziert und unterschrieben werden kann.
+3. **Ledger-Konsistenz.** Ausgabe und Rückgabe sind ohnehin je eine Bewegung in
+   `stock_movements` (D-102); der Beleg gibt der Rückgabebewegung eine saubere
+   Referenz, ein Feld-Update am Reservierungsobjekt hätte keine.
+
+Der Reservierungsstatus (`offen` / `teilweise_zurueck` / `erledigt`) ist
+**abgeleitet**, nicht gespeichert — konsistent zu D-093/D-102.
+
+### D-107 — Fremdgeräte ohne Artikelstamm: vertagt
+
+**Status:** offen (Rückfrage) · **Datum:** 2026-09-12
+
+Dormed wartet auch Geräte, die es nie verkauft hat (fremde Hersteller, Altbestand).
+Wenn die `article_number` am Artikel hängt (D-099), ist offen, ob solche Exemplare
+trotzdem einen `Article`-Datensatz brauchen — also ob `Device.article_id`
+`NOT NULL` oder nullable ist.
+
+**Vertagt auf Nutzerwunsch:** „muss später nochmal besprochen werden, ich muss mir
+die aktuelle Struktur angucken, damit die Datenüberführung auch gut funktioniert."
+Die Antwort hängt an der realen Sage/KHK-Struktur (D-108) und ist
+migrations­relevant — bis dahin **nicht** selbst entscheiden.
+
+### D-108 — Sage/KHK-Artikelstamm-Export als spätere Ist-Referenz vorgesehen
+
+**Status:** offen (Datenlieferung) · **Datum:** 2026-09-12
+
+Der einzige gepflegte Artikel-/Preisstamm liegt heute in **Sage/KHK** (Nutzer
+bestätigt) — dem System, das mit D-068 ersatzlos abgelöst wird. Es gibt für
+Inventory bisher **keinen** Export im Muster von `00-legacy/{Adressen,Tickets,
+Servicevertraege}/`.
+
+Vorgesehen, sobald verfügbar: Feldinventar + echter Datenexport unter
+`00-legacy/Artikel/`, dann Abgleich der hier getroffenen Entscheidungen gegen die
+reale Feldbelegung — nach demselben Verfahren wie D-098 (Abweichung wird geprüft
+und begründet entschieden, die Werteliste wird **nicht** stillschweigend
+angepasst). Der Nutzer hat den „umfassenden Zusatzfeldern" des Altsystems
+ausdrücklich attestiert, dass sie „teilweise notwendig und richtig sind,
+teilweise aber auch kein Belangen für uns haben" — die Übernahme ist also eine
+Feld-für-Feld-Entscheidung, kein 1:1-Import.
+
+### D-109 — ⭐ Teileentnahme: das Technikerlager **ist** die Positionsauswahl
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **erweitert D-043** (`line_items`)
+· **vom Nutzer ausdrücklich als tragendes Konzept markiert**
+
+> **Dies ist die zentrale Mechanik der Inventory-Domäne und muss in jeder
+> abgeleiteten Spec (`INVENTORY.md`, `SERVICE.md`, Modul-Doku) explizit und
+> hervorgehoben stehen.** Nutzer: „das ist eine sehr gute zusammengesetzte Idee,
+> um viele Probleme zu vermeiden."
+
+**Das Prinzip:** Lagerabgang und Rechnungsposition sind **ein einziger Vorgang**,
+nicht zwei. Der Techniker erfasst nicht „was ich abrechnen will" und separat „was
+ich verbraucht habe" — er erfasst **einmal**, was er benutzt hat, und daraus
+entsteht beides. Bestand und Abrechnung können damit konstruktionsbedingt nicht
+auseinanderlaufen.
+
+**Der Ablauf, zeitlich entkoppelt:**
+
+```
+1. Übergabe        Büro/Lagerist bucht 3 Netzkabel
+                   Zentrallager ──> Technikerlager (Umbuchung, D-114)
+                                    │
+                   (Tage bis Wochen vergehen)
+                                    │
+2. Einsatz         Techniker beim Kunden, Maintenance oder ServiceCase
+                   öffnet Positionen ──> „+" ──> Modal „Mein Inventar"
+                   sieht NUR seinen eigenen Bestand, wählt: 1 Netzkabel
+                                    │
+3. Ergebnis        ein Vorgang, zwei Wirkungen:
+                   ├─ stock_movement  (Abgang Technikerlager, D-102)
+                   └─ line_item       (article_id + Preis-Snapshot, D-104)
+                      ──> Billing (D-043/D-057)
+```
+
+**Die Auswahl ist doppelt eingeschränkt:**
+
+1. **Fachlich:** nur Artikel, die am `Article` als **servicerelevant markiert**
+   sind (`is_service_item`), erscheinen überhaupt — der Techniker sieht nicht den
+   ganzen Handelswarenkatalog.
+2. **Besitzrechtlich:** nur der **Bestand seines eigenen Lagers**. Das Lager wird
+   **aus dem eingeloggten Nutzer abgeleitet** (`warehouses.responsible_user_id =
+   auth()->id()`, Typ Technikerlager, D-101) — es gibt keine Lagerauswahl im
+   Erfassungsdialog. Ein Techniker kann nichts abrechnen, was er nicht hat.
+
+**Zwei Erfassungsmodi, abhängig von `Article.is_serial_tracked` (D-099):**
+
+| Artikelart | Erfassung | Menge |
+| --- | --- | --- |
+| nicht seriennummernpflichtig | Artikel + **Menge** | frei (Nutzerbeispiel: „Techniker kriegt 3 Kabel, benutzt hier eins, da eins, da eins, braucht dann neue") |
+| seriennummernpflichtig | **exaktes Exemplar** per eindeutigem Identifier (Seriennummer) | immer 1 |
+
+**UI-Vorgabe (Nutzer explizit):** **kein klassisches Dropdown** in der
+Positionszeile. Stattdessen ein **„+"-Button, der ein Modal öffnet**, das das
+**Inventar des Mitarbeiters** darstellt — er wählt daraus aus, *was* er benutzt
+hat und *in welcher Menge*. Die Liste ist damit ein Bestandsbild, kein
+Katalog-Picker.
+
+**Konsequenz für `SERVICE.md`:** Die `line_items`-Tabelle (D-043) bekommt
+`article_id` (FK → `articles`, **nullable** — freie Ad-hoc-Positionen ohne
+Artikelbezug bleiben möglich, z. B. Fremdleistung, Fahrtzonenpauschale) und
+`stock_movement_id` (FK, nullable — gesetzt, wenn die Position aus einer Entnahme
+entstanden ist). Gilt für `Maintenance` **und** `ServiceCase`, da `line_items`
+polymorph ist.
+
+**Offen:** Nutzer deutet „unter Umständen auch etwas mehr Komplexität" an
+(vermutlich Garantie-/Kulanzteile, Rückgabe unverbrauchter Teile, Teile ohne
+Abrechnung). Wird in einer Folgerunde präzisiert.
+
+### D-110 — Artikelgruppen: hierarchisch, **ohne** Feldvererbung
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+`ArticleGroup` ist ein **Baum** (`parent_id`, nullable) — aber die Hierarchie
+dient **ausschließlich Navigation und Filterung** („zeig mir alles unter
+Zubehör"). Das Feldset (D-100) kommt **ausschließlich** aus der Gruppe, in der
+der Artikel tatsächlich liegt; Obergruppen vererben **nichts**.
+
+Bewusst in Kauf genommen: gemeinsame Felder müssen je Gruppe erneut angelegt
+werden (`Netzkabel` und `USB-Kabel` brauchen beide „Länge" → zweimal). Der
+Gegenwert ist, dass das effektive Feldset eines Artikels **abgelesen** und nicht
+über den Baum **berechnet** wird — und dass eine Änderung an einer Obergruppe
+nie unbeabsichtigt auf Untergruppen durchschlägt.
+
+### D-111 — Feldkatalog-Typen + optionales Regex-Constraint je Feld
+
+**Status:** entschieden · **Datum:** 2026-09-12 · **präzisiert D-100**
+
+Der Feldkatalog der Artikelgruppe (D-100) bietet folgende Typen an:
+
+| Typ | Verwendung |
+| --- | --- |
+| `string` | einzeilig (MAC-Adresse, Ausstattung) |
+| `text` | mehrzeilig (Notizen) |
+| `integer` | ganze Zahlen (Anzahl Kanäle) |
+| `decimal` | Dezimalzahlen (Länge, Gewicht) |
+| `date` | Datum (Baujahr, Prüfdatum) |
+| `boolean` | Ja/Nein |
+| `select` | feste Werteliste, **beim Anlegen des Feldes selbst definiert** |
+
+Feldoptionen: `mandatory` (Pflichtfeld) und — **Nutzer-Ergänzung** — ein
+**optionales Regex-Muster** je Feld, z. B. für eine MAC-Adresse.
+
+Das Regex wird **als Postgres-CHECK-Constraint** durchgesetzt (bzw. auf der
+Anwendungsebene darüber). Das ist der saubere Bogen zurück zu **ADR-007**
+(„Postgres als zusätzliche Integrity Boundary") und zum Geist von **D-094**: die
+Ausnahme aus D-100 gibt dem Nutzer die *Definition* der Felder in die Hand, nimmt
+der Datenbank aber **nicht** die Durchsetzung der Integrität — ein
+benutzerdefiniertes Feld bekommt einen benutzerdefinierten Constraint statt gar
+keinen.
+
+### D-112 — Minusbestand: blockieren, aber übersteuerbar und dokumentiert
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+Eine Buchung, die den Bestand rechnerisch unter null drücken würde, wird
+**blockiert** — aber mit einem **bewussten Übersteuerungsschritt**: der Techniker
+bekommt eine Warnung und kann die Buchung explizit bestätigen. Die Übersteuerung
+wird **am Bewegungsdatensatz vermerkt** (`stock_movements.negative_override`
++ auslösender User über `TracksBlame`) und gemeldet.
+
+Damit wird der Techniker beim Kunden nie hart blockiert (er kann seine Position
+erfassen), der Bestand bildet trotzdem die Realität ab, und jeder Minusfall ist
+namentlich nachvollziehbar statt still. Fällt zusätzlich spätestens bei der
+Monatsinventur (D-113) auf.
+
+### D-113 — Monatliche Inventur: Inventurlauf + Zählauftrag je Lager, Scheduler-getrieben
+
+**Status:** entschieden (UI/UX-Verpackung offen) · **Datum:** 2026-09-12
+
+Struktur (Nutzer folgt der Empfehlung, „definitiv Scheduler"):
+
+```
+InventoryCount (Inventurlauf)          ← monatlich, automatisch zum Stichtag
+   └── n InventoryCountSheet (Zählauftrag je Lager)
+          ├─ warehouse_id
+          ├─ assigned_user_id   (Techniker für sein Lager, Buchhaltung fürs Zentrallager)
+          ├─ status: offen → eingereicht → gebucht
+          └─ n Zählpositionen (Artikel bzw. Exemplar, Ist-Menge)
+                 └── beim Buchen je Differenz: stock_movement
+                     mit Bewegungsart `inventurdifferenz` + FK auf das Sheet
+```
+
+- Ein **Laravel-Scheduler** erzeugt den Inventurlauf monatlich zum Stichtag und
+  darunter je aktivem Lager einen Zählauftrag mit Zuständigem.
+- Der Zuständige erfasst Ist-Mengen (bzw. bestätigt/vermisst Exemplare bei
+  seriennummernpflichtigen Artikeln) und reicht ein.
+- Beim Buchen entsteht **je Differenz eine `stock_movement`** (D-102) mit
+  Referenz auf den Zählauftrag. Damit ist die vom Nutzer geforderte
+  Nachvollziehbarkeit — „wer bucht was minus in den monatlichen Inventuren" —
+  vollständig aus dem **Ledger** auswertbar; es entsteht **kein zweites
+  Protokoll** neben `stock_movements`.
+- Der Zählauftrag ist der **Beleg** — dasselbe Prinzip wie der Rückgabebeleg
+  (D-106) und das Storno in Billing (D-069–D-074).
+- Auswertung je Lager und Monat läuft über die Zählaufträge.
+
+**Offen (UI/UX):** wie der Inventurprozess konkret verpackt wird — Nutzer: „die
+Frage ist nur, wie man das am Ende im UI und per UX verpackt." Kandidaten aus dem
+Gespräch: geführter Fenster-Flow als Aufgabe, Benachrichtigung über Minusbestände
+per Mail oder in der Web-App. **Hinweis:** ein volles Reminder-/
+Benachrichtigungssystem ist laut `SCHEDULING.md` #4 bewusst als Plattform-Thema
+**vertagt** — die Inventur-Benachrichtigung darf kein paralleles Zweitsystem
+aufmachen, sondern hängt sich dort an, sobald es existiert.
+
+### D-114 — Lagerumbuchung als eigener Beleg, zwischen allen Lagertypen
+
+**Status:** entschieden · **Datum:** 2026-09-12
+
+Umgebucht werden kann **zwischen beliebigen Lägern** — ausdrücklich auch von
+Technikerlager zu Technikerlager (Nutzer: „zwischen Lägern und auch
+Technikerlägern hin und her"). Die Umbuchung ist ein **eigener Belegdatensatz**
+(`stock_transfers`) mit Quell-Lager, Ziel-Lager, Datum, verantwortlichem User und
+`n` Positionen (Artikel + Menge bzw. Exemplar), der `2n` Ledger-Zeilen erzeugt
+(Abgang + Zugang, D-102). Ziel laut Nutzer: „Lagerbewegungen kleinlichst
+nachvollziehen können, wenn man das wollte."
+
+Dieser Beleg ist zugleich Schritt 1 der Entnahme-Mechanik aus **D-109** (Übergabe
+Büro → Techniker).
+
+**UI-Vorgabe (Nutzer, erste Runde):** die Umbuchung soll als **Massenaktion in
+der Tabellenansicht** funktionieren — Mehrfachmarkierung mehrerer Zeilen **und**
+Einzelsatz-Aktion, nicht nur ein separates Formular.
