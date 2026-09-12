@@ -1823,3 +1823,196 @@ Büro → Techniker).
 **UI-Vorgabe (Nutzer, erste Runde):** die Umbuchung soll als **Massenaktion in
 der Tabellenansicht** funktionieren — Mehrfachmarkierung mehrerer Zeilen **und**
 Einzelsatz-Aktion, nicht nur ein separates Formular.
+
+### D-115 — `Article`: feste Feldliste (bewusst großzügig für den Anfang)
+
+**Status:** entschieden (Agent-Entscheidung auf Nutzerauftrag) · **Datum:** 2026-09-13
+
+Nutzer hat vier Felder gesetzt — **Bezeichnung, Kostenstelle, Steuersatz,
+Checkbox „seriennummernpflichtig"** — und den Rest delegiert: „mach mal anfangs
+lieber zu viele statt zu wenig und das reduzieren wir die Liste später. Deine
+Entscheidung für den Anfang."
+
+Das sind die Felder, die **jeder** Artikel hat, unabhängig von der Artikelgruppe
+und nicht löschbar — im Unterschied zum benutzerdefinierten Feldkatalog (D-100/
+D-111). Liste bewusst breit; **Reduktion ist ausdrücklich vorgesehen** und wird
+dann je gestrichenem Feld hier vermerkt.
+
+Zwei Felder verdienen eine Begründung:
+
+- **`tax_category` + `tax_rate`** statt nur „Steuersatz": Billing führt die Steuer
+  laut **D-074** *je Position* über `tax_category` (`standard_19` ·
+  `reverse_charge` · `export_tax_free` · `other_tax_free`) **plus** `tax_rate`.
+  Der Artikel trägt beides als **Vorbelegung**, die in die Position gesnapshottet
+  wird (D-104) — sonst müsste die Position die Steuerkategorie raten.
+- **`cost_center`** (Kostenstelle, vom Nutzer genannt) ist zugleich der natürliche
+  Anknüpfungspunkt für den offenen Punkt **`BILLING.md` #2** (Kontenrahmen-/
+  Erlöskonto-Zuordnung für den DATEV-Export). Nicht jetzt entscheiden, aber der
+  Haken sitzt hier.
+
+`manufacturer` / `model_name` / `manufacturer_article_number` kommen per **D-099**
+vom `Device` herüber — sie sind Modell-, nicht Exemplareigenschaften.
+
+### D-116 — Positionsmodal: Registerstruktur Leistungen / Artikel / Sonstiges
+
+**Status:** entschieden · **Datum:** 2026-09-13 · **konkretisiert D-109**
+
+Das „+"-Modal aus D-109 ist **kein reiner Lagerdialog**, sondern der allgemeine
+Positions-Erfassungsdialog mit **Registern/Tabs** — für den Anfang drei:
+
+| Tab | Quelle | Verhalten |
+| --- | --- | --- |
+| **Leistungen** | `Offering`-Katalog (D-117) | nicht-physische Leistungen, kein Bestandsbezug |
+| **Artikel** | **Bestand des eigenen Technikerlagers** (D-109) | physische Artikel; Mengenerfassung bzw. Exemplarauswahl je `is_serial_tracked` |
+| **Sonstiges** | **fest im Code** (D-118) | freie Position: Preis, Menge, Beschreibung frei eingebbar |
+
+Nutzer: „das ist gerade aus einer Idee eine konkrete Vorgabe auch für das spätere
+UI/UX des Lager-Modals der Positionsauswahl des Technikers geworden." Die Tab-Liste
+ist **erweiterbar** („für den Anfang") — jede Erweiterung = eigene D-NNN.
+
+Wichtig für das Verständnis von D-109: die dortige Einschränkung „nur der eigene
+Lagerbestand" gilt **ausschließlich für den Artikel-Tab**. Leistungen sind nicht
+bestandsgeführt, „Sonstiges" ist bewusst unbeschränkt — genau deshalb gibt es die
+drei Tabs, statt alles in eine Liste zu werfen.
+
+### D-117 — Leistungskatalog: `OfferingGroup` → `Offering`, zweistufig, getrennt vom Artikelstamm
+
+**Status:** entschieden · **Datum:** 2026-09-13
+
+Leistungen sind **nicht** Artikel mit einem „nicht physisch"-Häkchen, sondern ein
+**eigener, paralleler Katalog** (Nutzer: „sollten separat zu Artikelgruppen,
+Artikel und Items existieren"). Aufbau analog, aber **eine Stufe kürzer**:
+
+```
+Artikel:    ArticleGroup  →  Article  →  Exemplar     (3 Stufen, D-099)
+Leistung:   OfferingGroup →  Offering                 (2 Stufen)
+```
+
+Die dritte Stufe entfällt zwangsläufig: eine Leistung hat kein physisches
+Einzelstück. Nutzer: „gleiche wie bei Artikeln, aber eine Ebene weiter oben, weil
+es logisch sonst keinen Sinn machen würde." Die `OfferingGroup` definiert also
+den Feldkatalog **direkt für die Leistungen** darunter — dieselbe Mechanik wie
+D-100/D-111 (Typvorgabe, `mandatory`, optionales Regex), nur mit einem einzigen
+möglichen Ziel statt zweien (vgl. D-119).
+
+**Benennung:** `Offering` / `OfferingGroup` statt des naheliegenden `Service`,
+weil `Modules\Service\` bereits das Servicemodul (Wartung/Servicefall) ist — ein
+`Service`-Model dort wäre dauerhaft mehrdeutig.
+
+**Modulzuordnung (Agent-Entscheidung, revidierbar):** der Leistungskatalog lebt in
+`Modules\Inventory\`, obwohl er nicht bestandsgeführt ist. Grund: er ist mit dem
+Artikelkatalog über das Positionsmodal (D-116) und dieselbe Feldkatalog-Mechanik
+untrennbar verzahnt, und `PROJECT_STRUCTURE.md` kennt kein eigenes Katalog-Modul —
+ein neues Basismodul wird nicht ohne Freigabe aufgemacht.
+
+**Abgrenzung zu `service_prices`:** `service_prices` (D-062/D-065) bleibt
+**unberührt**. Wartungspauschale und Stundensatz sind preisfindungsrelevante
+Sondermechanik mit Tarifstufen und Fixierung am Vertrag, kein Katalogeintrag.
+
+### D-118 — „Sonstiges"-Positionsarten leben im Code, nicht im Katalog
+
+**Status:** entschieden · **Datum:** 2026-09-13
+
+Die Einträge des Tabs „Sonstiges" (D-116) sind **fest im Code definiert** und
+ausdrücklich **keine** speziell angelegten Artikel- oder Leistungsdatensätze —
+Nutzer: „da sie aus dem Leistungs- und Artikelspektrum rausfallen."
+
+Für den Anfang **ein** Eintrag: **`diverse`** — freie Position mit frei
+eingebbarem Preis, freier Menge und freier Beschreibung, um außerplanmäßige
+Eingaben zu erlauben (Nutzerbeispiel, ironisch: „emotionale Unterstützung").
+
+Konsequenz: eine so erfasste Position hat **weder** `article_id` **noch**
+`offering_id` — sie ist genau der Fall, für den `line_items.article_id` in D-109
+nullable bleiben musste. Die Liste ist erweiterbar; jede Erweiterung = eigene
+D-NNN + Code-Änderung (bewusster Reibungspunkt, analog D-094).
+
+### D-119 — Feldkatalog-Definitionen tragen einen `scope`: Artikel- oder Exemplar-Feld
+
+**Status:** entschieden (Agent-Entscheidung) · **Datum:** 2026-09-13 · **präzisiert D-100/D-111**
+
+Der Feldkatalog der `ArticleGroup` muss unterscheiden, **auf welcher Stufe** ein
+Feld lebt — die Nutzerbeispiele fallen auseinander:
+
+- **MAC-Adresse, Ausstattung** → gehören zum **einzelnen Exemplar**. Der Nutzer
+  hat sie genau so eingeführt: als „Informationen für das Item, was ein Artikel
+  darstellt, mit allen nötigen Zusatzfeldern eines seriennummernpflichtigen
+  Artikels", erfasst **beim Wareneingang je Stück**.
+- **Länge, Gewicht, Anzahl Kanäle** → gehören zum **Artikel**. Alle Exemplare
+  eines Artikels sind darin identisch; eine Erfassung je Stück wäre stumpfe
+  Wiederholung.
+
+Deshalb trägt jede Felddefinition `scope: article | item`. `scope = item` ist nur
+zulässig, wenn `Article.is_serial_tracked` gesetzt ist — sonst gibt es keine
+Exemplare, die den Wert tragen könnten (DB-CHECK bzw. Validierung).
+
+Die `OfferingGroup` (D-117) braucht dieses Feld **nicht**: dort existiert nur eine
+Stufe. Genau das meint der Nutzer mit „eine Ebene weiter oben".
+
+### D-120 — Bestellwesen zurückgestellt; nur `suppliers` bleibt beschlossen (revidiert D-103)
+
+**Status:** offen (Empfehlung in der nächsten Runde) · **Datum:** 2026-09-13 · **revidiert D-103**
+
+D-103 hatte „Wareneingang **mit** vorgelagertem Bestellwesen" beschlossen. Der
+Nutzer hat das nach Bedenkzeit relativiert: „ich bin kein Freund von Bestellung
+zu Wareneingang. Meiner Meinung nach sollte Wareneingang reichen, aber ich
+vertraue hier auf deine Perspektive. Bitte in die nächste Runde mit mehr
+Empfehlungen mitnehmen."
+
+**Damit gilt:**
+
+- **Beschlossen bleibt** der eigenständige `suppliers`-Stamm (strikte Kreditoren-/
+  Debitoren-Trennung, `Company` bleibt nach D-002 kundenseitig). Dieser Teil von
+  D-103 ist **unverändert gültig**.
+- **Zurückgestellt** ist die Frage Bestellung → Wareneingang. Bis zur Entscheidung
+  gilt die **engere** Variante als Arbeitsannahme: Wareneingang ist ein
+  eigenständiger Vorgang mit Lieferantenbezug, **ohne** Bestellabgleich.
+- Der Agent legt in der nächsten Runde eine begründete Empfehlung mit
+  Abwägung vor — nicht nur eine Optionsliste.
+
+### D-121 — `Device` wandert von `Modules\Service\` nach `Modules\Inventory\` (Zyklusauflösung)
+
+**Status:** entschieden (Agent-Entscheidung, revidierbar) · **Datum:** 2026-09-13
+· **Folge aus D-099/D-109**
+
+**Das Problem.** Nach D-099 ist `Device` das **seriennummerngeführte Exemplar** —
+es entsteht im Wareneingang, lebt im Lager, geht zum Kunden, wird verschrottet.
+Gleichzeitig braucht `line_items` (Modul Service) nach D-109 einen `article_id`
+und `stock_movement_id`. Bliebe `Device` im Servicemodul, entstünde ein
+**zyklischer Modulgraph**:
+
+```
+Service ──> Inventory     (line_items → articles, stock_movements)
+Inventory ──> Service     (Wareneingang erzeugt Device)
+```
+
+Das verbietet `ARCHITECTURE.md` §5 ausdrücklich („keine zyklischen
+Modulabhängigkeiten ohne dokumentierte Begründung") und `ModuleBoundariesTest`
+würde es erzwingen.
+
+**Die Entscheidung.** `Device` (und mit ihm `DeviceComponent`) zieht nach
+`Modules\Inventory\`. Der Graph wird azyklisch:
+
+```
+Inventory ──> Core
+Service   ──> Inventory, Core
+Sales     ──> Inventory, Core
+```
+
+**Warum das nicht nur ein Trick ist:** Es folgt der Fachlichkeit, die D-099 gesetzt
+hat. Ein Device ist nach dieser Entscheidung primär ein **physisches Einzelstück
+der Warenwirtschaft** mit vollem Lebenszyklus; „steht beim Kunden und wird
+gewartet" ist nur **eine Phase** davon. `INVENTORY.md` (05-modules) hat das von
+Anfang an so gesehen: „Ein verkauftes Gerät soll langfristig als Device-Record
+existieren … Das Gerät bleibt serialisiert und individuell nachvollziehbar."
+Auch `DOMAIN.md` sagt bereits: „Ein Gerät soll langfristig ein First-Class-Objekt
+der Warenwirtschaft sein."
+
+Service verliert dabei **nichts** an Fachlichkeit: `ServiceContract`,
+`Maintenance`, `MaintenanceReport`, `MeasurementProtocol`, `ServiceCase`,
+`line_items`, `service_prices`, `travel_zones`, `service_territories` bleiben
+vollständig dort. Nur der Datensatz des physischen Geräts liegt eine Etage tiefer.
+
+**Offen:** wie sich `DeviceComponent` (Sonde, Drucker, Wagen — D-034) zu
+serialisierten Exemplaren verhält. Eine Sonde ist heute eine Zeile am Gerät,
+könnte aber genauso ein seriennummernpflichtiger Artikel im Lager sein, der beim
+Einbau ans Gerät wandert. Beides parallel wäre eine Dublette. Nächste Runde.

@@ -16,7 +16,8 @@ haben ein eigenes autoritatives Dokument (Feldform, Enums, Regeln):
 | Scheduling: Termine | [`SCHEDULING.md`](SCHEDULING.md) | **spezifiziert** (D-046–050, D-088, D-090) |
 | Sales: Verkaufschancen | [`SALES.md`](SALES.md) | **spezifiziert** (D-051–055, D-086–087; `stage`/`probability`-Phasenliste D-089 vertagt) |
 | Billing: Rechnungen / Zahlungen / Mahnwesen | [`BILLING.md`](BILLING.md) | **spezifiziert** (D-056 – D-077; Bank-Import-Format & DATEV-Kontenrahmen offen) |
-| Dokumente, Inventory, Portal, Shop | dieses Dokument | Discovery |
+| Inventory: Katalog / Lager / Bestand / Belege | [`INVENTORY.md`](INVENTORY.md) | **spezifiziert** (D-099 – D-121; Fremdgeräte D-107, Bestellwesen D-120 offen) |
+| Dokumente, Portal, Shop | dieses Dokument | Discovery |
 
 ## Core
 
@@ -42,6 +43,11 @@ haben ein eigenes autoritatives Dokument (Feldform, Enums, Regeln):
 Ein physisches Gerät.
 
 Ein Gerät soll langfristig ein First-Class-Objekt der Warenwirtschaft sein.
+
+> **Eingelöst (D-099/D-121).** `Device` **ist** das seriennummerngeführte Exemplar
+> der Warenwirtschaft — ein Datensatz mit Lebenszyklus vom Wareneingang bis zur
+> Verschrottung, kein separates `InventoryItem` daneben. Das Model lebt deshalb in
+> `Modules\Inventory\`. Autoritativ: [`INVENTORY.md`](INVENTORY.md).
 
 ### ServiceContract
 
@@ -143,7 +149,24 @@ keine freistehende Rechnungsadresse ohne Company. Details: `BILLING.md`.
 - ✅ Enum-Wertelisten ServiceContract/Maintenance/ServiceCase/Appointment
   (D-079, D-081–083, D-088, D-090, D-097).
 
-### Sales — vertagt
+### Inventory — geklärt (siehe `INVENTORY.md` / `grill-log.md` D-099–D-121)
 
-- `stage`/`probability`-Phasenliste (reale % aus Legacy-`DistributionPhase`) —
-  vertagt bis Nutzer die Werteliste liefert (D-089).
+- ✅ Dreistufiger Warenstamm `ArticleGroup → Article → Exemplar`; `article_number`
+  gehört zum **Artikel**, nicht zum Exemplar (D-099).
+- ✅ **Tragende Mechanik:** das Technikerlager **ist** die Positionsauswahl —
+  Lagerabgang und Rechnungsposition sind ein einziger Vorgang (D-109).
+- ✅ Benutzerdefinierter Feldkatalog je Artikelgruppe mit Typvorgabe, `mandatory`
+  und optionalem Regex als CHECK-Constraint (D-100/D-111/D-119).
+- ✅ Bestand als Bewegungs-Ledger statt Bestandsspalte (D-102, Folge aus D-093).
+- ✅ Leistungskatalog `OfferingGroup → Offering`, getrennt vom Artikelstamm (D-117).
+- ✅ Belegprinzip durchgezogen: Wareneingang, Umbuchung, Reservierung + Rückgabe,
+  Zählauftrag sind eigene Belege (D-106/D-113/D-114).
+
+### Vertagt
+
+- **Sales:** `stage`/`probability`-Phasenliste (reale % aus Legacy-`DistributionPhase`)
+  — vertagt bis Nutzer die Werteliste liefert (D-089).
+- **Inventory:** Fremdgeräte ohne Artikelstamm — ist `Device.article_id` `NOT NULL`?
+  Nutzer prüft die Altstruktur, migrationsrelevant (D-107).
+- **Inventory:** Bestellwesen ja/nein — Agent legt in der nächsten Runde eine
+  begründete Empfehlung vor (D-120).

@@ -6,7 +6,15 @@ Autoritative deklarative Spec. Entscheidungen **D-034 – D-045**
 [`../00-legacy/Tickets/Tickets-Zuordnung.md`](../00-legacy/Tickets/Tickets-Zuordnung.md).
 Prinzipien: [`../05-modules/SERVICE.md`](../05-modules/SERVICE.md).
 
-Modul: `packages/core/src/Modules/Service/` (Namespace `Dormed\Core\Modules\Service\`, `depends_on: [Core]`, ADR-013).
+Modul: `packages/core/src/Modules/Service/` (Namespace `Dormed\Core\Modules\Service\`, `depends_on: [Core, Inventory]`, ADR-013 — Inventory neu durch D-109/D-121).
+
+> **`Device` und `DeviceComponent` leben ab D-121 in `Modules\Inventory\`**, nicht
+> mehr hier. Grund ist die Zyklusauflösung: `line_items` braucht einen Artikelbezug
+> (Service → Inventory), und der Wareneingang erzeugt Geräte (Inventory → Service).
+> Fachlich bleibt Service vollständig: `ServiceContract`, `Maintenance`,
+> `MaintenanceReport`, `MeasurementProtocol`, `ServiceCase`, `line_items`,
+> `service_prices`, `travel_zones`, `service_territories`. Die Device-Spec unten
+> bleibt als Feldreferenz bestehen, autoritativ ist dafür [`INVENTORY.md`](INVENTORY.md).
 
 ## Grundsatz
 
@@ -41,19 +49,29 @@ ServiceCase (unabhängig, 0..n Geräte, keine Vertragskosten)
 
 ## Device
 
-Das medizintechnische System (Ultraschallgerät …). Steht an einer `Location`
-(D-007). Kann **mit oder ohne** Servicevertrag existieren (D-064).
+Das medizintechnische System (Ultraschallgerät …). Kann **mit oder ohne**
+Servicevertrag existieren (D-064).
+
+> **Revidiert durch die Inventory-Runde (D-099/D-105/D-121) — autoritativ ist ab
+> jetzt [`INVENTORY.md`](INVENTORY.md).** `Device` ist das seriennummerngeführte
+> **Exemplar der Warenwirtschaft** mit Lebenszyklus vom Wareneingang bis zur
+> Verschrottung; „steht beim Kunden und wird gewartet" ist nur eine Phase davon.
+> Konsequenzen: das Model zieht nach `Modules\Inventory\` (Zyklusauflösung,
+> D-121), Katalogfelder wandern auf den `Article`, und `location_id` wird
+> nullable, weil ein Gerät im Lager keinen Kundenstandort hat.
 
 | Feld | Typ | Null | Notiz |
 | --- | --- | :-: | --- |
+| `article_id` | FK → `articles` | ? | **neu (D-099)** — Katalogbezug. Nullability offen, hängt an den Fremdgeräten (D-107) |
 | `service_contract_id` | FK → `service_contracts` | ✓ | nullable, unique (D-064). Gesetzt ⇒ Tarifstufe `contract` |
 | `form_factor` | enum `portabel` \| `standgeraet` | – | Bauform — bestimmt die Wartungspauschale (D-063/D-080): `standgeraet` teurer als `portabel` |
 | `imaging_type` | enum `schwarzweiss` \| `farbdoppler` | – | Bildgebung — **rein katalog-/anzeigerelevant**, keine Preiswirkung (D-080). Kombination ergibt die Katalog-Klasse, z. B. „portables Farbdopplersystem" |
-| `location_id` | FK → `locations` | – | Gerätestandort |
-| `manufacturer` | string | – | ← `SYSTEM_HERSTELLER` |
-| `model_name` | string | ✓ | Kategorie/Bezeichnung ← `SYSTEM_BEZEICHNUNG` |
-| `article_number` | string | ✓ | ← `SYSTEM_ARTIKELNUMMER` |
-| `serial_number` | string | – | ← `SYSTEM_SERIENNUMMER` |
+| `location_id` | FK → `locations` | ✓ | **wird nullable (D-099)** — Kundenstandort. Gesetzt ⇔ Gerät beim Kunden |
+| `warehouse_id` | FK → `warehouses` | ✓ | **neu (D-099)** — Lager. Gesetzt ⇔ Gerät im Lager. **DB-CHECK: genau eines von beiden gesetzt** |
+| ~~`manufacturer`~~ | – | – | **entfällt → `Article`** (Modelleigenschaft, D-099) |
+| ~~`model_name`~~ | – | – | **entfällt → `Article`** (Modelleigenschaft, D-099) |
+| ~~`article_number`~~ | – | – | **entfällt → `Article`** — „Artikelnummer ist Teil des Artikels, nicht des Items" (D-099) |
+| `serial_number` | string | – | ← `SYSTEM_SERIENNUMMER` — die Seriennummer existiert genau **einmal** im System |
 | `year_built` | string(8) | ✓ | ← `SYSTEM_BAUJAHR` |
 | `delivered_on` | date | ✓ | ← `SYSTEM_AUSLIEFERUNGSDATUM` |
 | `operating_system` | string | ✓ | ← `SYSTEM_OS` |
@@ -338,14 +356,27 @@ kein Prüfkatalog-Zwang). `lineItems()` `morphMany`. Rückruf-Nr./Mail →
 
 Polymorph an `Maintenance` **oder** `ServiceCase` (D-043).
 
+> **Erweitert durch die Inventory-Runde (D-109/D-116/D-118).** Positionen sind
+> nicht mehr reiner Freitext: sie können aus dem Artikelkatalog, aus dem
+> Leistungskatalog oder frei erfasst werden. Die tragende Mechanik dahinter —
+> **das Technikerlager ist die Positionsauswahl** — steht in
+> [`INVENTORY.md`](INVENTORY.md) und ist für diese Tabelle verbindlich.
+
 | Feld | Typ | Null | Notiz |
 | --- | --- | :-: | --- |
 | `lineable_type` / `lineable_id` | morph | – | |
 | `position` | smallint | – | |
-| `description` | string | – | |
-| `quantity` | decimal(10,2) | – | |
-| `unit` | string | ✓ | Stk / Std / Pauschale |
-| `unit_price` | decimal(12,2) | ✓ | netto |
+| `article_id` | FK → `articles` | ✓ | **neu (D-109)** — gesetzt bei Positionen aus dem Artikel-Tab |
+| `offering_id` | FK → `offerings` | ✓ | **neu (D-117)** — gesetzt bei Positionen aus dem Leistungs-Tab |
+| `stock_movement_id` | FK → `stock_movements` | ✓ | **neu (D-109)** — gesetzt, wenn die Position aus einer Lagerentnahme entstanden ist |
+| `description` | string | – | bei Katalogpositionen vorbelegt, bei `diverse` frei (D-118) |
+| `quantity` | decimal(10,2) | – | bei seriennummernpflichtigen Exemplaren immer 1 |
+| `unit` | string | ✓ | Stk / Std / Pauschale — aus `Article.unit` / `Offering.unit` |
+| `unit_price` | decimal(12,2) | ✓ | netto, **gesnapshottet** aus dem Katalog (D-104) |
+
+Alle drei neuen FKs sind nullable: eine „Sonstiges"-Position (`diverse`, D-118) hat
+weder `article_id` noch `offering_id`, und eine Katalogposition ohne Bestandsbezug
+(Leistung) hat keine `stock_movement_id`.
 
 **Keine** Summen-/Steuerfelder hier. Bei Einsatzabschluss + Freigabe → Übergabe an
 Billing, das die `Invoice` erstellt und einfriert (D-043). Legacy `TICKET_GESAMT_*`,
@@ -365,7 +396,7 @@ Billing, das die `Invoice` erstellt und einfriert (D-043). Legacy `TICKET_GESAMT
 | 4 | ~~`MaintenanceReport.operating_status`-Werte~~ | ✅ bestätigt (D-091) |
 | 5 | ~~Übergabe-Mechanismus line_items → Invoice~~ | ✅ gelöst, siehe `BILLING.md` (D-057/D-066) |
 | 6 | `Termine.xml` — Terminplanung für Maintenance/ServiceCase | ✅ gelöst, siehe `SCHEDULING.md` |
-| 7 | Ersatzteile/Lager (Teile in line_items) | Bereich Inventory (nächster) |
+| 7 | ~~Ersatzteile/Lager (Teile in line_items)~~ | ✅ gelöst — [`INVENTORY.md`](INVENTORY.md), tragende Mechanik D-109 |
 | 8 | Qualifizierte e-Signatur | späterer Slice |
 | 9 | Offline-Wartungsbericht | späterer ROADMAP-Slice (D-041) |
 | 10 | `sales_territories`/`service_territories`: konkrete PLZ-Bereiche + Zuordnungen befüllen | Datenerfassung bei Umsetzung |

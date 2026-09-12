@@ -4,7 +4,7 @@ Autoritative deklarative Spec. Entscheidungen **D-051 – D-055**
 ([`../07-decisions/grill-log.md`](../07-decisions/grill-log.md)). Feld-Herkunft:
 [`../00-legacy/Verkaufschancen/Verkaufschancen-Felder.md`](../00-legacy/Verkaufschancen/Verkaufschancen-Felder.md) (34 F.).
 
-Modul: `packages/core/src/Modules/Sales/` (Namespace `Dormed\Core\Modules\Sales\`, `depends_on: [Core]`, ADR-013).
+Modul: `packages/core/src/Modules/Sales/` (Namespace `Dormed\Core\Modules\Sales\`, `depends_on: [Core, Inventory]`, ADR-013 — Inventory neu durch D-099/D-117, Katalogbezug der Positionen).
 
 ## Grundsatz
 
@@ -52,11 +52,12 @@ discount_percent/100) − unit_cost)`).
 | --- | --- | :-: | --- |
 | `opportunity_id` | FK | – | cascade |
 | `position` | smallint | – | |
-| `product_id` | FK → `products` | ✓ | Produktkatalog (Bereich Inventory) — bis dahin `description` |
-| `description` | string | – | |
+| `article_id` | FK → `articles` | ✓ | **ersetzt `product_id` (D-099)** — Artikelkatalog, siehe [`INVENTORY.md`](INVENTORY.md) |
+| `offering_id` | FK → `offerings` | ✓ | **neu (D-117)** — Leistungskatalog, paralleler Katalog neben den Artikeln |
+| `description` | string | – | bei Katalogpositionen vorbelegt, bei freien Positionen (`diverse`, D-118) frei |
 | `quantity` | decimal(10,2) | – | |
-| `unit_price` | decimal(12,2) | – | netto |
-| `unit_cost` | decimal(12,2) | ✓ | für Deckungsbeitrag |
+| `unit_price` | decimal(12,2) | – | netto, **gesnapshottet** aus `Article.sale_price` / `Offering.sale_price` (D-104) |
+| `unit_cost` | decimal(12,2) | ✓ | für Deckungsbeitrag — gesnapshottet aus `Article.purchase_price` (D-104) |
 | `discount_percent` | decimal(5,2) | ✓ | |
 
 ## Workflow
@@ -100,6 +101,6 @@ Schlägt `Company.responsible_sales_id` bei Company-Anlage automatisch vor (D-01
 | 2 | ~~`DORMEDABTEILUNG`~~ | ✅ verworfen (D-087) |
 | 3 | ~~`lead_source`-Enum-Werte~~ | ✅ gelöst (D-086) |
 | 4 | ~~`discount`/`unit_cost` an `OpportunityItem`~~ | ✅ beide nötig — `unit_cost` für `marginal_return`, `discount_percent` fließt in `net_line_amount` (D-052-Formel präzisiert) |
-| 5 | Produktkatalog (`products`) | Bereich Inventory |
+| 5 | ~~Produktkatalog (`products`)~~ | ✅ gelöst — `articles` + `offerings`, [`INVENTORY.md`](INVENTORY.md) (D-099/D-117) |
 | 6 | Angebots-PDF-Erzeugung | Bereich Dokumente |
 | 7 | Sales-Aktivitäten (Anrufe/Mails/Notizen-Timeline) | Bereich Communication (später) |
