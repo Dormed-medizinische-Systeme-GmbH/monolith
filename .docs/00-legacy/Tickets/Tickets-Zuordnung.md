@@ -1,6 +1,6 @@
 # Maintenance / ServiceCase — Feld-Zuordnung
 
-Legacy [`Tickets.xml`](../xml/Tickets.xml) · 112 Felder. Basis: D-034 – D-045.
+Legacy [`Tickets.xml`](Tickets.xml) · 112 Felder. Basis: D-034 – D-045.
 Synthese → `.docs/04-domain/SERVICE.md`.
 
 | Feld | Typ | Label | Ziel | Notiz |

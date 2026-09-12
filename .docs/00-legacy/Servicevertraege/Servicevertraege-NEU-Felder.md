@@ -1,6 +1,6 @@
 # Legacy-Felder — SV (Servicevertraege-NEU)
 
-Quelle: [`Servicevertraege-NEU.xml`](../xml/Servicevertraege-NEU.xml) · 83 Spalten · 83 Custom · 6 Pflicht
+Quelle: [`Servicevertraege-NEU.xml`](Servicevertraege-NEU.xml) · 83 Spalten · 83 Custom · 6 Pflicht
 
 **Ist-Analyse (ADR-004).** `Entscheidung` wird in `/grill-me` gesetzt: `übernehmen` (in welches Zielmodell/-feld) · `verwerfen` · `offen`.
 

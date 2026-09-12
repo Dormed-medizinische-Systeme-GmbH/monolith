@@ -6,19 +6,22 @@ Rohe `gwconnect`-Objektdefinitionen aus dem aktuell produktiven CRM
 
 ## Dateien
 
+Ein Ordner je Domäne, alle zugehörigen Dateien zusammen (Schema, Feld-Inventar,
+Zuordnung, ggf. echte Daten) — Übersicht: [`LEGACY_REFERENCE.md`](LEGACY_REFERENCE.md).
+
 | Roh-XML | Feld-Inventar | Objekt | Spalten (Custom) | Neues Zielkonzept (grob) |
 | --- | --- | --- | --- | --- |
-| [`Adressen.xml`](../xml/Adressen.xml) | [`Adressen-Felder.md`](Adressen-Felder.md) | `Address` (ADR) | 356 (176) | Company / Person / CompanyContact / Address / Location |
-| [`Servicevertraege-NEU.xml`](../xml/Servicevertraege-NEU.xml) | [`Servicevertraege-NEU-Felder.md`](Servicevertraege-NEU-Felder.md) | `SV` (SV) | 83 (83) | ServiceContract / Device / DeviceConfiguration / Maintenance |
-| [`Tickets.xml`](../xml/Tickets.xml) | [`Tickets-Felder.md`](Tickets-Felder.md) | `TICKETS` (TICK) | 112 (112) | ServiceCase / Maintenance / Serviceposition / Diagnose … |
-| [`Termine.xml`](../xml/Termine.xml) | [`Termine-Felder.md`](Termine-Felder.md) | `APPOINTMENT` (APP) | 25 (1) | Appointment (Scheduling, getrennt von Fachvorgang) |
-| [`Verkaufschancen.xml`](../xml/Verkaufschancen.xml) | [`Verkaufschancen-Felder.md`](Verkaufschancen-Felder.md) | `GWOPPORTUNITY` (GWOP) | 34 (9) | SalesOpportunity |
+| [`Adressen.xml`](Adressen/Adressen.xml) | [`Adressen-Felder.md`](Adressen/Adressen-Felder.md) | `Address` (ADR) | 356 (176) | Company / Person / CompanyContact / Address / Location |
+| [`Servicevertraege-NEU.xml`](Servicevertraege/Servicevertraege-NEU.xml) | [`Servicevertraege-NEU-Felder.md`](Servicevertraege/Servicevertraege-NEU-Felder.md) | `SV` (SV) | 83 (83) | ServiceContract / Device / DeviceConfiguration / Maintenance |
+| [`Tickets.xml`](Tickets/Tickets.xml) | [`Tickets-Felder.md`](Tickets/Tickets-Felder.md) | `TICKETS` (TICK) | 112 (112) | ServiceCase / Maintenance / Serviceposition / Diagnose … |
+| [`Termine.xml`](Termine/Termine.xml) | [`Termine-Felder.md`](Termine/Termine-Felder.md) | `APPOINTMENT` (APP) | 25 (1) | Appointment (Scheduling, getrennt von Fachvorgang) |
+| [`Verkaufschancen.xml`](Verkaufschancen/Verkaufschancen.xml) | [`Verkaufschancen-Felder.md`](Verkaufschancen/Verkaufschancen-Felder.md) | `GWOPPORTUNITY` (GWOP) | 34 (9) | SalesOpportunity |
 
 Die `*-Felder.md` sind die **lesbare Vorverdauung** (Feld, Typ, Label, Custom-Flag,
 Cluster nach Namenspräfix). Die Spalte `Entscheidung` steht auf `offen` und wird
 in `/grill-me` gefüllt (`übernehmen` → Zielmodell/-feld · `verwerfen` · `offen`).
 
-Details der Zerlegung: [`../../04-domain/LEGACY_MAPPING.md`](../../04-domain/LEGACY_MAPPING.md).
+Details der Zerlegung: [`../04-domain/LEGACY_MAPPING.md`](../04-domain/LEGACY_MAPPING.md).
 
 ## Format — wie lesen
 

@@ -2,7 +2,7 @@
 
 Autoritative deklarative Spec. Entscheidungen **D-046 – D-050**
 ([`../07-decisions/grill-log.md`](../07-decisions/grill-log.md)). Feld-Herkunft:
-[`../00-legacy/mapping/Termine-Felder.md`](../00-legacy/mapping/Termine-Felder.md) (25 F.).
+[`../00-legacy/Termine/Termine-Felder.md`](../00-legacy/Termine/Termine-Felder.md) (25 F.).
 
 Modul: `packages/core/src/Modules/Scheduling/` (Namespace `Dormed\Core\Modules\Scheduling\`, ADR-013).
 

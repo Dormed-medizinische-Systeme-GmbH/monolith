@@ -1,6 +1,6 @@
 # Legacy-Felder — TICKETS (Tickets)
 
-Quelle: [`Tickets.xml`](../xml/Tickets.xml) · 112 Spalten · 112 Custom · 4 Pflicht
+Quelle: [`Tickets.xml`](Tickets.xml) · 112 Spalten · 112 Custom · 4 Pflicht
 
 **Ist-Analyse (ADR-004).** `Entscheidung` wird in `/grill-me` gesetzt: `übernehmen` (in welches Zielmodell/-feld) · `verwerfen` · `offen`.
 

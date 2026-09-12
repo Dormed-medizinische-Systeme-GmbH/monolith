@@ -1,6 +1,6 @@
 # Legacy-Felder — APPOINTMENT (Termine)
 
-Quelle: [`Termine.xml`](../xml/Termine.xml) · 25 Spalten · 1 Custom · 3 Pflicht
+Quelle: [`Termine.xml`](Termine.xml) · 25 Spalten · 1 Custom · 3 Pflicht
 
 **Ist-Analyse (ADR-004).** `Entscheidung` wird in `/grill-me` gesetzt: `übernehmen` (in welches Zielmodell/-feld) · `verwerfen` · `offen`.
 

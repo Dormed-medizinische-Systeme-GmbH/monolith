@@ -1,6 +1,6 @@
 # Legacy-Felder — Address (Adressen)
 
-Quelle: [`Adressen.xml`](../xml/Adressen.xml) · 356 Spalten · 176 Custom · 0 Pflicht
+Quelle: [`Adressen.xml`](Adressen.xml) · 356 Spalten · 176 Custom · 0 Pflicht
 
 **Ist-Analyse (ADR-004).** `Entscheidung` wird in `/grill-me` gesetzt: `übernehmen` (in welches Zielmodell/-feld) · `verwerfen` · `offen`.
 
