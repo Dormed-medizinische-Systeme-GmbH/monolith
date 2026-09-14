@@ -1,0 +1,169 @@
+# ==========================================================================
+# DEV-Stack (ADR-041). Ein Befehl, alles laeuft, nichts ueberlebt:
+#
+#     cp .env.example .env && php artisan key:generate
+#     docker compose up -d --build
+#
+# Heisst `docker-compose.yaml` und nicht `...dev.yaml`, damit `docker compose up`
+# ohne `-f` laeuft. Es ist trotzdem ausschliesslich der DEV-Stack: Produktion
+# baut aus dem Dockerfile, Postgres und S3 sind dort externe Ressourcen (ADR-041).
+#
+#     Website  http://dormed.test        Shop    http://shop.dormed.test
+#     ERP      http://erp.dormed.test    Portal  http://my.dormed.test
+#     MinIO-Konsole http://localhost:9001   (dormed / secret12345)
+#
+#   /etc/hosts:  127.0.0.1 dormed.test erp.dormed.test my.dormed.test shop.dormed.test
+#
+# Postgres und MinIO liegen auf tmpfs — RAM, kein Volume. Beim `down` ist alles
+# weg und `up` baut den Stand aus Migrations + Seedern neu auf. Das ist Absicht:
+# der Seeder ist damit bei jedem Start der einzige Weg zu Daten und bleibt
+# dadurch dauerhaft lauffaehig — genau der Lauf, der in Produktion EINMAL
+# gegen die echte Datenbank gefahren wird.
+#
+# Produktion benutzt diese Datei NICHT. Dort sind Postgres und S3 externe
+# Coolify-Ressourcen und das Image wird aus dem Prod-Dockerfile gebaut
+# (ADR-041, .docs/06-infrastructure/HOSTING.md).
+# ==========================================================================
+
+x-app: &app
+  build:
+    context: ./vendor/laravel/sail/runtimes/8.4
+    dockerfile: Dockerfile
+    args:
+      WWWGROUP: "${WWWGROUP:-1000}"
+  image: dormed/dev:8.4
+  environment: &app-env
+    WWWUSER: "${WWWUSER:-1000}"
+    LARAVEL_SAIL: 1
+  volumes:
+    - .:/var/www/html
+  networks: [dormed]
+
+services:
+
+  # ---- Die Anwendung. Alle vier Hostnames zeigen hierher (ADR-033) ----
+  #
+  # Port 80, damit die Hostnamen im Browser ohne Portangabe funktionieren.
+  # Ein nacktes `erp.dormed.test` schickt Chrome sonst auf 443 und danach auf
+  # 80 — beide leer, Ergebnis ERR_CONNECTION_REFUSED auf allen vier Hosts.
+  #
+  # EIN Port fuer alle vier. Mehr wuerde nichts trennen: zugeordnet wird am
+  # Host-Header, nie am Port. Das ist zugleich naeher an Produktion, wo der
+  # Coolify-Proxy auf 443 terminiert und es gar keine sichtbaren Ports gibt.
+  app:
+    <<: *app
+    ports:
+      - "${APP_PORT:-80}:80"
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # ---- Vite fuer Inertia/Svelte (ADR-039) ----
+  vite:
+    <<: *app
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    restart: unless-stopped
+
+  # ---- Einmal-Schritt: Schema + Seed. Faehrt bei jedem `up` (ADR-015) ----
+  # Migrations laufen bewusst NICHT im Start-CMD der App.
+  setup:
+    <<: *app
+    # `--database=pgsql_owner`: Migrations laufen als Schema-EIGENTUEMER, die
+    # Anwendung nie (ADR-036). Der Standard `pgsql` zeigt auf `dormed_staff` —
+    # eine Rolle, die zu diesem Zeitpunkt noch gar nicht existiert, sie wird ja
+    # gerade erst angelegt.
+    command:
+      - bash
+      - -c
+      - |
+        php artisan migrate --force --seed --database=pgsql_owner &&
+        php artisan storage:link 2>/dev/null || true
+    environment:
+      <<: *app-env
+      # `--isolated` wuerde einen Cache-Lock in `cache_locks` brauchen — einer
+      # Tabelle, die erst die Migration anlegt, die gerade laufen soll. Gegen
+      # eine leere Datenbank scheitert das immer. Hier faehrt genau ein
+      # Container, also braucht es die Isolation gar nicht.
+      CACHE_STORE: file
+    depends_on:
+      pgsql:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    restart: "no"
+
+  # ---- PostgreSQL, fluechtig auf tmpfs ----
+  pgsql:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: "${DB_DATABASE:-dormed}"
+      POSTGRES_USER: "${DB_USERNAME:-dormed}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-secret}"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    configs:
+      - source: test-database
+        target: /docker-entrypoint-initdb.d/10-test-database.sql
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-dormed} -d ${DB_DATABASE:-dormed}"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    networks: [dormed]
+
+  # ---- MinIO als S3-Ersatz, fluechtig auf tmpfs (ADR-025/028) ----
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: "${AWS_ACCESS_KEY_ID:-dormed}"
+      MINIO_ROOT_PASSWORD: "${AWS_SECRET_ACCESS_KEY:-secret12345}"
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+    networks: [dormed]
+
+  # ---- Bucket anlegen und oeffentlich schalten (ADR-028) ----
+  # Der Bucket traegt nur Marketing-Assets und Produktbilder, keine Kundendaten.
+  minio-init:
+    image: quay.io/minio/mc:latest
+    entrypoint:
+      - sh
+      - -c
+      - |
+        mc alias set local http://minio:9000 "${AWS_ACCESS_KEY_ID:-dormed}" "${AWS_SECRET_ACCESS_KEY:-secret12345}" &&
+        mc mb --ignore-existing "local/${AWS_BUCKET:-dormed-public}" &&
+        mc anonymous set download "local/${AWS_BUCKET:-dormed-public}"
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: "no"
+    networks: [dormed]
+
+configs:
+  # Zweite Datenbank fuer den Testlauf. Ohne sie teilen Tests und Dev-Stand
+  # dieselbe Datenbank, und jeder `php artisan test` raeumt den Seed weg —
+  # der Browser zeigt danach eine leere Anwendung.
+  #
+  # Laeuft bei jedem Start, weil Postgres auf tmpfs liegt und damit jedes Mal
+  # frisch initialisiert wird (ADR-041). Inline statt als Datei, damit es
+  # ausser dieser Datei und dem Dockerfile keine Docker-Artefakte im Repo gibt.
+  test-database:
+    content: |
+      CREATE DATABASE dormed_test OWNER dormed;
+
+networks:
+  dormed:
+    driver: bridge

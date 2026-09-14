@@ -1,0 +1,1 @@
+- Database seeder mit anmeldedaten für kunden und employee anlegen.

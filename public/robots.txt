@@ -1,0 +1,35 @@
+User-agent: *
+Allow: /
+Allow: /robots.txt
+Allow: /sitemap.xml
+Allow: /assets/
+Allow: /public/
+Disallow: /admin
+Disallow: /login
+Disallow: /account
+Disallow: /checkout
+Disallow: /cart
+Disallow: /search
+Disallow: /*?*utm_*
+Disallow: /*?*sort*
+
+User-agent: Googlebot
+User-agent: Googlebot-Image
+User-agent: Google-InspectionTool
+User-agent: AdsBot-Google
+User-agent: Bingbot
+User-agent: BingPreview
+User-agent: DuckDuckBot
+User-agent: Applebot
+User-agent: YandexBot
+User-agent: PetalBot
+User-agent: Qwantify
+User-agent: SeznamBot
+Allow: /
+Allow: /sitemap.xml
+Disallow: /admin
+Disallow: /login
+Disallow: /account
+Disallow: /checkout
+
+Sitemap: https://dormed.de/sitemap.xml

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+        <!--
+            Architektur-Beweise (ADR-033/036). Brauchen ein echtes PostgreSQL —
+            Rollen, Grants und RLS lassen sich auf SQLite nicht pruefen. Sie
+            ueberspringen sich selbst, wenn der Dev-Stack nicht laeuft.
+        -->
+        <testsuite name="Architecture">
+            <directory>tests/Architecture</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CACHE_STORE" value="array"/>
+        <!--
+            PostgreSQL, nicht SQLite. Die Datenschicht dieses Projekts ist
+            bewusst Postgres-spezifisch — Rollen und RLS (ADR-036), CHECK-
+            Constraints statt nativer Enums (D-094). Auf SQLite zu testen gaebe
+            falsche Sicherheit: genau die Zusicherungen, auf die es ankommt,
+            existieren dort nicht.
+
+            Eigene Datenbank `dormed_test` (angelegt von docker/postgres-init.sql),
+            damit der Testlauf den Dev-Seed nicht wegraeumt.
+
+            Als `pgsql_owner`, weil Migrations Eigentuemer-Arbeit sind (ADR-036).
+            Die Zugriffspunkte schalten pro Route-Group selbst um.
+        -->
+        <env name="DB_CONNECTION" value="pgsql_owner"/>
+        <env name="DB_DATABASE" value="dormed_test"/>
+        <env name="DB_PG_DATABASE" value="dormed_test"/>
+        <env name="DB_URL" value=""/>
+        <!-- Siehe config/database.php: die Umschaltung und RefreshDatabase
+             vertragen sich nicht. Die Architecture-Suite schaltet sie fuer
+             ihre Pruefungen gezielt wieder ein. -->
+        <env name="DB_SWITCH_BY_ACCESS_POINT" value="false"/>
+        <!-- Ohne Port: im Test gibt es keinen. In .env tragen die Domains den
+             Dev-Port, damit der Browser sie trifft. -->
+        <env name="APP_DOMAIN_WEBSITE" value="dormed.test"/>
+        <env name="APP_DOMAIN_ERP" value="erp.dormed.test"/>
+        <env name="APP_DOMAIN_PORTAL" value="my.dormed.test"/>
+        <env name="APP_DOMAIN_SHOP" value="shop.dormed.test"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="NIGHTWATCH_ENABLED" value="false"/>
+    </php>
+</phpunit>
