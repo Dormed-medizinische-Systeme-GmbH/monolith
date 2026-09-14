@@ -8,6 +8,9 @@ use App\Modules\Core\Models\Role;
 use App\Modules\Core\Models\User;
 use App\Modules\Crm\Enums\ChannelLabel;
 use App\Modules\Crm\Enums\ChannelType;
+use App\Modules\Crm\Enums\ConsentChannel;
+use App\Modules\Crm\Enums\ConsentSource;
+use App\Modules\Crm\Enums\ConsentStatus;
 use App\Modules\Crm\Enums\Gender;
 use App\Modules\Crm\Models\Company;
 use App\Modules\Crm\Models\CompanyContact;
@@ -111,6 +114,23 @@ final class DevelopmentAccountSeeder extends Seeder
                 [ChannelType::Email, ChannelLabel::Geschaeftlich, mb_strtolower($vorname[0].'.'.$nachname).'@praxis.test', true],
             ]);
 
+            /*
+             * Einwilligungen werden fortgeschrieben, nicht geaendert (D-013).
+             * Der erste Kontakt bekommt deshalb einen Widerruf NACH einer
+             * Erteilung — sonst sieht man der Ansicht nicht an, dass sie den
+             * juengsten Stand je Kanal zeigt und nicht einfach alles.
+             */
+            self::consents($person, [
+                [ConsentChannel::Mail, ConsentStatus::Erteilt, ConsentSource::Formular],
+                [ConsentChannel::Telefon, ConsentStatus::Erteilt, ConsentSource::Muendlich],
+            ]);
+
+            if ($index === 0) {
+                self::consents($person, [
+                    [ConsentChannel::Mail, ConsentStatus::Widerrufen, ConsentSource::Telefonisch],
+                ]);
+            }
+
             if ($mail === null) {
                 continue;
             }
@@ -133,6 +153,26 @@ final class DevelopmentAccountSeeder extends Seeder
             $owner->contactChannels()->firstOrCreate(
                 ['channel_type' => $type, 'value' => $value],
                 ['label' => $label, 'is_primary' => $isPrimary],
+            );
+        }
+    }
+
+    /**
+     * Einwilligungen je Person (D-013). Ein Statuswechsel erzeugt einen NEUEN
+     * Datensatz, er aendert keinen bestehenden.
+     *
+     * @param  list<array{ConsentChannel, ConsentStatus, ConsentSource}>  $consents
+     */
+    private static function consents(Person $person, array $consents): void
+    {
+        foreach ($consents as [$channel, $status, $source]) {
+            $person->consents()->firstOrCreate(
+                ['channel' => $channel, 'status' => $status],
+                [
+                    'source' => $source,
+                    'granted_at' => $status === ConsentStatus::Erteilt ? now()->subMonths(6) : null,
+                    'revoked_at' => $status === ConsentStatus::Widerrufen ? now()->subWeek() : null,
+                ],
             );
         }
     }

@@ -17,6 +17,7 @@
     import * as Table from '@/components/ui/table';
     import * as Tabs from '@/components/ui/tabs';
     import { index } from '@/routes/erp/companies';
+    import { show as contactShow } from '@/routes/erp/companies/contacts';
     import AccessBadge from './AccessBadge.svelte';
     import ChannelList from './ChannelList.svelte';
     import type { CompanyProfile } from './profile';
@@ -307,7 +308,15 @@
                     <Table.Row>
                         <Table.Cell class="align-top">
                             <div class="flex items-center gap-2">
-                                <span class="font-medium">{contact.name}</span>
+                                <Link
+                                    href={contactShow({
+                                        company: company.id,
+                                        contact: contact.id,
+                                    }).url}
+                                    class="font-medium underline-offset-4 hover:underline"
+                                >
+                                    {contact.name}
+                                </Link>
                                 {#if contact.isPrimary}
                                     <Badge variant="outline" class="text-muted-foreground">
                                         Hauptkontakt

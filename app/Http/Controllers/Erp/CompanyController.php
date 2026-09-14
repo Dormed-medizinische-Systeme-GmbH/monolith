@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Crm\Models\Company;
+use App\Modules\Crm\Models\CompanyContact;
+use App\Modules\Crm\Queries\CompanyContactProfile;
 use App\Modules\Crm\Queries\CompanyList;
 use App\Modules\Crm\Queries\CompanyProfile;
 use App\Support\DataTable\DataTable;
@@ -40,6 +42,20 @@ final class CompanyController extends Controller
     {
         return Inertia::render('erp/companies/Show', [
             'company' => CompanyProfile::for($company),
+        ]);
+    }
+
+    /**
+     * Ein Ansprechpartner dieser Firma.
+     *
+     * `$company` ist nicht nur Zierde: die Route bindet verschachtelt
+     * (`scopeBindings`), ein Kontakt einer anderen Firma ist unter diesem Pfad
+     * deshalb nicht erreichbar.
+     */
+    public function contact(Company $company, CompanyContact $contact): Response
+    {
+        return Inertia::render('erp/companies/contacts/Show', [
+            'contact' => CompanyContactProfile::for($contact),
         ]);
     }
 }

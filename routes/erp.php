@@ -34,4 +34,14 @@ Route::middleware('auth:staff')->group(function (): void {
      */
     Route::get('/firmen', [CompanyController::class, 'index'])->name('erp.companies.index');
     Route::get('/firmen/{company}', [CompanyController::class, 'show'])->name('erp.companies.show');
+
+    /*
+     * Verschachtelt gebunden: `{contact}` wird ueber `$company->contacts()`
+     * aufgeloest. Ein Kontakt einer anderen Firma liefert damit 404 statt ihn
+     * unter einem fremden Pfad zu zeigen — die Firma ist der Rahmen, auch in
+     * der Adresse.
+     */
+    Route::get('/firmen/{company}/kontakte/{contact}', [CompanyController::class, 'contact'])
+        ->scopeBindings()
+        ->name('erp.companies.contacts.show');
 });
