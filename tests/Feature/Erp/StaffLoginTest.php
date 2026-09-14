@@ -77,3 +77,27 @@ test('die Fehlermeldung unterscheidet nicht zwischen gesperrt und falschem Passw
     expect($falsch->getSession()->get('errors')->get('email'))
         ->toBe($gesperrt->getSession()->get('errors')->get('email'));
 });
+
+test('es gibt keine Selbstbedienung fuer Mitarbeiter', function (string $path): void {
+    /*
+     * D-032: fuer Mitarbeiter ist nur der Login vorgesehen. Keine
+     * Registrierung, kein Self-Service-Passwort-Reset, keine
+     * E-Mail-Verifizierung.
+     *
+     * Ein Selbstregistrierungsformular waere ohnehin an `users.role_id`
+     * gescheitert — NOT NULL nach D-124, und niemand kann sich selbst eine
+     * Abteilung geben. Das Passwort setzt ein Administrator zurueck, bis
+     * Entra-SSO uebernimmt (D-029).
+     *
+     * Der Test steht hier, damit die Routen nicht durch ein wiederbelebtes
+     * Fortify-Feature zurueckkehren, ohne dass es jemand bemerkt.
+     */
+    $this->get('http://'.config('domains.erp').$path)->assertNotFound();
+    $this->post('http://'.config('domains.erp').$path)->assertNotFound();
+})->with(['/register', '/forgot-password', '/reset-password', '/email/verify']);
+
+test('der Kunden-Passwort-Reset bleibt davon unberuehrt', function (): void {
+    // Kunden brauchen ihn zwingend — sie haben keinen Administrator im Haus
+    // (ADR-043). Der Broker steht in config/auth.php mit eigener Token-Tabelle.
+    expect(config('auth.passwords.customers.table'))->toBe('customer_password_reset_tokens');
+});
