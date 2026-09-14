@@ -12,6 +12,10 @@ void createInertiaApp({
         switch (true) {
             case name === 'Welcome':
                 return null;
+            // Login-Seiten bringen ihr eigenes ganzseitiges Layout mit — die
+            // App-Shell mit Sidebar waere davor sinnlos.
+            case name.endsWith('/Login'):
+                return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):

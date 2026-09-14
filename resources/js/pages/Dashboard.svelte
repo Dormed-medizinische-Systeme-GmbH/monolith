@@ -1,44 +1,18 @@
-<script module lang="ts">
-    import { dashboard } from '@/routes';
-
-    export const layout = {
-        breadcrumbs: [
-            {
-                title: 'Dashboard',
-                href: dashboard(),
-            },
-        ],
-    };
-</script>
-
 <script lang="ts">
     import AppHead from '@/components/AppHead.svelte';
-    import PlaceholderPattern from '@/components/PlaceholderPattern.svelte';
+    import Heading from '@/components/Heading.svelte';
+
+    /**
+     * Platzhalter bis zum Cockpit (D-126).
+     *
+     * Das Cockpit ist je Abteilung im Code definiert und besteht aus Listen und
+     * Kennzahlen — es entsteht mit den Fachmodulen, nicht vorher.
+     */
 </script>
 
 <AppHead title="Dashboard" />
 
-<div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-    <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div
-            class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70"
-        >
-            <PlaceholderPattern />
-        </div>
-        <div
-            class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70"
-        >
-            <PlaceholderPattern />
-        </div>
-        <div
-            class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70"
-        >
-            <PlaceholderPattern />
-        </div>
-    </div>
-    <div
-        class="relative min-h-screen flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min"
-    >
-        <PlaceholderPattern />
-    </div>
-</div>
+<Heading
+    title="Angemeldet"
+    description="Das Cockpit entsteht mit den Fachmodulen (D-126)."
+/>

@@ -2,10 +2,10 @@
     import { Link } from '@inertiajs/svelte';
     import type { Snippet } from 'svelte';
     import Heading from '@/components/Heading.svelte';
-    import { Button } from '@/components/ui/button';
+    import { buttonVariants } from '@/components/ui/button';
     import { Separator } from '@/components/ui/separator';
     import { currentUrlState } from '@/lib/currentUrl.svelte';
-    import { toUrl } from '@/lib/utils';
+    import { cn, toUrl } from '@/lib/utils';
     import { edit as editProfile } from '@/routes/profile';
     import { edit as editSecurity } from '@/routes/security';
     import type { NavItem } from '@/types';
@@ -43,22 +43,21 @@
                 aria-label="Settings"
             >
                 {#each sidebarNavItems as item (toUrl(item.href))}
-                    <Button
-                        variant="ghost"
-                        class="w-full justify-start {url.isCurrentUrl(
-                            item.href,
-                            url.currentUrl,
-                        )
-                            ? 'bg-muted'
-                            : ''}"
-                        asChild
+                    <!--
+                        `buttonVariants` statt <Button href=…>: der Button würde
+                        ein <a> mit vollem Seitenwechsel rendern. Hier soll
+                        Inertia navigieren, also trägt der Link die Optik.
+                    -->
+                    <Link
+                        href={toUrl(item.href)}
+                        class={cn(
+                            buttonVariants({ variant: 'ghost' }),
+                            'w-full justify-start',
+                            url.isCurrentUrl(item.href, url.currentUrl) && 'bg-muted',
+                        )}
                     >
-                        {#snippet children(props)}
-                            <Link href={toUrl(item.href)} class={props.class}>
-                                {item.title}
-                            </Link>
-                        {/snippet}
-                    </Button>
+                        {item.title}
+                    </Link>
                 {/each}
             </nav>
         </aside>
