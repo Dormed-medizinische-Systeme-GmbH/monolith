@@ -104,6 +104,57 @@ mit 32 GB liegen bei ~65 €; ein dedizierter Ryzen 7 mit 8 echten Kernen und 64
 > nächtlicher Dumps, und in die Parallelphase. Bei 700 € ruft jemand anderes um 3 Uhr
 > nachts zurück; bei 70 € ist man das selbst — dafür ist der Rest des Budgets da.
 
+## 5a. Testumgebung auf Coolify — ⚠ Übergangszustand
+
+Solange die echten Domains noch nicht auf die Anwendung zeigen, läuft sie unter:
+
+| Zugriffspunkt | Hostname |
+| --- | --- |
+| Website | `dormed.everding.it` |
+| Shop | `dormed-shop.everding.it` |
+| Portal | `dormed-portal.everding.it` |
+| ERP | `dormed-erp.everding.it` |
+
+**Dafür ist kein Code nötig** — nur diese vier Werte in der Coolify-Env:
+
+```dotenv
+APP_DOMAIN_WEBSITE=dormed.everding.it
+APP_DOMAIN_SHOP=dormed-shop.everding.it
+APP_DOMAIN_PORTAL=dormed-portal.everding.it
+APP_DOMAIN_ERP=dormed-erp.everding.it
+APP_URL=https://dormed.everding.it
+```
+
+Domain-Routing, URL-Erzeugung, Fortify (`fortify.domain` liest `APP_DOMAIN_ERP`)
+und die Gast-Weiterleitung hängen alle an diesen Variablen. Beim Produktivgang
+werden sie auf `dormed.de` umgestellt, mehr nicht.
+
+> **Verworfener Umweg (2026-09-14).** Ein Alias-Mechanismus, der beide
+> Domain-Sätze gleichzeitig bedient, war gebaut und wurde wieder entfernt. Er
+> löst ein Problem, das hier nicht besteht — Testumgebung und Produktion sind
+> getrennte Deployments —, und er zwang zusätzlich dazu, Fortifys
+> Routenregistrierung zu übernehmen. Falls später ein echter Übergang mit
+> gleichzeitigem Betrieb beider Domains nötig wird: der Weg führt über
+> `Fortify::ignoreRoutes()` und eine Registrierung je Hostname, nicht über
+> `fortify.domain`, das nur einen Einzelwert kennt.
+
+### Migrationen laufen derzeit im Container-Start — ⚠ ebenfalls Übergang
+
+`entrypoint.sh` führt `php artisan migrate --force --seed --database=pgsql_owner`
+aus, damit ein Deploy ohne Handgriffe eine benutzbare Anwendung hinterlässt.
+
+**Vor dem echten Produktivgang muss das raus** (ADR-015). Die Begründung steht
+ausführlich im Skript; kurz: bei mehreren Replicas migrieren Container
+gegeneinander, eine fehlgeschlagene Migration tarnt sich als Startschleife, und
+`--seed` fährt bei jedem Start — der `DevelopmentAccountSeeder` mit seinen
+`password`-Zugängen hängt dann allein an `APP_ENV=production`.
+
+Ersetzt wird es durch ein Pre-Deploy-Command in Coolify:
+
+```
+php artisan migrate --force --database=pgsql_owner
+```
+
 ## 6. Was tatsächlich wächst
 
 Nicht die Datenbank — die **Einsatzfotos** (ADR-029):
