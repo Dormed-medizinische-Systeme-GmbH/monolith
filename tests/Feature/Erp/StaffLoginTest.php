@@ -136,10 +136,10 @@ test('nach der Anmeldung bleibt man auf dem eigenen Hostnamen', function (): voi
 test('ein gemerktes Ziel auf demselben Hostnamen wird befolgt', function (): void {
     User::factory()->create(['email' => 'intern@dormed.test']);
 
-    $this->withSession(['url.intended' => 'http://'.config('domains.erp').'/settings/profile'])
+    $this->withSession(['url.intended' => 'http://'.config('domains.erp').'/dashboard'])
         ->post('http://'.config('domains.erp').'/login', [
             'email' => 'intern@dormed.test',
             'password' => 'password',
         ])
-        ->assertRedirect('http://'.config('domains.erp').'/settings/profile');
+        ->assertRedirect('http://'.config('domains.erp').'/dashboard');
 });
