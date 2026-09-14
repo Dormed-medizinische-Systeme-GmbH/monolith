@@ -6,6 +6,8 @@ namespace Database\Seeders;
 
 use App\Modules\Core\Models\Role;
 use App\Modules\Core\Models\User;
+use App\Modules\Crm\Enums\ChannelLabel;
+use App\Modules\Crm\Enums\ChannelType;
 use App\Modules\Crm\Enums\Gender;
 use App\Modules\Crm\Models\Company;
 use App\Modules\Crm\Models\CompanyContact;
@@ -62,6 +64,19 @@ final class DevelopmentAccountSeeder extends Seeder
             ['debitor_number' => 'K-10002', 'avv_status' => 'signed', 'avv_signed_at' => now()->subYear()],
         );
         $zweite->locations()->firstOrCreate(['name' => 'Hauptstandort'], ['is_primary' => true]);
+        $zweite->locations()->firstOrCreate(['name' => 'Zweigstelle Süd'], ['is_primary' => false]);
+
+        $zweite->address()->firstOrCreate([], [
+            'street' => 'Nordring',
+            'house_number' => '8a',
+            'postal_code' => '21073',
+            'city' => 'Hamburg',
+        ]);
+
+        self::channels($zweite, [
+            [ChannelType::Phone, ChannelLabel::Zentrale, '040 987654-0', true],
+            [ChannelType::Email, ChannelLabel::Geschaeftlich, 'info@nordpraxis.test', true],
+        ]);
 
         $erste = Company::query()->where('name', 'Musterpraxis Dr. Muster')->firstOrFail();
 
@@ -91,6 +106,11 @@ final class DevelopmentAccountSeeder extends Seeder
                 ['role' => $rolle, 'is_primary' => false],
             );
 
+            self::channels($person, [
+                [ChannelType::Phone, ChannelLabel::Durchwahl, '04181 1234-'.(10 + $index), true],
+                [ChannelType::Email, ChannelLabel::Geschaeftlich, mb_strtolower($vorname[0].'.'.$nachname).'@praxis.test', true],
+            ]);
+
             if ($mail === null) {
                 continue;
             }
@@ -98,6 +118,21 @@ final class DevelopmentAccountSeeder extends Seeder
             CustomerAccount::query()->updateOrCreate(
                 ['person_id' => $person->id],
                 ['email' => $mail, 'password' => 'password', 'is_active' => $aktiv],
+            );
+        }
+    }
+
+    /**
+     * Kommunikationswege an eine Company ODER Person haengen (D-010).
+     *
+     * @param  list<array{ChannelType, ChannelLabel, string, bool}>  $channels
+     */
+    private static function channels(Company|Person $owner, array $channels): void
+    {
+        foreach ($channels as [$type, $label, $value, $isPrimary]) {
+            $owner->contactChannels()->firstOrCreate(
+                ['channel_type' => $type, 'value' => $value],
+                ['label' => $label, 'is_primary' => $isPrimary],
             );
         }
     }
@@ -136,10 +171,31 @@ final class DevelopmentAccountSeeder extends Seeder
         );
 
         // Jede Company hat mindestens einen Standort (D-007).
-        $company->locations()->firstOrCreate(
+        $location = $company->locations()->firstOrCreate(
             ['name' => 'Hauptstandort'],
             ['is_primary' => true],
         );
+
+        $company->address()->firstOrCreate([], [
+            'street' => 'Musterstraße',
+            'house_number' => '12',
+            'postal_code' => '21244',
+            'city' => 'Buchholz in der Nordheide',
+        ]);
+
+        $location->address()->firstOrCreate([], [
+            'street' => 'Musterstraße',
+            'house_number' => '12',
+            'postal_code' => '21244',
+            'city' => 'Buchholz in der Nordheide',
+        ]);
+
+        self::channels($company, [
+            [ChannelType::Phone, ChannelLabel::Zentrale, '04181 1234-0', true],
+            [ChannelType::Fax, ChannelLabel::Praxis, '04181 1234-99', false],
+            [ChannelType::Email, ChannelLabel::Rechnungsversand, 'rechnung@musterpraxis.test', true],
+            [ChannelType::Web, ChannelLabel::Homepage, 'www.musterpraxis.test', true],
+        ]);
 
         $person = Person::query()->firstOrCreate(
             ['first_name' => 'Linus', 'last_name' => 'Everding'],
