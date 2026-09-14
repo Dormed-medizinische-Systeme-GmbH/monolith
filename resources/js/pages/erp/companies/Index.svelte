@@ -25,6 +25,6 @@
     {rows}
     {meta}
     rowHref={(row) => show(row.id).url}
-    searchPlaceholder="Firma, Kundennummer oder Ort …"
+    searchPlaceholder="Firma, Kundennummer oder Adresse …"
     emptyMessage="Keine Firmen gefunden."
 />

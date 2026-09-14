@@ -15,11 +15,9 @@ export type CompanyRow = {
     id: string;
     name: string;
     nameAddition: string | null;
-    debitorNumber: string | null;
     specialty: string | null;
+    street: string | null;
     city: string | null;
-    contactCount: number;
-    locationCount: number;
     avvSigned: boolean;
 };
 
@@ -30,7 +28,7 @@ const helper = createColumnHelper<DataTableFeatures, CompanyRow>();
  * `components/data-table`. Genau das ist die Aufteilung: hier der Datensatz,
  * dort das Verhalten.
  *
- * Die Schlüssel (`name`, `debitor`, …) müssen zur Freigabeliste in
+ * Die Schlüssel (`name`, `specialty`, …) müssen zur Freigabeliste in
  * `CompanyList::SORTABLE` passen — was dort nicht steht, lässt sich nicht
  * sortieren.
  */
@@ -57,21 +55,17 @@ export function companyColumns(
                     sublabel: row.original.nameAddition,
                 }),
         }),
-        helper.accessor('debitorNumber', {
-            header: () => sortable('debitor', 'Kundennr.'),
-            cell: ({ row }) => row.original.debitorNumber ?? '—',
-        }),
         helper.accessor('specialty', {
             header: () => sortable('specialty', 'Fachrichtung'),
             cell: ({ row }) => row.original.specialty ?? '—',
         }),
+        helper.accessor('street', {
+            header: () => sortable('street', 'Straße'),
+            cell: ({ row }) => row.original.street ?? '—',
+        }),
         helper.accessor('city', {
             header: () => sortable('city', 'Ort'),
             cell: ({ row }) => row.original.city ?? '—',
-        }),
-        helper.accessor('contactCount', {
-            header: () => sortable('contacts', 'Ansprechpartner'),
-            cell: ({ row }) => String(row.original.contactCount),
         }),
     ]);
 }

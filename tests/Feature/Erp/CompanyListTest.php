@@ -53,14 +53,19 @@ test('die Liste verlangt eine Anmeldung', function (): void {
         ->assertRedirect('http://'.config('domains.erp').'/login');
 });
 
-test('sie zeigt Firma, Kundennummer, Fachrichtung und Ort', function (): void {
+test('sie zeigt Firma, Fachrichtung und Anschrift', function (): void {
     $fach = MedicalSpecialty::query()->create(['name' => 'Radiologie']);
 
     firma('Praxis Alpha', [
         'name_addition' => 'Gemeinschaftspraxis',
         'debitor_number' => 'K-1',
         'medical_specialty_id' => $fach->id,
-    ], ['street' => 'Hauptstraße', 'postal_code' => '21244', 'city' => 'Buchholz']);
+    ], [
+        'street' => 'Hauptstraße',
+        'house_number' => '7',
+        'postal_code' => '21244',
+        'city' => 'Buchholz',
+    ]);
 
     besucheFirmen($this)
         ->assertOk()
@@ -70,8 +75,8 @@ test('sie zeigt Firma, Kundennummer, Fachrichtung und Ort', function (): void {
             // Untertitel der Leitspalte — wird gesucht, also muss er auch
             // ausgeliefert werden.
             ->where('rows.0.nameAddition', 'Gemeinschaftspraxis')
-            ->where('rows.0.debitorNumber', 'K-1')
             ->where('rows.0.specialty', 'Radiologie')
+            ->where('rows.0.street', 'Hauptstraße 7')
             ->where('rows.0.city', '21244 Buchholz')
         );
 });
@@ -92,7 +97,6 @@ test('eine Firma mit mehreren Ansprechpartnern bleibt EINE Zeile', function (): 
         ->assertInertia(fn (Assert $page) => $page
             ->where('meta.total', 1)
             ->has('rows', 1)
-            ->where('rows.0.contactCount', 3)
         );
 });
 
@@ -110,8 +114,7 @@ test('eine Person bei zwei Firmen erzeugt keine Doppelzeile', function (): void 
     besucheFirmen($this)
         ->assertInertia(fn (Assert $page) => $page
             ->where('meta.total', 2)
-            ->where('rows.0.contactCount', 1)
-            ->where('rows.1.contactCount', 1)
+            ->has('rows', 2)
         );
 });
 
@@ -130,7 +133,9 @@ test('die Suche greift auf Name, Kundennummer und Ort', function (string $suche,
         );
 })->with([
     ['Alpha', 'Praxis Alpha'],
+    // Die Kundennummer steht nicht mehr in der Tabelle, bleibt aber auffindbar.
     ['K-2', 'Gemeinschaftspraxis Nord'],
+    ['Nordring', 'Gemeinschaftspraxis Nord'],
     ['Buchholz', 'Praxis Alpha'],
 ]);
 
@@ -148,20 +153,18 @@ test('sortiert wird nur nach freigegebenen Spalten', function (): void {
         ->assertInertia(fn (Assert $page) => $page->where('meta.sort', 'name'));
 });
 
-test('nach der Zahl der Ansprechpartner laesst sich sortieren', function (): void {
-    // `contacts_count` ist ein Ausgabename aus `withCount`, keine echte Spalte —
-    // Postgres laesst das in ORDER BY zu, und genau das wird hier geprueft.
-    $alpha = firma('Praxis Alpha');
-    kontaktBei($alpha, 'Anke', 'Brehm');
-    kontaktBei($alpha, 'Tobias', 'Ritter');
-    firma('Praxis Beta');
+test('nach der Strasse laesst sich sortieren', function (): void {
+    // Die Spalte kommt aus der gejointen `addresses` — ohne den Join im
+    // Lesemodell liefe das ORDER BY ins Leere.
+    firma('Praxis Alpha', [], ['street' => 'Zederweg', 'postal_code' => '21244', 'city' => 'Buchholz']);
+    firma('Praxis Beta', [], ['street' => 'Ahornallee', 'postal_code' => '21073', 'city' => 'Hamburg']);
 
-    besucheFirmen($this, '?sortierung=contacts&richtung=desc')
+    besucheFirmen($this, '?sortierung=street')
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('meta.sort', 'contacts')
-            ->where('rows.0.name', 'Praxis Alpha')
-            ->where('rows.1.name', 'Praxis Beta')
+            ->where('meta.sort', 'street')
+            ->where('rows.0.name', 'Praxis Beta')
+            ->where('rows.1.name', 'Praxis Alpha')
         );
 });
 
