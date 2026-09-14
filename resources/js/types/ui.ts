@@ -1,4 +1,3 @@
-
 export type AppVariant = 'header' | 'sidebar';
 
 export type FlashToast = {
