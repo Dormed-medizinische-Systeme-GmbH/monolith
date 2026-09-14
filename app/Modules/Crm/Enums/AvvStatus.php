@@ -14,4 +14,12 @@ enum AvvStatus: string
 {
     case None = 'none';
     case Signed = 'signed';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::None => 'nicht unterzeichnet',
+            self::Signed => 'unterzeichnet',
+        };
+    }
 }

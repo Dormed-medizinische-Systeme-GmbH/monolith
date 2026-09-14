@@ -17,4 +17,15 @@ enum ChannelType: string
     case Fax = 'fax';
     case Email = 'email';
     case Web = 'web';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Phone => 'Telefon',
+            self::Mobile => 'Mobil',
+            self::Fax => 'Fax',
+            self::Email => 'E-Mail',
+            self::Web => 'Web',
+        };
+    }
 }

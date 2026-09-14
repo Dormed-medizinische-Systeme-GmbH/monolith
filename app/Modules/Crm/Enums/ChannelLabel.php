@@ -22,4 +22,20 @@ enum ChannelLabel: string
     case MobilArzt = 'mobil_arzt';
     case Homepage = 'homepage';
     case Sonstige = 'sonstige';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Geschaeftlich => 'geschäftlich',
+            self::Praxis => 'Praxis',
+            self::Zentrale => 'Zentrale',
+            self::Durchwahl => 'Durchwahl',
+            self::Rechnungsversand => 'Rechnungsversand',
+            self::Privat => 'privat',
+            self::MobilPersoenlich => 'mobil, persönlich',
+            self::MobilArzt => 'mobil, Arzt',
+            self::Homepage => 'Homepage',
+            self::Sonstige => 'sonstige',
+        };
+    }
 }
