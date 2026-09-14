@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Erp\CompanyController;
-use App\Http\Controllers\Erp\HomeController;
+use App\Http\Controllers\Erp\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,7 +21,8 @@ use Illuminate\Support\Facades\Route;
  * bootstrap/app.php registriert — er liegt ausserhalb dieser Gruppe.
  */
 Route::middleware('auth:staff')->group(function (): void {
-    Route::get('/', HomeController::class)->name('erp.home');
+    // Die Wurzel ist das Dashboard. Keine zweite `/dashboard`-Adresse daneben.
+    Route::get('/', DashboardController::class)->name('erp.dashboard');
 
     /*
      * Vorerst nur Ansicht. Anlegen und Bearbeiten kommen mit dem ersten

@@ -13,7 +13,14 @@
         role: string;
     }
 
-    let { accessPoint }: { accessPoint: AccessPoint } = $props();
+    /**
+     * `framed`: eigenstaendige Seite (Portal, Shop, Geruest-Startseiten).
+     * Ohne: eingebettet in eine Flaeche, die bereits ein Layout mitbringt.
+     */
+    let {
+        accessPoint,
+        framed = true,
+    }: { accessPoint: AccessPoint; framed?: boolean } = $props();
 
     const rows = $derived([
         { label: 'Host', value: accessPoint.host },
@@ -24,14 +31,14 @@
     ]);
 </script>
 
-<div
-    class="flex min-h-screen flex-col items-center justify-center bg-[#FDFDFC] p-6 text-[#1b1b18]"
->
+{#snippet inhalt()}
     <div class="w-full max-w-md">
-        <p class="mb-1 text-xs tracking-widest text-neutral-500 uppercase">
-            Dormed — Geruest
-        </p>
-        <h1 class="mb-6 text-2xl font-semibold">{accessPoint.label}</h1>
+        {#if framed}
+            <p class="mb-1 text-xs tracking-widest text-neutral-500 uppercase">
+                Dormed — Geruest
+            </p>
+            <h1 class="mb-6 text-2xl font-semibold">{accessPoint.label}</h1>
+        {/if}
 
         <dl
             class="divide-y divide-neutral-200 rounded-lg border border-neutral-200"
@@ -50,4 +57,14 @@
             tatsaechlich bedient hat.
         </p>
     </div>
-</div>
+{/snippet}
+
+{#if framed}
+    <div
+        class="flex min-h-screen flex-col items-center justify-center bg-[#FDFDFC] p-6 text-[#1b1b18]"
+    >
+        {@render inhalt()}
+    </div>
+{:else}
+    {@render inhalt()}
+{/if}

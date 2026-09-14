@@ -83,7 +83,7 @@ test('ERP, Portal und Shop antworten ueber Inertia', function (string $key, stri
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->component($component));
 })->with([
-    ['erp', 'erp/Home'],
+    ['erp', 'erp/Dashboard'],
     ['portal', 'portal/Home'],
     ['shop', 'shop/Home'],
 ]);

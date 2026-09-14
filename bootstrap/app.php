@@ -16,8 +16,10 @@ use Illuminate\Support\Facades\Route;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         // Kein `web:` — es wuerde die Routen OHNE Domain-Bindung registrieren und
-        // damit auf allen vier Hostnamen ausliefern. `routes/web.php` haengt
-        // deshalb unten in der ERP-Gruppe (ADR-033/036).
+        // damit auf allen vier Hostnamen ausliefern. Jede Route-Datei haengt
+        // deshalb unten an ihrer Domain-Gruppe (ADR-033/036). `routes/web.php`
+        // gibt es nicht mehr: sie enthielt nur noch `/dashboard`, und das ist
+        // jetzt die ERP-Wurzel.
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function (): void {
@@ -42,14 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             Route::middleware(['web', UseStaffConnection::class])
                 ->domain(config('domains.erp'))
-                ->group(function (): void {
-                    require base_path('routes/erp.php');
-
-                    // Dashboard, Einstellungen und Profil sind Mitarbeiterflaechen.
-                    // Ohne Domain-Bindung waeren sie auch unter dormed.de erreichbar,
-                    // und zwar ohne Verbindungs-Middleware, also auf `dormed_staff`.
-                    require base_path('routes/web.php');
-                });
+                ->group(base_path('routes/erp.php'));
 
             Route::middleware(['web', UseCustomerConnection::class])
                 ->domain(config('domains.portal'))
