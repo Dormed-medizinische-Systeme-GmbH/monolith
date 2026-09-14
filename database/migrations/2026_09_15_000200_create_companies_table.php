@@ -19,10 +19,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('companies', function (Blueprint $table): void {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('name');
             $table->string('name_addition')->nullable();
-            $table->foreignId('medical_specialty_id')->nullable()->constrained('medical_specialties')->nullOnDelete();
+            $table->foreignUuid('medical_specialty_id')->nullable()->constrained('medical_specialties')->nullOnDelete();
             $table->text('notes')->nullable();
 
             // Eigene interne Kundennummer, KEIN Fremdsystem-Bezug (D-009/D-073).
@@ -33,13 +33,20 @@ return new class extends Migration
             $table->date('avv_signed_at')->nullable();
 
             // Informativ, KEINE Autorisierung (D-016).
-            $table->foreignId('responsible_sales_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('responsible_service_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignUuid('responsible_sales_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignUuid('responsible_service_id')->nullable()->constrained('users')->nullOnDelete();
 
             // Abweichende Rechnungsanschrift => andere Company (D-004/D-066).
             // Alle Rechnungen dieser Praxis gehen dorthin; keine
             // praxisuebergreifende Sammelrechnung.
-            $table->foreignId('billing_company_id')->nullable()->constrained('companies')->nullOnDelete();
+            //
+            // Der Fremdschluessel auf die eigene Tabelle folgt weiter unten:
+            // bei einem UUID-Primaerschluessel (ADR-046) setzt Postgres den
+            // PRIMARY KEY erst per ALTER TABLE nach dem CREATE — anders als bei
+            // `bigserial`, wo er inline steht. Eine Selbstreferenz innerhalb der
+            // Closure zeigt deshalb auf eine Spalte, die noch keinen eindeutigen
+            // Index hat, und schlaegt fehl.
+            $table->uuid('billing_company_id')->nullable();
 
             // travel_zone_id fehlt bewusst: `travel_zones` wird im
             // Service-Bereich definiert (D-020/D-059/D-063) und existiert noch
@@ -62,6 +69,10 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index('name');
+        });
+
+        Schema::table('companies', function (Blueprint $table): void {
+            $table->foreign('billing_company_id')->references('id')->on('companies')->nullOnDelete();
         });
 
         Columns::check('companies', 'avv_status', ['none', 'signed']);

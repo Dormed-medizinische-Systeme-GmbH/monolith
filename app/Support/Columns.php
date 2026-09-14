@@ -27,8 +27,8 @@ final class Columns
      */
     public static function blame(Blueprint $table): void
     {
-        $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-        $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+        $table->foreignUuid('created_by')->nullable()->constrained('users')->nullOnDelete();
+        $table->foreignUuid('updated_by')->nullable()->constrained('users')->nullOnDelete();
     }
 
     /**

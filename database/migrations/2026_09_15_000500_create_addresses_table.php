@@ -16,8 +16,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('addresses', function (Blueprint $table): void {
-            $table->id();
-            $table->morphs('addressable');
+            $table->uuid('id')->primary();
+            $table->uuidMorphs('addressable');
 
             $table->string('street');
             $table->string('house_number', 32)->nullable();

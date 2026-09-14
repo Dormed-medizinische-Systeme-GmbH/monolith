@@ -7,6 +7,7 @@ namespace App\Modules\Crm\Models;
 use App\Modules\Core\Models\User;
 use App\Modules\Crm\Enums\AvvStatus;
 use App\Support\TracksBlame;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -25,13 +26,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * sie sagen, wer zustaendig ist, nicht wer zugreifen darf. Berechtigungen
  * kommen ausschliesslich aus der Rolle (D-030).
  *
- * @property int $id
+ * @property string $id
  * @property string $name
  * @property AvvStatus $avv_status
  */
 final class Company extends Model
 {
-    use SoftDeletes, TracksBlame;
+    use HasUuids, SoftDeletes, TracksBlame;
 
     protected $fillable = [
         'name', 'name_addition', 'medical_specialty_id', 'notes', 'debitor_number',

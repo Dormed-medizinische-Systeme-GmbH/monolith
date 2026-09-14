@@ -6,6 +6,7 @@ namespace App\Modules\Core\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -25,19 +26,19 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * zusammen. Der urspruengliche Breeze-Kompatibilitaetsgrund ist mit Fortify
  * entfallen.
  *
- * @property int $id
+ * @property string $id
  * @property string $first_name
  * @property string $last_name
  * @property string $email
  * @property string|null $entra_oid
  * @property bool $is_admin
  * @property bool $is_active
- * @property int $role_id
+ * @property string $role_id
  */
 final class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+    use HasFactory, HasUuids, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * Die Fabrik muss benannt werden: Laravel leitet ihren Namen sonst aus dem

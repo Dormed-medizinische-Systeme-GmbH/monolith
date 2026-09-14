@@ -2,7 +2,7 @@
  * Was `App\Modules\Crm\Queries\CompanyProfile` liefert.
  */
 export type Channel = {
-    id: number;
+    id: string;
     type: string;
     typeLabel: string;
     label: string;
@@ -18,8 +18,8 @@ export type Address = {
 };
 
 export type Contact = {
-    id: number;
-    personId: number;
+    id: string;
+    personId: string;
     name: string;
     role: string | null;
     department: string | null;
@@ -33,7 +33,7 @@ export type Contact = {
 };
 
 export type CompanyProfile = {
-    id: number;
+    id: string;
     name: string;
     nameAddition: string | null;
     specialty: string | null;
@@ -43,10 +43,10 @@ export type CompanyProfile = {
     bank: Record<string, string>;
     address: Address | null;
     channels: Channel[];
-    billingCompany: { id: number; name: string } | null;
+    billingCompany: { id: string; name: string } | null;
     responsible: { sales: string | null; service: string | null };
     locations: {
-        id: number;
+        id: string;
         name: string;
         isPrimary: boolean;
         address: Address | null;

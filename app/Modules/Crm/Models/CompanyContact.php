@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Crm\Models;
 
 use App\Support\TracksBlame;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,15 +16,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * `role` ist bewusst Freitext mit Vorschlagsliste und KEIN Enum (D-005) — es
  * ist nicht auswertungsrelevant. Bei `ContactChannel.label` ist es umgekehrt.
  *
- * @property int $id
- * @property int $company_id
- * @property int $person_id
+ * @property string $id
+ * @property string $company_id
+ * @property string $person_id
  * @property string|null $role
  * @property bool $is_primary
  */
 final class CompanyContact extends Model
 {
-    use SoftDeletes, TracksBlame;
+    use HasUuids, SoftDeletes, TracksBlame;
 
     /**
      * Vorschlagswerte fuer das UI (D-005). Eine Datalist, keine Einschraenkung —

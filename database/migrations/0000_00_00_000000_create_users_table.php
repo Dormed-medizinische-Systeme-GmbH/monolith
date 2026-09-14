@@ -19,7 +19,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('roles', function (Blueprint $table): void {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('key')->unique();
             $table->string('name');
             $table->boolean('is_active')->default(true);
@@ -27,7 +27,7 @@ return new class extends Migration
         });
 
         Schema::create('users', function (Blueprint $table): void {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->unique();
@@ -48,7 +48,7 @@ return new class extends Migration
 
             // NOT NULL (D-124): genau eine Rolle je Mitarbeiter. Der Pivot
             // `role_user` und `is_primary` sind ersatzlos entfallen.
-            $table->foreignId('role_id')->constrained('roles')->restrictOnDelete();
+            $table->foreignUuid('role_id')->constrained('roles')->restrictOnDelete();
 
             $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
@@ -64,7 +64,7 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table): void {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->foreignUuid('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');

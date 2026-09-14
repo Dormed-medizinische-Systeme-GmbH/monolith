@@ -169,6 +169,18 @@ test('eine Person bei zwei Firmen erscheint in beiden mit der dortigen Rolle', f
         );
 });
 
+test('ein unsinniger Schluessel wird zu 404, nicht zu einem Datenbankfehler', function (): void {
+    /*
+     * Seit die Schluessel UUIDs sind (ADR-046) wuerde ein `where id = 'abc'`
+     * in Postgres mit „invalid input syntax for type uuid" abbrechen — also
+     * mit 500 statt 404. Laravel faengt das im Route-Model-Binding ab; dieser
+     * Test haelt fest, dass wir uns darauf verlassen.
+     */
+    $this->actingAs(User::factory()->create(), 'staff')
+        ->get('http://'.config('domains.erp').'/firmen/keine-uuid')
+        ->assertNotFound();
+});
+
 test('eine geloeschte Firma ist nicht erreichbar', function (): void {
     $this->company->delete();
 

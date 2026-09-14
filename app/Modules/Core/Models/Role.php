@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Core\Models;
 
 use Database\Factories\RoleFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Code (`config/authorization.php`, D-030), nicht in der Datenbank und nicht im
  * UI — eine Rechteaenderung ist ein Deployment, keine Klickstrecke.
  *
- * @property int $id
+ * @property string $id
  * @property string $key
  * @property string $name
  * @property bool $is_active
@@ -24,7 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 final class Role extends Model
 {
     /** @use HasFactory<RoleFactory> */
-    use HasFactory;
+    use HasFactory, HasUuids;
 
     /**
      * Wie bei User: der Fabrikname muss benannt werden, weil das Model in

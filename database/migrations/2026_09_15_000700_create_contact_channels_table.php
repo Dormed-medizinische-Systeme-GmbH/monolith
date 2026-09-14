@@ -16,8 +16,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('contact_channels', function (Blueprint $table): void {
-            $table->id();
-            $table->morphs('channelable');
+            $table->uuid('id')->primary();
+            $table->uuidMorphs('channelable');
             $table->string('channel_type');
 
             // Fester Enum, im Gegensatz zu `company_contacts.role`

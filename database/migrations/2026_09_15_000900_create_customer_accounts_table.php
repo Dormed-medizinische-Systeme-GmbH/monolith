@@ -23,8 +23,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('customer_accounts', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('person_id')->unique()->constrained('people')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('person_id')->unique()->constrained('people')->cascadeOnDelete();
 
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();

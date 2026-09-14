@@ -12,7 +12,7 @@ import {
 import { show } from '@/routes/erp/companies';
 
 export type CompanyRow = {
-    id: number;
+    id: string;
     name: string;
     nameAddition: string | null;
     debitorNumber: string | null;

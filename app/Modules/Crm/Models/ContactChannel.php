@@ -7,6 +7,7 @@ namespace App\Modules\Crm\Models;
 use App\Modules\Crm\Enums\ChannelLabel;
 use App\Modules\Crm\Enums\ChannelType;
 use App\Support\TracksBlame;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * Ersetzt die rund 30 nummerierten Legacy-Kommunikationsslots (D-010).
  * Polymorph an Company ODER Person.
  *
- * @property int $id
+ * @property string $id
  * @property ChannelType $channel_type
  * @property ChannelLabel $label
  * @property string $value
@@ -23,7 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 final class ContactChannel extends Model
 {
-    use SoftDeletes, TracksBlame;
+    use HasUuids, SoftDeletes, TracksBlame;
 
     protected $fillable = ['channel_type', 'label', 'value', 'is_primary'];
 

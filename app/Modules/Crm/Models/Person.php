@@ -7,6 +7,7 @@ namespace App\Modules\Crm\Models;
 use App\Modules\Crm\Enums\Gender;
 use App\Support\TracksBlame;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -21,14 +22,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * eigene Adresse (D-014). Die Briefanrede wird bei der Dokumenterstellung
  * erzeugt, nicht gespeichert (D-015).
  *
- * @property int $id
+ * @property string $id
  * @property string $first_name
  * @property string $last_name
  * @property Gender $gender
  */
 final class Person extends Model
 {
-    use SoftDeletes, TracksBlame;
+    use HasUuids, SoftDeletes, TracksBlame;
 
     protected $fillable = ['first_name', 'last_name', 'name_suffix', 'title', 'gender', 'locale'];
 

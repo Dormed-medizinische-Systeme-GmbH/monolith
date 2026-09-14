@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,29 +17,34 @@ use Illuminate\Support\Facades\DB;
 |
 | `NULLIF(..., '')` in der Policy ist Pflicht, nicht Kosmetik: eine leere
 | Zeichenkette — was eine Middleware ohne Firmenkontext setzt — wuerde bei
-| `''::bigint` einen Fehler werfen statt null Zeilen zu liefern.
+| `''::uuid` einen Fehler werfen statt null Zeilen zu liefern. Seit die
+| Schluessel UUIDs sind (ADR-046) gilt das doppelt: auch jeder andere nicht
+| wohlgeformte Wert wirft, statt still alles freizugeben.
 |
 */
 
 beforeEach(function (): void {
     requirePostgres();
 
+    $this->firmaEins = (string) Str::uuid7();
+    $this->firmaZwei = (string) Str::uuid7();
+
     $owner = DB::connection('pgsql_owner');
     $customer = config('database.connections.pgsql_customer.username');
     $staff = config('database.connections.pgsql.username');
 
     $owner->statement('drop table if exists rls_probe');
-    $owner->statement('create table rls_probe (id bigserial primary key, company_id bigint not null, secret text not null)');
+    $owner->statement('create table rls_probe (id uuid primary key, company_id uuid not null, secret text not null)');
     $owner->statement('alter table rls_probe enable row level security');
     $owner->statement("grant select on rls_probe to \"{$customer}\", \"{$staff}\"");
 
     $owner->statement("create policy customer_own_company on rls_probe for select to \"{$customer}\"
-        using (company_id = nullif(current_setting('app.company_id', true), '')::bigint)");
+        using (company_id = nullif(current_setting('app.company_id', true), '')::uuid)");
     $owner->statement("create policy staff_full_access on rls_probe for select to \"{$staff}\" using (true)");
 
     $owner->table('rls_probe')->insert([
-        ['company_id' => 1, 'secret' => 'gehoert Firma 1'],
-        ['company_id' => 2, 'secret' => 'gehoert Firma 2'],
+        ['id' => (string) Str::uuid7(), 'company_id' => $this->firmaEins, 'secret' => 'gehoert Firma 1'],
+        ['id' => (string) Str::uuid7(), 'company_id' => $this->firmaZwei, 'secret' => 'gehoert Firma 2'],
     ]);
 
     DB::purge('pgsql_customer');
@@ -76,7 +82,7 @@ test('ein leerer Firmenkontext faellt ebenfalls geschlossen aus', function (): v
 });
 
 test('mit Firmenkontext sieht der Kunde genau die eigenen Zeilen', function (): void {
-    setCompanyContext('1');
+    setCompanyContext($this->firmaEins);
 
     $rows = DB::connection('pgsql_customer')->table('rls_probe')->get();
 
@@ -85,7 +91,7 @@ test('mit Firmenkontext sieht der Kunde genau die eigenen Zeilen', function (): 
 });
 
 test('Kunde A sieht die Zeilen von Kunde B nicht', function (): void {
-    setCompanyContext('2');
+    setCompanyContext($this->firmaZwei);
 
     $secrets = DB::connection('pgsql_customer')->table('rls_probe')->pluck('secret');
 

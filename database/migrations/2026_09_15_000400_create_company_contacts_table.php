@@ -18,9 +18,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('company_contacts', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
-            $table->foreignId('person_id')->constrained('people')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('company_id')->constrained('companies')->cascadeOnDelete();
+            $table->foreignUuid('person_id')->constrained('people')->cascadeOnDelete();
 
             // GENAU EINE Rolle (D-005). Vorschlagsliste im UI, Freitext
             // erlaubt, nicht auswertungsrelevant — deshalb kein Enum.

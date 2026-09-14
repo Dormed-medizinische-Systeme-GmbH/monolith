@@ -6,6 +6,7 @@ namespace App\Modules\Crm\Models;
 
 use App\Modules\Crm\Enums\GeocodeStatus;
 use App\Support\TracksBlame;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -17,14 +18,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * `latitude`/`longitude` sind kein Beiwerk: sie sind die Grundlage der
  * Fahrtzone und damit der Service-Anfahrtspauschale (D-024/D-020).
  *
- * @property int $id
+ * @property string $id
  * @property string $street
  * @property string $postal_code
  * @property string $city
  */
 final class Address extends Model
 {
-    use SoftDeletes, TracksBlame;
+    use HasUuids, SoftDeletes, TracksBlame;
 
     protected $fillable = [
         'street', 'house_number', 'postal_code', 'city', 'district', 'state',

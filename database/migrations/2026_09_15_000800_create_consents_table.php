@@ -18,8 +18,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('consents', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('person_id')->constrained('people')->cascadeOnDelete();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('person_id')->constrained('people')->cascadeOnDelete();
             $table->string('channel');
             $table->string('status');
             $table->dateTime('granted_at')->nullable();

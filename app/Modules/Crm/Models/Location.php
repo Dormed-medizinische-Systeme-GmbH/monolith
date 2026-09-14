@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Crm\Models;
 
 use App\Support\TracksBlame;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -20,14 +21,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * Der Praxis-Netzwerk-Block (D-092) ersetzt 14 Legacy-Felder und haengt am
  * Standort, nicht am Geraet.
  *
- * @property int $id
- * @property int $company_id
+ * @property string $id
+ * @property string $company_id
  * @property string $name
  * @property bool $is_primary
  */
 final class Location extends Model
 {
-    use SoftDeletes, TracksBlame;
+    use HasUuids, SoftDeletes, TracksBlame;
 
     protected $fillable = [
         'company_id', 'name', 'notes', 'is_primary',

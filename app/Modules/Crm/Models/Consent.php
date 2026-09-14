@@ -8,6 +8,7 @@ use App\Modules\Crm\Enums\ConsentChannel;
 use App\Modules\Crm\Enums\ConsentSource;
 use App\Modules\Crm\Enums\ConsentStatus;
 use App\Support\TracksBlame;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -18,14 +19,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * Wird NIE hart geloescht — Nachweispflicht. Ein Statuswechsel erzeugt einen
  * neuen Datensatz, er aendert keinen bestehenden.
  *
- * @property int $id
- * @property int $person_id
+ * @property string $id
+ * @property string $person_id
  * @property ConsentChannel $channel
  * @property ConsentStatus $status
  */
 final class Consent extends Model
 {
-    use SoftDeletes, TracksBlame;
+    use HasUuids, SoftDeletes, TracksBlame;
 
     protected $fillable = ['person_id', 'channel', 'status', 'granted_at', 'revoked_at', 'source'];
 
