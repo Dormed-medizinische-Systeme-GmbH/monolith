@@ -32,6 +32,8 @@ final class DatabaseSeeder extends Seeder
             ObjectStorageSeeder::class,
             // Zwei Anmeldedaten zum Ausprobieren — ueberspringt sich in Produktion.
             DevelopmentAccountSeeder::class,
+            // Ein kleiner Artikelkatalog — ueberspringt sich ebenfalls.
+            ArticleCatalogSeeder::class,
         ]);
     }
 }

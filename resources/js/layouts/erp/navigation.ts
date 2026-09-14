@@ -17,6 +17,7 @@ import UserCog from '@lucide/svelte/icons/user-cog';
 import Users from '@lucide/svelte/icons/users';
 import Wrench from '@lucide/svelte/icons/wrench';
 import { dashboard } from '@/routes/erp';
+import { index as articles } from '@/routes/erp/articles';
 import { index as companies } from '@/routes/erp/companies';
 
 export type NavItem = {
@@ -76,7 +77,7 @@ export const navigation: NavGroup[] = [
             { title: 'Verkaufschancen', icon: TrendingUp },
             { title: 'Rechnungen', icon: ReceiptText },
             { title: 'Verträge', icon: FileText },
-            { title: 'Artikel', icon: Boxes },
+            { title: 'Artikel', icon: Boxes, href: articles().url },
         ],
     },
     {

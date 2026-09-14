@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Erp\ArticleController;
 use App\Http\Controllers\Erp\CompanyController;
 use App\Http\Controllers\Erp\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -44,4 +45,8 @@ Route::middleware('auth:staff')->group(function (): void {
     Route::get('/firmen/{company}/kontakte/{contact}', [CompanyController::class, 'contact'])
         ->scopeBindings()
         ->name('erp.companies.contacts.show');
+
+    // Katalog, kein Bestand — der kommt mit dem Ledger (D-102).
+    Route::get('/artikel', [ArticleController::class, 'index'])->name('erp.articles.index');
+    Route::get('/artikel/{article}', [ArticleController::class, 'show'])->name('erp.articles.show');
 });
