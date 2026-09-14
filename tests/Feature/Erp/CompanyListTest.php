@@ -57,6 +57,7 @@ test('sie zeigt Firma, Kundennummer, Fachrichtung und Ort', function (): void {
     $fach = MedicalSpecialty::query()->create(['name' => 'Radiologie']);
 
     firma('Praxis Alpha', [
+        'name_addition' => 'Gemeinschaftspraxis',
         'debitor_number' => 'K-1',
         'medical_specialty_id' => $fach->id,
     ], ['street' => 'Hauptstraße', 'postal_code' => '21244', 'city' => 'Buchholz']);
@@ -66,6 +67,9 @@ test('sie zeigt Firma, Kundennummer, Fachrichtung und Ort', function (): void {
         ->assertInertia(fn (Assert $page) => $page
             ->component('erp/companies/Index')
             ->where('rows.0.name', 'Praxis Alpha')
+            // Untertitel der Leitspalte — wird gesucht, also muss er auch
+            // ausgeliefert werden.
+            ->where('rows.0.nameAddition', 'Gemeinschaftspraxis')
             ->where('rows.0.debitorNumber', 'K-1')
             ->where('rows.0.specialty', 'Radiologie')
             ->where('rows.0.city', '21244 Buchholz')

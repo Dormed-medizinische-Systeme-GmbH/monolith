@@ -4,7 +4,7 @@ import {
     type ColumnDef,
 } from '@tanstack/svelte-table';
 import {
-    DataTableLink,
+    DataTableLeadCell,
     DataTableSortButton,
     type DataTableFeatures,
     type DataTableMeta,
@@ -51,9 +51,10 @@ export function companyColumns(
         helper.accessor('name', {
             header: () => sortable('name', 'Firma'),
             cell: ({ row }) =>
-                renderComponent(DataTableLink, {
+                renderComponent(DataTableLeadCell, {
                     href: show(row.original.id).url,
                     label: row.original.name,
+                    sublabel: row.original.nameAddition,
                 }),
         }),
         helper.accessor('debitorNumber', {

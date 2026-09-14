@@ -78,8 +78,13 @@ kommen von dort.
   Detailansicht, wo der Datensatz den Rahmen bildet.
 - **Verlinkt wird über `rowHref`**, nicht über eine eigene Spalte je Fläche.
   Die ganze Zeile wird damit anklickbar; die Leitspalte trägt zusätzlich einen
-  `DataTableLink`, damit mittlere Maustaste, „in neuem Tab öffnen" und Tastatur
-  funktionieren.
+  `DataTableLeadCell`, damit mittlere Maustaste, „in neuem Tab öffnen" und
+  Tastatur funktionieren.
+- **Bezeichnung mit Zusatz gehört in `DataTableLeadCell`** (`label` +
+  `sublabel`), nicht als eigenes Markup in die `columns.ts`. Firma und
+  Firmenzusatz, Person und Rolle, Gerät und Seriennummer — dasselbe Muster;
+  wenn es jede Fläche selbst baut, sieht die dritte Liste anders aus als die
+  erste.
 - **Sortierung nur über die Freigabeliste** im Controller. Der Spaltenname kommt
   aus der URL und landet in `ORDER BY`; ohne Prüfung ließe sich damit nach
   beliebigen Spalten ordnen, auch aus fremden Tabellen.
