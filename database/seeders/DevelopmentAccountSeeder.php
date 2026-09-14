@@ -44,6 +44,62 @@ final class DevelopmentAccountSeeder extends Seeder
 
         $this->staffAccount();
         $this->customerAccount();
+        $this->furtherContacts();
+    }
+
+    /**
+     * Weitere Kontakte, damit die Listenansicht etwas zu zeigen hat.
+     *
+     * Bewusst alle drei Zugangszustaende (ADR-037/042): ohne Zugang, mit
+     * aktivem, mit gesperrtem. Die Unterscheidung ist der Zweck der Liste — ein
+     * gesperrter Zugang sieht sonst aus wie gar keiner, und der Kunde ruft an,
+     * weil er sich nicht anmelden kann.
+     */
+    private function furtherContacts(): void
+    {
+        $zweite = Company::query()->firstOrCreate(
+            ['name' => 'Gemeinschaftspraxis Nord'],
+            ['debitor_number' => 'K-10002', 'avv_status' => 'signed', 'avv_signed_at' => now()->subYear()],
+        );
+        $zweite->locations()->firstOrCreate(['name' => 'Hauptstandort'], ['is_primary' => true]);
+
+        $erste = Company::query()->where('name', 'Musterpraxis Dr. Muster')->firstOrFail();
+
+        /** @var list<array{string, string, string, ?string, ?bool}> */
+        $kontakte = [
+            // Vorname, Nachname, Rolle, Zugangs-Mail (null = keiner), aktiv
+            ['Anke', 'Brehm', 'Praxismanager*in', 'a.brehm@praxis.test', true],
+            ['Tobias', 'Ritter', 'Einkauf', null, null],
+            ['Sabine', 'Kohl', 'Buchhaltung', 's.kohl@praxis.test', false],
+            ['Martin', 'Vogt', 'IT', null, null],
+            ['Claudia', 'Nowak', 'Ärztliche Leitung', 'c.nowak@nordpraxis.test', true],
+            ['Jens', 'Hartmann', 'Technik', null, null],
+            ['Petra', 'Lindner', 'Empfang', null, null],
+            ['Ulrich', 'Baumann', 'Einkauf', 'u.baumann@nordpraxis.test', true],
+        ];
+
+        foreach ($kontakte as $index => [$vorname, $nachname, $rolle, $mail, $aktiv]) {
+            $company = $index < 4 ? $erste : $zweite;
+
+            $person = Person::query()->firstOrCreate(
+                ['first_name' => $vorname, 'last_name' => $nachname],
+                ['gender' => Gender::Unbekannt, 'locale' => 'de'],
+            );
+
+            CompanyContact::query()->firstOrCreate(
+                ['company_id' => $company->id, 'person_id' => $person->id],
+                ['role' => $rolle, 'is_primary' => false],
+            );
+
+            if ($mail === null) {
+                continue;
+            }
+
+            CustomerAccount::query()->updateOrCreate(
+                ['person_id' => $person->id],
+                ['email' => $mail, 'password' => 'password', 'is_active' => $aktiv],
+            );
+        }
     }
 
     private function staffAccount(): void

@@ -59,6 +59,23 @@ Vier Postgres-Rollen, die Verbindung folgt dem **Zugriffspunkt** (ADR-036):
   (D-125/D-136/D-137) bleibt in Laravel-Policies und Gates. RLS ist Zeileneigentum für
   Kunden und wirkt als Netz darunter.
 
+## Listenansichten: die Mechanik liegt zentral
+
+Jede Liste im ERP benutzt `resources/js/components/data-table` und
+`App\Support\DataTable\DataTable`. Eine Fläche bringt **nur Spalten und
+Datensatz** mit — Suche, Sortierung, Seitenaufteilung und Erscheinungsbild
+kommen von dort.
+
+- **Serverseitig**, nicht im Browser. Abweichend von der shadcn-Anleitung, die
+  alle Zeilen lädt und clientseitig filtert: der Adressstamm hat rund 50.000
+  Personen (`.docs/06-infrastructure/HOSTING.md`).
+- **Sortierung nur über die Freigabeliste** im Controller. Der Spaltenname kommt
+  aus der URL und landet in `ORDER BY`; ohne Prüfung ließe sich damit nach
+  beliebigen Spalten ordnen, auch aus fremden Tabellen.
+- **`addSelect()` mit `'tabelle.spalte as alias'`**, nicht mit
+  `alias => spalte` — die Schlüssel-Form erwartet Unterabfragen und liefert bei
+  Spaltennamen stillschweigend nichts.
+
 ## Kein Dark Mode (ADR-044)
 
 Eine Farbpalette, an Light angelehnt. **Keine `dark:`-Utilities, keine `.dark`-Klasse,
