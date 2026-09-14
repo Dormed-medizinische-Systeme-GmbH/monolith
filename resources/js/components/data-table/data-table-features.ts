@@ -1,5 +1,6 @@
 import {
     createSortedRowModel,
+    rowSelectionFeature,
     rowSortingFeature,
     sortFn_alphanumeric,
     sortFn_text,
@@ -20,8 +21,13 @@ import {
  *
  * Sortierung bleibt registriert, weil TanStack den Zustand verwaltet und die
  * Pfeile in den Kopfzeilen daraus kommen; sortiert wird trotzdem in Postgres.
+ *
+ * Die Auswahl ist rein im Browser und muss es auch sein — sie ist ein
+ * Zwischenzustand, kein Datensatz. Sie hält über Seitenwechsel hinweg, weil
+ * `getRowId` den Schlüssel des Datensatzes benutzt und nicht den Zeilenindex.
  */
 export const features = tableFeatures({
+    rowSelectionFeature,
     rowSortingFeature,
     sortedRowModel: createSortedRowModel(),
     sortFns: {

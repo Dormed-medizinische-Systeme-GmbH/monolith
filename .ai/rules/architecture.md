@@ -80,6 +80,11 @@ kommen von dort.
   Die ganze Zeile wird damit anklickbar; die Leitspalte trägt zusätzlich einen
   `DataTableLeadCell`, damit mittlere Maustaste, „in neuem Tab öffnen" und
   Tastatur funktionieren.
+- **Auswahlkästchen kommen von der `DataTable` selbst**, nicht als Spalte aus
+  der `columns.ts`. Sie halten über Seitenwechsel, weil `getRowId` den
+  Schlüssel des Datensatzes benutzt; mit dem voreingestellten Zeilenindex wäre
+  auf Seite 2 „dieselbe" Zeile ausgewählt wie auf Seite 1. `selectable={false}`
+  schaltet sie ab, wo es nichts auszuwählen gibt.
 - **Bezeichnung mit Zusatz gehört in `DataTableLeadCell`** (`label` +
   `sublabel`), nicht als eigenes Markup in die `columns.ts`. Firma und
   Firmenzusatz, Person und Rolle, Gerät und Seriennummer — dasselbe Muster;

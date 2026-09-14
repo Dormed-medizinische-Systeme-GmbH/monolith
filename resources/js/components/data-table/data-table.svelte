@@ -5,7 +5,9 @@
         FlexRender,
         type ColumnDef,
         type RowData,
+        type RowSelectionState,
     } from '@tanstack/svelte-table';
+    import { Checkbox } from '@/components/ui/checkbox';
     import { Input } from '@/components/ui/input';
     import * as Table from '@/components/ui/table';
     import DataTablePagination from './data-table-pagination.svelte';
@@ -32,6 +34,8 @@
         searchPlaceholder = 'Suchen …',
         emptyMessage = 'Keine Einträge gefunden.',
         rowHref,
+        selectable = true,
+        rowId = (row: TData) => String((row as { id: unknown }).id),
     }: {
         columns: ColumnDef<typeof features, TData, unknown>[];
         rows: TData[];
@@ -44,7 +48,21 @@
          * damit es auch ein echter Verweis bleibt.
          */
         rowHref?: (row: TData) => string;
+        /** Auswahlkästchen je Zeile. Aus, wo es nichts auszuwählen gibt. */
+        selectable?: boolean;
+        /**
+         * Der Schlüssel eines Datensatzes. Steuert die Auswahl über
+         * Seitenwechsel hinweg — mit dem voreingestellten Zeilenindex wäre
+         * sonst auf Seite 2 „dieselbe" Zeile ausgewählt wie auf Seite 1.
+         */
+        rowId?: (row: TData) => string;
     } = $props();
+
+    // `RowSelectionState` fuehrt nur die AUSGEWAEHLTEN Schluessel (`true`),
+    // abgewaehlte verschwinden — deshalb genuegt das Zaehlen der Schluessel.
+    let rowSelection = $state<RowSelectionState>({});
+
+    const selectedCount = $derived(Object.keys(rowSelection).length);
 
     const table = createTable({
         features,
@@ -60,12 +78,23 @@
          * sortiert aus Postgres.
          */
         manualSorting: true,
+        getRowId: (row) => rowId(row),
+        get enableRowSelection() {
+            return selectable;
+        },
         state: {
             get sorting() {
                 return [{ id: meta.sort, desc: meta.direction === 'desc' }];
             },
+            get rowSelection() {
+                return rowSelection;
+            },
         },
         onSortingChange: () => {},
+        onRowSelectionChange: (updater) => {
+            rowSelection =
+                typeof updater === 'function' ? updater(rowSelection) : updater;
+        },
     });
 
     /** Besucht dieselbe Seite mit geänderten Parametern. */
@@ -143,6 +172,17 @@
             <Table.Header>
                 {#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
                     <Table.Row>
+                        {#if selectable}
+                            <Table.Head class="w-10">
+                                <Checkbox
+                                    checked={table.getIsAllPageRowsSelected()}
+                                    indeterminate={table.getIsSomePageRowsSelected()}
+                                    onCheckedChange={(value) =>
+                                        table.toggleAllPageRowsSelected(Boolean(value))}
+                                    aria-label="Alle Zeilen dieser Seite auswählen"
+                                />
+                            </Table.Head>
+                        {/if}
                         {#each headerGroup.headers as header (header.id)}
                             <Table.Head>
                                 {#if !header.isPlaceholder}
@@ -180,6 +220,26 @@
                                   onRowKeydown(event, row.original)
                             : undefined}
                     >
+                        {#if selectable}
+                            <!--
+                                Die Zelle schluckt den Klick: sie gehört zur
+                                Auswahl, nicht zum Öffnen. Ohne das führte ein
+                                Treffer neben dem Kästchen in den Datensatz —
+                                also genau dorthin, wo man gerade nicht hin
+                                wollte.
+                            -->
+                            <Table.Cell
+                                class="w-10"
+                                onclick={(event: MouseEvent) => event.stopPropagation()}
+                            >
+                                <Checkbox
+                                    checked={row.getIsSelected()}
+                                    onCheckedChange={(value) =>
+                                        row.toggleSelected(Boolean(value))}
+                                    aria-label="Zeile auswählen"
+                                />
+                            </Table.Cell>
+                        {/if}
                         {#each row.getAllCells() as cell (cell.id)}
                             <Table.Cell>
                                 <!-- Gleicher Grund wie oben bei der Kopfzeile. -->
@@ -193,7 +253,7 @@
                 {:else}
                     <Table.Row>
                         <Table.Cell
-                            colspan={columns.length}
+                            colspan={columns.length + (selectable ? 1 : 0)}
                             class="h-24 text-center text-muted-foreground"
                         >
                             {emptyMessage}
@@ -204,5 +264,5 @@
         </Table.Root>
     </div>
 
-    <DataTablePagination {meta} onNavigate={navigate} />
+    <DataTablePagination {meta} {selectedCount} onNavigate={navigate} />
 </div>

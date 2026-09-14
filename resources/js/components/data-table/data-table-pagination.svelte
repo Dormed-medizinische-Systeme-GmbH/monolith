@@ -10,9 +10,11 @@
     let {
         meta,
         onNavigate,
+        selectedCount = 0,
     }: {
         meta: DataTableMeta;
         onNavigate: (params: Record<string, string | number>) => void;
+        selectedCount?: number;
     } = $props();
 
     const zahl = new Intl.NumberFormat('de-DE');
@@ -20,7 +22,14 @@
 
 <div class="flex items-center justify-between gap-4">
     <p class="text-sm text-muted-foreground">
-        {#if meta.total === 0}
+        {#if selectedCount > 0}
+            <!--
+                Die Auswahl gilt ueber Seitengrenzen hinweg, deshalb wird sie
+                gegen die Gesamtzahl gezaehlt und nicht gegen die 25 Zeilen,
+                die gerade sichtbar sind.
+            -->
+            {zahl.format(selectedCount)} von {zahl.format(meta.total)} ausgewählt
+        {:else if meta.total === 0}
             Keine Einträge
         {:else}
             {zahl.format(meta.from ?? 0)}–{zahl.format(meta.to ?? 0)} von
