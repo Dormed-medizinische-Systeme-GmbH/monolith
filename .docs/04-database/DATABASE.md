@@ -103,18 +103,37 @@ DB::statement("ALTER TABLE service_contracts ADD CONSTRAINT service_contracts_st
 - Zeitstempel: `*_at` (Timestamp) vs. `*_date`/`*_on` (reines Datum ohne Uhrzeit) —
   konsistent nach Feldbedeutung aus den `04-domain/*.md`-Specs übernehmen.
 
-## Primärschlüssel (D-095)
+## Primärschlüssel (ADR-046, hebt D-095 auf)
 
-**Auto-Increment `bigint` (Laravel-Standard `id()`)**, kein UUID.
+**UUIDv7** für jede fachliche Tabelle und jede Identitätstabelle:
 
-Begründung: Alle fachlichen Nummernkreise mit externer Sichtbarkeit (Rechnung,
-Vertrag, Opportunity, ServiceCase, Maintenance) haben bereits ein eigenes,
-fachliches `number`-Feld (D-067 u. a.) — der DB-PK ist rein intern und muss nicht
-extern vorhersagbar/nicht-erratbar sein. Auto-Increment ist kompakter (8 Byte vs.
-16 Byte UUID), schneller zu indizieren, und Laravels Tooling (Eloquent, Migrations)
-ist darauf optimiert. Kein Multi-Master-/Offline-Sync-Bedarf, der UUIDs erfordern
-würde (D-041: Offline-Wartungsbericht ist bewusst ein späterer Slice, keine
-aktuelle Anforderung).
+```php
+$table->uuid('id')->primary();          // Migration
+$table->foreignUuid('company_id')->constrained('companies');
+$table->uuidMorphs('addressable');      // polymorph
+```
+
+```php
+use HasUuids;                            // Model — Laravel 13 erzeugt Str::uuid7()
+```
+
+Begründung: Ein Schlüssel muss vergeben werden können, **bevor** der Datensatz einen
+Server erreicht (Offline-Wartungsbericht D-041 — vertagt, nicht gestrichen), und zwei
+Bestände müssen sich zusammenführen lassen, ohne umzunummerieren (Übernahme aus CAS
+genesisWorld, das seinerseits GGUIDs führt). Beides kann eine laufende Nummer nicht.
+
+**v7, nicht v4:** UUIDv7 trägt die Zeit in den führenden Bits und fügt am Ende des
+B-Trees ein — kein Streuen über den ganzen Index, keine erzwungenen Seitenteilungen.
+Die alte Warnung „UUID als PK ist langsam" gilt v4, nicht v7.
+
+**Nicht umgestellt:** Laravels Infrastrukturtabellen (`cache`, `cache_locks`, `jobs`,
+`job_batches`, `failed_jobs`) — keine fachlichen Datensätze. `sessions.user_id` folgt
+dagegen `users.id`.
+
+Die fachlichen Nummernkreise mit externer Sichtbarkeit (Rechnung, Vertrag, Opportunity,
+ServiceCase, Maintenance) bleiben davon unberührt: sie haben weiterhin ihr eigenes
+`number`-Feld (D-067 u. a.). Der Primärschlüssel ist intern, die Belegnummer fachlich —
+das eine ersetzt das andere nicht.
 
 ## Geldbeträge
 

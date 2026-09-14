@@ -1404,7 +1404,11 @@ zum Laravel-PHP-Enum-Cast. Wertelisten-Änderung = eigene Migration
 
 ### D-095 — Primärschlüssel: Auto-Increment bigint, kein UUID
 
-**Status:** entschieden · **Datum:** 2026-09-12
+**Status:** **aufgehoben durch ADR-046** (2026-09-14) · **Datum:** 2026-09-12
+
+> Die Begründung „kein Multi-Master-/Offline-Sync-Bedarf" trägt nicht: D-041 ist vertagt,
+> nicht gestrichen. Seit ADR-046 gilt UUIDv7 als Primärschlüssel. Der Absatz bleibt als
+> Beleg stehen, warum die Frage 2026-09-12 anders beantwortet wurde.
 
 Laravel-Standard `id()` (bigint, auto-increment) für alle Tabellen. Kein UUID —
 fachliche Nummernkreise mit externer Sichtbarkeit existieren bereits separat

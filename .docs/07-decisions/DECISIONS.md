@@ -1577,3 +1577,61 @@ begrenzten Direktlink aus. Autorisierung in der App, Auslieferung aus dem Speich
 
 Betrifft diesen Bucket vorerst nicht — ADR-028 hält Unterschriften und Einsatzfotos
 ausdrücklich heraus, genau weil er vollständig öffentlich ist.
+
+## ADR-046 — UUIDv7 als Primärschlüssel für jeden fachlichen Datensatz
+
+Status: Accepted (2026-09-14) · **hebt D-095 auf**
+
+Jede fachliche Tabelle und jede Identitätstabelle führt `uuid('id')->primary()`; jedes
+zugehörige Model nutzt `HasUuids`. Laravel 13 erzeugt darüber **UUIDv7** (`Str::uuid7()`)
+— zeitgeordnet nach RFC 9562, nicht das zufällige v4.
+
+D-095 hatte Auto-Increment `bigint` festgelegt, mit der Begründung, es gebe keinen
+Multi-Master- oder Offline-Sync-Bedarf. Diese Begründung trägt nicht: der
+Offline-Wartungsbericht (D-041) ist **vertagt, nicht gestrichen** (Nutzer, 2026-09-14),
+und das abzulösende CAS genesisWorld führt seine Objekte bereits über GGUIDs.
+
+### Warum jetzt und nicht später
+
+Nachträglich ist es kein Spaltentausch. Jeder Fremdschlüssel, jede polymorphe Beziehung,
+jede gespeicherte Referenz und jede ausgelieferte URL hängt daran. Der Wechsel kostet
+heute eine Änderung an den ursprünglichen Migrationen — nach der ersten echten
+Datenübernahme kostet er eine Datenmigration mit Schlüsselabbildung über den gesamten
+Bestand.
+
+### Warum v7 und nicht v4
+
+UUIDv4 ist zufällig; als Primärschlüssel streut es Einfügungen über den ganzen B-Tree,
+erzwingt Seitenteilungen und bläht das WAL. UUIDv7 trägt einen Zeitstempel in den
+führenden Bits und fügt am Ende des Index ein — das Verhalten entspricht dem einer
+laufenden Nummer. Genau das ist der Grund, warum die Empfehlung „UUID als PK" heute
+anders ausfällt als vor zehn Jahren.
+
+> Postgres 17 (unser Stand) hat **kein** natives `uuidv7()` — das kam mit 18. Die
+> Erzeugung liegt deshalb in der Anwendung, was ohnehin die Voraussetzung dafür ist,
+> dass ein Offline-Client einen Schlüssel ohne Server vergeben kann.
+
+### Was das mitbringt
+
+- **Ein Datensatz kann entstehen, bevor er gespeichert wird.** Voraussetzung für den
+  Offline-Wartungsbericht und für jede Client-seitige Anlage.
+- **Zwei Bestände lassen sich zusammenführen**, ohne Schlüssel umzunummerieren — beim
+  Import aus CAS, bei einem Mandantenzukauf, bei einer Wiederherstellung aus Teilbeständen.
+- **Kein Durchzählen über URLs.** Nicht als Sicherheitsmaßnahme gedacht — Policies, Gates
+  und RLS bleiben die Grenze (ADR-036) —, aber die Bestandsgröße steht nicht mehr in
+  jedem Link.
+
+### Was nicht umgestellt wird
+
+Laravels Infrastrukturtabellen: `cache`, `cache_locks`, `jobs`, `job_batches`,
+`failed_jobs`. Das sind keine fachlichen Datensätze, sie überleben keinen Import und
+keinen Offline-Abgleich. `sessions.user_id` folgt dagegen `users.id` und ist `uuid`.
+
+### Fallstrick, der beim Umbau aufgetreten ist
+
+Bei `bigserial` setzt Postgres den PRIMARY KEY **inline** in `CREATE TABLE`. Bei
+`uuid('id')->primary()` kommt er als eigenes `ALTER TABLE` **nach** den Fremdschlüsseln.
+Eine Selbstreferenz innerhalb derselben `Schema::create`-Closure zeigt damit auf eine
+Spalte ohne eindeutigen Index und schlägt fehl — `companies.billing_company_id` bekommt
+ihren Fremdschlüssel deshalb in einem nachgelagerten `Schema::table()`.
+

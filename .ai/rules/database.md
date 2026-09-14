@@ -29,9 +29,28 @@ DB::statement("ALTER TABLE <table> ADD CONSTRAINT <table>_<col>_check
 PHP-Enum-Klasse + DB-CHECK-Werteliste müssen synchron bleiben, beide aus derselben
 `D-NNN`-Quelle in `grill-log.md`.
 
-## Primärschlüssel
+## Primärschlüssel: UUIDv7 (ADR-046)
 
-`id()` (bigint auto-increment). Kein UUID (D-095).
+**Jeder fachliche Datensatz und jede Identität.** Kein `id()`, kein bigint.
+
+```php
+$table->uuid('id')->primary();
+$table->foreignUuid('company_id')->constrained('companies');
+$table->uuidMorphs('addressable');
+```
+
+Das Model braucht dazu `use HasUuids;` — sonst versucht Eloquent, einen
+Auto-Increment-Schlüssel zu lesen, den es nicht gibt. Laravel 13 erzeugt darüber
+`Str::uuid7()`, also zeitgeordnet.
+
+**Ausgenommen:** Laravels Infrastrukturtabellen (`cache`, `cache_locks`, `jobs`,
+`job_batches`, `failed_jobs`). `sessions.user_id` folgt dagegen `users.id`.
+
+> **Selbstreferenz gehört hinter `Schema::create`.** Anders als bei `bigserial` setzt
+> Postgres den PRIMARY KEY hier per `ALTER TABLE` — und zwar NACH den Fremdschlüsseln.
+> Ein FK auf die eigene Tabelle findet innerhalb der Closure noch keinen eindeutigen
+> Index und bricht ab. Spalte in `create` anlegen, Constraint in einem nachgelagerten
+> `Schema::table()` (siehe `companies.billing_company_id`).
 
 ## Geldbeträge
 
