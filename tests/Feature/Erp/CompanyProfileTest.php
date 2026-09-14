@@ -67,7 +67,7 @@ test('sie zeigt die Stammdaten der Firma auf einen Blick', function (): void {
             ->component('erp/companies/Show')
             ->where('company.name', 'Praxis Alpha')
             ->where('company.nameAddition', 'Gemeinschaftspraxis')
-            ->where('company.stammdaten.Kundennummer', 'K-1')
+            ->where('company.debitorNumber', 'K-1')
             ->where('company.stammdaten.Rechtsform', 'GbR')
             ->where('company.address.street', 'Hauptstraße 12')
             ->where('company.address.city', '21244 Buchholz')

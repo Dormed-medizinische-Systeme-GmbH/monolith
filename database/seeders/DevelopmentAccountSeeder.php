@@ -166,6 +166,16 @@ final class DevelopmentAccountSeeder extends Seeder
                 'medical_specialty_id' => MedicalSpecialty::query()
                     ->where('name', 'Allgemeinmedizin / Hausarzt')
                     ->value('id'),
+                // Platzhalter, damit die Detailansicht ihre Abschnitte auch
+                // wirklich zeigt — leere Abschnitte blendet sie aus, und dann
+                // sieht ein Entwurfsfehler aus wie fehlende Daten.
+                'legal_form' => 'Gesellschaft bürgerlichen Rechts',
+                'tax_number' => '21/815/04711',
+                'vat_id' => 'DE000000000',
+                'iban' => 'DE02120300000000202051',
+                'bic' => 'BYLADEM1001',
+                'bank_account_holder' => 'Musterpraxis Dr. Muster GbR',
+                'bank_name' => 'Musterbank',
                 'notes' => 'Platzhalter aus dem Entwicklungs-Seed.',
             ],
         );

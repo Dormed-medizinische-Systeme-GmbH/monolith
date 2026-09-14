@@ -1,9 +1,11 @@
 <script lang="ts">
     import { Link } from '@inertiajs/svelte';
     import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+    import Building from '@lucide/svelte/icons/building';
+    import MapPin from '@lucide/svelte/icons/map-pin';
     import AppHead from '@/components/AppHead.svelte';
     import { Badge } from '@/components/ui/badge';
-    import * as Card from '@/components/ui/card';
+    import { Separator } from '@/components/ui/separator';
     import * as Table from '@/components/ui/table';
     import { index } from '@/routes/erp/companies';
     import AccessBadge from './AccessBadge.svelte';
@@ -11,43 +13,54 @@
     import type { CompanyProfile } from './profile';
 
     /**
-     * Die Firma auf einen Blick: Stammdaten oben, Ansprechpartner darunter.
+     * Die Firma auf einen Blick.
      *
-     * Die Ansprechpartner sind hier bewusst KEINE `DataTable`: es gibt nichts
-     * zu durchsuchen, zu sortieren oder zu blättern — eine Praxis hat eine
-     * Handvoll Kontakte, und die stehen vollständig da. Die zentrale
-     * Listenmechanik ist für den Adressstamm gebaut, nicht für sechs Zeilen.
+     * Bewusst ohne Karten: gerahmte Kästen setzen sieben Angaben optisch
+     * gleichrangig nebeneinander und zwingen das Auge, jeden Rahmen einzeln
+     * abzusuchen. Was man tatsächlich sucht — Anschrift und Telefonnummer —
+     * steht deshalb oben und unverpackt, alles Belegmäßige darunter.
+     *
+     * Die Ansprechpartner sind keine `DataTable`: es gibt nichts zu
+     * durchsuchen, zu sortieren oder zu blättern. Die zentrale Listenmechanik
+     * ist für den Adressstamm gebaut, nicht für sechs Zeilen.
      */
     let { company }: { company: CompanyProfile } = $props();
+
+    const weitereAngaben = $derived(Object.entries(company.stammdaten));
+    const bank = $derived(Object.entries(company.bank));
+    const hatZustaendige = $derived(
+        Boolean(company.responsible.sales || company.responsible.service),
+    );
 </script>
 
 <AppHead title={company.name} />
 
 <div class="space-y-6">
-    <div>
-        <Link
-            href={index().url}
-            class="inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-4 hover:underline"
-        >
-            <ArrowLeft class="size-4" />
-            Alle Firmen
-        </Link>
-    </div>
+    <Link
+        href={index().url}
+        class="inline-flex items-center gap-1 text-sm text-muted-foreground underline-offset-4 hover:underline"
+    >
+        <ArrowLeft class="size-4" />
+        Alle Firmen
+    </Link>
 
-    <header class="space-y-1">
-        <h2 class="text-xl font-semibold tracking-tight">{company.name}</h2>
-        {#if company.nameAddition}
-            <p class="text-sm text-muted-foreground">{company.nameAddition}</p>
-        {/if}
-        <div class="flex flex-wrap items-center gap-2 pt-1">
-            {#if company.specialty}
-                <Badge variant="secondary">{company.specialty}</Badge>
+    <header class="flex items-start justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-semibold tracking-tight">{company.name}</h2>
+            {#if company.nameAddition}
+                <p class="text-sm text-muted-foreground">{company.nameAddition}</p>
+            {/if}
+        </div>
+
+        <div class="flex shrink-0 flex-col items-end gap-1.5">
+            {#if company.debitorNumber}
+                <Badge variant="secondary" class="font-mono">
+                    {company.debitorNumber}
+                </Badge>
             {/if}
             {#if company.avv.signed}
-                <Badge variant="secondary">
-                    AVV {company.avv.label}{company.avv.signedAt
-                        ? ` · ${company.avv.signedAt}`
-                        : ''}
+                <Badge variant="outline" class="text-muted-foreground">
+                    AVV {company.avv.signedAt ?? company.avv.label}
                 </Badge>
             {:else}
                 <Badge variant="outline" class="text-muted-foreground">
@@ -57,148 +70,146 @@
         </div>
     </header>
 
-    <div class="grid gap-4 md:grid-cols-2">
-        <Card.Root>
-            <Card.Header>
-                <Card.Title>Anschrift</Card.Title>
-            </Card.Header>
-            <Card.Content class="space-y-4 text-sm">
-                {#if company.address}
-                    <address class="not-italic">
-                        {company.address.street}<br />
-                        {company.address.city}
-                        {#if company.address.district}
-                            <br />{company.address.district}
+    <div class="grid gap-x-10 gap-y-5 sm:grid-cols-2">
+        <div class="flex gap-2.5">
+            <MapPin class="size-4 shrink-0 translate-y-0.5 text-muted-foreground" />
+            {#if company.address}
+                <address class="text-sm leading-relaxed not-italic">
+                    {company.address.street}<br />
+                    {company.address.city}
+                    {#if company.address.district}
+                        <br /><span class="text-muted-foreground">
+                            {company.address.district}
+                        </span>
+                    {/if}
+                </address>
+            {:else}
+                <span class="text-sm text-muted-foreground">
+                    Keine Sitzadresse hinterlegt.
+                </span>
+            {/if}
+        </div>
+
+        <ChannelList channels={company.channels} />
+    </div>
+
+    <Separator />
+
+    <section class="space-y-2">
+        <h3 class="text-xs tracking-wide text-muted-foreground uppercase">
+            Standorte
+        </h3>
+        <!--
+            Geräte und Serviceverträge hängen später am Standort, nicht an der
+            Firma (D-007) — deshalb stehen sie hier, auch wenn der Hauptstandort
+            meist die Sitzadresse ist.
+        -->
+        <ul class="space-y-2">
+            {#each company.locations as location (location.id)}
+                <li class="flex gap-2.5 text-sm">
+                    <Building class="size-4 shrink-0 translate-y-0.5 text-muted-foreground" />
+                    <div>
+                        <span class="font-medium">{location.name}</span>
+                        {#if location.isPrimary}
+                            <span class="ms-2 text-xs text-muted-foreground">
+                                Hauptstandort
+                            </span>
                         {/if}
-                    </address>
-                {:else}
-                    <p class="text-muted-foreground">Keine Sitzadresse hinterlegt.</p>
-                {/if}
+                        <div class="text-muted-foreground">
+                            {#if location.sameAsCompanyAddress}
+                                wie Sitzadresse
+                            {:else if location.address}
+                                {location.address.street}, {location.address.city}
+                            {:else}
+                                keine Adresse hinterlegt
+                            {/if}
+                        </div>
+                    </div>
+                </li>
+            {:else}
+                <li class="text-sm text-muted-foreground">Kein Standort hinterlegt.</li>
+            {/each}
+        </ul>
+    </section>
 
-                {#if company.billingCompany}
-                    <p class="text-muted-foreground">
-                        Rechnungen gehen an
-                        <span class="text-foreground">{company.billingCompany.name}</span>
-                    </p>
-                {/if}
-            </Card.Content>
-        </Card.Root>
+    {#if weitereAngaben.length > 0 || bank.length > 0 || hatZustaendige || company.billingCompany || company.notes}
+        <Separator />
 
-        <Card.Root>
-            <Card.Header>
-                <Card.Title>Kontakt</Card.Title>
-            </Card.Header>
-            <Card.Content>
-                <ChannelList channels={company.channels} />
-            </Card.Content>
-        </Card.Root>
-
-        {#if Object.keys(company.stammdaten).length > 0}
-            <Card.Root>
-                <Card.Header>
-                    <Card.Title>Stammdaten</Card.Title>
-                </Card.Header>
-                <Card.Content>
+        <div class="grid gap-x-10 gap-y-6 sm:grid-cols-2">
+            {#if weitereAngaben.length > 0}
+                <section class="space-y-2">
+                    <h3 class="text-xs tracking-wide text-muted-foreground uppercase">
+                        Stammdaten
+                    </h3>
                     <dl class="space-y-1 text-sm">
-                        {#each Object.entries(company.stammdaten) as [label, value] (label)}
-                            <div class="flex gap-2">
-                                <dt class="w-36 shrink-0 text-muted-foreground">
-                                    {label}
-                                </dt>
+                        {#each weitereAngaben as [label, value] (label)}
+                            <div class="flex gap-3">
+                                <dt class="w-36 shrink-0 text-muted-foreground">{label}</dt>
                                 <dd>{value}</dd>
                             </div>
                         {/each}
                     </dl>
-                </Card.Content>
-            </Card.Root>
-        {/if}
+                </section>
+            {/if}
 
-        <Card.Root>
-            <Card.Header>
-                <Card.Title>Standorte</Card.Title>
-                <Card.Description>
-                    Geräte und Serviceverträge hängen später am Standort, nicht an
-                    der Firma (D-007).
-                </Card.Description>
-            </Card.Header>
-            <Card.Content class="space-y-3 text-sm">
-                {#each company.locations as location (location.id)}
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-medium">{location.name}</span>
-                            {#if location.isPrimary}
-                                <Badge variant="outline" class="text-muted-foreground">
-                                    Hauptstandort
-                                </Badge>
-                            {/if}
-                        </div>
-                        {#if location.address}
-                            <p class="text-muted-foreground">
-                                {location.address.street}, {location.address.city}
-                            </p>
-                        {/if}
-                    </div>
-                {:else}
-                    <p class="text-muted-foreground">Kein Standort hinterlegt.</p>
-                {/each}
-            </Card.Content>
-        </Card.Root>
-
-        {#if Object.keys(company.bank).length > 0}
-            <Card.Root>
-                <Card.Header>
-                    <Card.Title>Bankverbindung</Card.Title>
-                </Card.Header>
-                <Card.Content>
+            {#if bank.length > 0}
+                <section class="space-y-2">
+                    <h3 class="text-xs tracking-wide text-muted-foreground uppercase">
+                        Bankverbindung
+                    </h3>
                     <dl class="space-y-1 text-sm">
-                        {#each Object.entries(company.bank) as [label, value] (label)}
-                            <div class="flex gap-2">
-                                <dt class="w-36 shrink-0 text-muted-foreground">
-                                    {label}
-                                </dt>
+                        {#each bank as [label, value] (label)}
+                            <div class="flex gap-3">
+                                <dt class="w-36 shrink-0 text-muted-foreground">{label}</dt>
                                 <dd class="font-mono text-xs">{value}</dd>
                             </div>
                         {/each}
                     </dl>
-                </Card.Content>
-            </Card.Root>
-        {/if}
+                </section>
+            {/if}
 
-        {#if company.responsible.sales || company.responsible.service}
-            <Card.Root>
-                <Card.Header>
-                    <Card.Title>Zuständig</Card.Title>
-                    <Card.Description>
-                        Informativ — Berechtigungen kommen aus der Rolle, nicht von
-                        hier (D-016).
-                    </Card.Description>
-                </Card.Header>
-                <Card.Content>
+            {#if hatZustaendige || company.billingCompany}
+                <section class="space-y-2">
+                    <h3 class="text-xs tracking-wide text-muted-foreground uppercase">
+                        Zuständig
+                    </h3>
                     <dl class="space-y-1 text-sm">
-                        <div class="flex gap-2">
+                        <div class="flex gap-3">
                             <dt class="w-36 shrink-0 text-muted-foreground">Vertrieb</dt>
                             <dd>{company.responsible.sales ?? '—'}</dd>
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex gap-3">
                             <dt class="w-36 shrink-0 text-muted-foreground">Service</dt>
                             <dd>{company.responsible.service ?? '—'}</dd>
                         </div>
+                        {#if company.billingCompany}
+                            <div class="flex gap-3">
+                                <dt class="w-36 shrink-0 text-muted-foreground">
+                                    Rechnung an
+                                </dt>
+                                <dd>{company.billingCompany.name}</dd>
+                            </div>
+                        {/if}
                     </dl>
-                </Card.Content>
-            </Card.Root>
-        {/if}
-    </div>
+                    <!--
+                        Informativ, KEINE Berechtigung: wer was darf, kommt aus
+                        der Rolle (D-016/D-030).
+                    -->
+                </section>
+            {/if}
 
-    {#if company.notes}
-        <Card.Root>
-            <Card.Header>
-                <Card.Title>Notiz</Card.Title>
-            </Card.Header>
-            <Card.Content class="text-sm whitespace-pre-line">
-                {company.notes}
-            </Card.Content>
-        </Card.Root>
+            {#if company.notes}
+                <section class="space-y-2">
+                    <h3 class="text-xs tracking-wide text-muted-foreground uppercase">
+                        Notiz
+                    </h3>
+                    <p class="text-sm whitespace-pre-line">{company.notes}</p>
+                </section>
+            {/if}
+        </div>
     {/if}
+
+    <Separator />
 
     <section class="space-y-3">
         <div>
@@ -226,10 +237,7 @@
                                 <div class="flex items-center gap-2">
                                     <span class="font-medium">{contact.name}</span>
                                     {#if contact.isPrimary}
-                                        <Badge
-                                            variant="outline"
-                                            class="text-muted-foreground"
-                                        >
+                                        <Badge variant="outline" class="text-muted-foreground">
                                             Hauptkontakt
                                         </Badge>
                                     {/if}

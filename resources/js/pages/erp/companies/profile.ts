@@ -38,6 +38,7 @@ export type CompanyProfile = {
     nameAddition: string | null;
     specialty: string | null;
     notes: string | null;
+    debitorNumber: string | null;
     stammdaten: Record<string, string>;
     avv: { signed: boolean; label: string; signedAt: string | null };
     bank: Record<string, string>;
@@ -50,6 +51,8 @@ export type CompanyProfile = {
         name: string;
         isPrimary: boolean;
         address: Address | null;
+        /** Deckungsgleich mit der Sitzadresse — dann wird sie nicht wiederholt. */
+        sameAsCompanyAddress: boolean;
     }[];
     contacts: Contact[];
 };

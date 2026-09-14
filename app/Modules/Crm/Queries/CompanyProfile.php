@@ -50,8 +50,12 @@ final class CompanyProfile
             'specialty' => $company->medicalSpecialty?->name,
             'notes' => $company->notes,
 
+            // Steht als Kennzeichnung oben, nicht in der Aufstellung — sie ist
+            // das, womit ein Mitarbeiter die Firma gegenueber Buchhaltung und
+            // Lieferschein benennt.
+            'debitorNumber' => $company->debitor_number,
+
             'stammdaten' => array_filter([
-                'Kundennummer' => $company->debitor_number,
                 'Rechtsform' => $company->legal_form,
                 'Fachrichtung' => $company->medicalSpecialty?->name,
                 'Steuernummer' => $company->tax_number,
@@ -95,6 +99,14 @@ final class CompanyProfile
                     'name' => $location->name,
                     'isPrimary' => $location->is_primary,
                     'address' => self::address($location->address),
+                    /*
+                     * Der Hauptstandort liegt meistens an der Sitzadresse. Sie
+                     * dort noch einmal auszuschreiben sieht aus wie ein
+                     * Dublette-Fehler — die Ansicht verweist stattdessen
+                     * darauf.
+                     */
+                    'sameAsCompanyAddress' => self::address($location->address) !== null
+                        && self::address($location->address) === self::address($company->address),
                 ])
                 ->all(),
 
