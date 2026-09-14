@@ -7,4 +7,9 @@
 export { default as DataTable } from './data-table.svelte';
 export { default as DataTablePagination } from './data-table-pagination.svelte';
 export { default as DataTableSortButton } from './data-table-sort-button.svelte';
-export { features, type DataTableFeatures, type DataTableMeta } from './data-table-features';
+export { default as DataTableLink } from './data-table-link.svelte';
+export {
+    features,
+    type DataTableFeatures,
+    type DataTableMeta,
+} from './data-table-features';

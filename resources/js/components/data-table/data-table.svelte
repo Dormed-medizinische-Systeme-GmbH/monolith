@@ -31,12 +31,19 @@
         meta,
         searchPlaceholder = 'Suchen …',
         emptyMessage = 'Keine Einträge gefunden.',
+        rowHref,
     }: {
         columns: ColumnDef<typeof features, TData, unknown>[];
         rows: TData[];
         meta: DataTableMeta;
         searchPlaceholder?: string;
         emptyMessage?: string;
+        /**
+         * Wohin eine Zeile führt. Gesetzt, macht sie die gesamte Zeile
+         * anklickbar — die Leitspalte trägt zusätzlich einen `DataTableLink`,
+         * damit es auch ein echter Verweis bleibt.
+         */
+        rowHref?: (row: TData) => string;
     } = $props();
 
     const table = createTable({
@@ -83,6 +90,34 @@
                 meta.sort === column && meta.direction === 'asc' ? 'desc' : 'asc',
             page: 1,
         });
+    }
+
+    /**
+     * Klick auf die Zeile öffnet den Datensatz.
+     *
+     * Trifft der Klick einen Verweis oder ein Bedienelement innerhalb der
+     * Zeile, bleibt er dort — sonst navigierte die Zeile zusätzlich zum
+     * eigentlichen Ziel.
+     */
+    function onRowClick(event: MouseEvent, row: TData): void {
+        if ((event.target as HTMLElement).closest('a, button, input, [role="button"]')) {
+            return;
+        }
+
+        router.visit(rowHref!(row));
+    }
+
+    function onRowKeydown(event: KeyboardEvent, row: TData): void {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+
+        if ((event.target as HTMLElement).closest('a, button, input')) {
+            return;
+        }
+
+        event.preventDefault();
+        router.visit(rowHref!(row));
     }
 
     let searchTimer: ReturnType<typeof setTimeout>;
@@ -134,7 +169,17 @@
 
             <Table.Body>
                 {#each table.getRowModel().rows as row (row.id)}
-                    <Table.Row>
+                    <Table.Row
+                        class={rowHref ? 'cursor-pointer' : undefined}
+                        tabindex={rowHref ? 0 : undefined}
+                        onclick={rowHref
+                            ? (event: MouseEvent) => onRowClick(event, row.original)
+                            : undefined}
+                        onkeydown={rowHref
+                            ? (event: KeyboardEvent) =>
+                                  onRowKeydown(event, row.original)
+                            : undefined}
+                    >
                         {#each row.getAllCells() as cell (cell.id)}
                             <Table.Cell>
                                 <!-- Gleicher Grund wie oben bei der Kopfzeile. -->
