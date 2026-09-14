@@ -6,6 +6,7 @@ use App\Http\Middleware\UseCustomerConnection;
 use App\Http\Middleware\UsePublicConnection;
 use App\Http\Middleware\UseStaffConnection;
 use Illuminate\Support\Facades\Route;
+use Inertia\Testing\AssertableInertia as Assert;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,10 +76,24 @@ test('jede Domain-Gruppe traegt ihre Verbindungs-Middleware', function (string $
     ['shop', UsePublicConnection::class],
 ]);
 
-test('der Mitarbeiter-Login ist nur unter der ERP-Domain erreichbar', function (string $key): void {
-    $this->get('http://'.config("domains.{$key}").'/login')->assertNotFound();
-})->with(['website', 'portal', 'shop']);
-
-test('unter der ERP-Domain ist er erreichbar', function (): void {
-    $this->get('http://'.config('domains.erp').'/login')->assertOk();
+test('die oeffentliche Website hat gar keinen Login', function (): void {
+    $this->get('http://'.config('domains.website').'/login')->assertNotFound();
 });
+
+test('jeder Zugriffspunkt mit Login zeigt SEINE eigene Maske', function (string $key, string $component): void {
+    $this->get('http://'.config("domains.{$key}").'/login')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component($component));
+})->with([
+    // Der Mitarbeiter-Login darf nirgendwo sonst auftauchen: eine Kundin auf
+    // my.dormed.de soll nicht auf einer Maske landen, an der sie sich nicht
+    // anmelden kann (ADR-037/042).
+    ['erp', 'erp/Login'],
+    ['portal', 'portal/Login'],
+    ['shop', 'shop/Login'],
+]);
+
+test('Gaeste werden auf die Maske ihres eigenen Zugriffspunkts geleitet', function (string $key): void {
+    $this->get('http://'.config("domains.{$key}").'/')
+        ->assertRedirect('http://'.config("domains.{$key}").'/login');
+})->with(['portal', 'shop']);

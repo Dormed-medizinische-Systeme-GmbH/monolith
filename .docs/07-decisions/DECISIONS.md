@@ -1429,6 +1429,20 @@ Token-Tabelle — alles in `config/auth.php` nativ vorgesehen.
 **Unverändert bleibt ADR-042 im Kern:** getrennte Tabellen, getrennte Models, getrennte
 Guards. Geteilt wird nur die Mechanik, nie die Identität.
 
+> **Abweichung beim Bau (2026-09-14), bewusst und befristet.** Der Kundenlogin
+> ist zunächst **von Hand** gebaut (`Customer\SessionController`,
+> `Customer\LoginRequest`), nicht über die geteilte Fortify-Installation.
+>
+> Grund: Der Ausschlag oben kam von **Kunden-2FA** — der Challenge-Fluss ist der
+> teure Teil, den man nicht zweimal schreiben will. Gebaut ist er noch nicht.
+> Solange bliebe von Fortify hier nur Standardkram, und die dafür nötige
+> Umschaltung von `fortify.guard` per Middleware ist globaler Zustand pro
+> Request, den man sich ohne Gegenwert einhandelte.
+>
+> **Wenn Kunden-2FA kommt, wird umgestellt** — `Customer\SessionController` ist
+> dann der Ort, an dem es passiert. Die Entscheidung dieser ADR bleibt gültig,
+> nur ihr Zeitpunkt verschiebt sich.
+
 > **Der Footgun, der bleibt.** Die Umschaltung ist globaler veränderlicher Zustand pro
 > Request: Was *vor* der Middleware aufgelöst wird — eine andere Middleware, ein
 > Route-Model-Binding, ein Event-Listener — sieht noch den alten Guard. Zwei Regeln

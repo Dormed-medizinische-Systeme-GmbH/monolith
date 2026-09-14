@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\UseCustomerConnection;
 use App\Http\Middleware\UsePublicConnection;
 use App\Http\Middleware\UseStaffConnection;
 use Illuminate\Foundation\Application;
@@ -50,7 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     require base_path('routes/web.php');
                 });
 
-            Route::middleware('web')
+            Route::middleware(['web', UseCustomerConnection::class])
                 ->domain(config('domains.portal'))
                 ->group(base_path('routes/portal.php'));
 
@@ -61,6 +62,24 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['sidebar_state']);
+
+        /*
+         * Gaeste gehoeren auf die Anmeldemaske IHRES Zugriffspunkts.
+         *
+         * Ohne das leitet Laravel pauschal auf `route('login')` um — und das
+         * ist Fortifys Mitarbeiter-Login unter erp.dormed.de. Ein Kunde auf
+         * my.dormed.de landete damit auf einer Maske, an der er sich nicht
+         * anmelden kann, auf einer fremden Domain.
+         */
+        $middleware->redirectGuestsTo(function (Request $request): string {
+            foreach (['portal', 'shop'] as $accessPoint) {
+                if ($request->getHost() === config("domains.{$accessPoint}")) {
+                    return route("{$accessPoint}.login");
+                }
+            }
+
+            return route('login');
+        });
 
         $middleware->web(append: [
             HandleInertiaRequests::class,

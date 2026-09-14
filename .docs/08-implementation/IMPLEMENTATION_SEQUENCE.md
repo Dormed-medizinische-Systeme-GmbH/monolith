@@ -99,6 +99,12 @@ RLS fail-closed, Kunde A sieht Kunde B nicht, jeder Host trifft seine Rolle.
    Guard **immer** explizit; die Umschaltung sitzt in der äußersten Middleware der
    Domain-Group (ADR-043).
 
+> **Gebaut 2026-09-14:** Schema (11 Tabellen, 11 Models, 8 Enums), beide Guards,
+> ERP-Login mit totem SSO-Knopf, Kunden-Login für Portal und Shop, Gate davor.
+> 96 Tests grün. Offen in dieser Phase: der Permission-Katalog
+> (`config/authorization.php`, D-136/D-137) und die Zugangsverwaltung am
+> Kontakt (ADR-037).
+
 ## Phase 4 — Seeder als Ausgangsbasis
 
 Der Seeder ist kein Demo-Werkzeug, sondern der Lauf, der in Produktion **einmal** die

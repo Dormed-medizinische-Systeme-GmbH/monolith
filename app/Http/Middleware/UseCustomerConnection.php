@@ -71,13 +71,26 @@ final class UseCustomerConnection
     }
 
     /**
-     * Seam fuer Phase 3 (ADR-037/042): dort loest die Firma sich ueber
-     * `customer_accounts → people → company` des eingeloggten Kontakts auf.
-     * Solange es weder Model noch Guard gibt, traegt die Session den Wert —
-     * die RLS-Mechanik darunter ist dieselbe und bereits jetzt pruefbar.
+     * Die Firma des angemeldeten Kontakts (ADR-037): `customer_accounts` →
+     * `people` → `company_contacts`.
+     *
+     * Leer, solange niemand angemeldet ist — dann greift die Policy
+     * fail-closed und liefert null Zeilen statt aller. Das ist der gewollte
+     * Zustand auf der Anmeldemaske.
+     *
+     * Der Test setzt den Wert stattdessen ueber die Session; deshalb hat sie
+     * hier weiterhin Vorrang.
      */
     private function companyId(Request $request): string
     {
-        return (string) $request->session()->get('app.company_id', '');
+        $fromSession = $request->hasSession()
+            ? $request->session()->get('app.company_id')
+            : null;
+
+        if ($fromSession !== null) {
+            return (string) $fromSession;
+        }
+
+        return (string) ($request->user('customer')?->companyId() ?? '');
     }
 }
