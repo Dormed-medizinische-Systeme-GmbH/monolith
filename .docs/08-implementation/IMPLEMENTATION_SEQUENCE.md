@@ -141,7 +141,9 @@ Werden **nachgebaut**, nicht migriert (ADR-018). Der Code unter `.legacy/` ist V
    Kontaktformular mit beiden Mails, Sitemaps, Markdown-Kurzprofile, 352 statische
    Assets. URL-Pfade unverändert. Läuft über `dormed_public` (ADR-036).
    **Offen:** Produktdaten kommen noch aus den Blade-Seiten, nicht aus der Datenbank —
-   das ist der eigentliche Inhalt von ADR-038 und setzt Inventory voraus.
+   das ist der eigentliche Inhalt von ADR-038 und setzt Inventory voraus. Dazu gehört
+   der Umzug der 28 Prospekt-PDFs (39 MB) von `public/assets/pdf/` in den Bucket; bis
+   dahin liegen sie doppelt im Repository, und das ist Absicht (ADR-038).
 2. **`shop.dormed.de`** — Inertia/Svelte. Setzt Inventory und Billing voraus.
    Die Schema-Zusammenführung mit dem Alt-Shop ist die eigentliche Projektarbeit.
 3. **`my.dormed.de`** — Inertia/Svelte. Hier werden die RLS-Policies aus ADR-036 scharf

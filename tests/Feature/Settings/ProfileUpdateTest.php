@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Modules\Core\Models\User;
 
 test('profile page is displayed', function () {
     $user = User::factory()->create();
@@ -18,7 +18,8 @@ test('profile information can be updated', function () {
     $response = $this
         ->actingAs($user)
         ->patch(route('profile.update'), [
-            'name' => 'Test User',
+            'first_name' => 'Test',
+            'last_name' => 'User',
             'email' => 'test@example.com',
         ]);
 
@@ -39,7 +40,8 @@ test('email verification status is unchanged when the email address is unchanged
     $response = $this
         ->actingAs($user)
         ->patch(route('profile.update'), [
-            'name' => 'Test User',
+            'first_name' => 'Test',
+            'last_name' => 'User',
             'email' => $user->email,
         ]);
 
@@ -64,7 +66,18 @@ test('user can delete their account', function () {
         ->assertRedirect(route('erp.home'));
 
     $this->assertGuest();
-    expect($user->fresh())->toBeNull();
+
+    /*
+     * Mit SoftDeletes (D-018) ist der Datensatz nicht fort, sondern markiert.
+     *
+     * Geprueft wird ueber `find()`, NICHT ueber `$user->fresh()`: `fresh()`
+     * baut die Abfrage mit `newQueryWithoutScopes()` und umgeht damit den
+     * SoftDelete-Filter — es faende den Datensatz also auch nach dem Loeschen.
+     *
+     * Endgueltig loeschen darf niemand; ein Job raeumt nach 30 Tagen ab (D-139).
+     */
+    expect(User::find($user->id))->toBeNull();
+    expect(User::withTrashed()->find($user->id))->not->toBeNull();
 });
 
 test('correct password must be provided to delete account', function () {

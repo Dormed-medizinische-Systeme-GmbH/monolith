@@ -1046,6 +1046,23 @@ Zugriffspunkte auf einer Wahrheit, kein Export, kein Sync, kein zweiter Pflegeor
   anlegen.
 - Produktbilder brauchen einen öffentlich auslieferbaren Ablageort. Der öffentliche
   Bucket aus ADR-028 ist dafür gedacht und passt: Marketing-Assets, keine Kundendaten.
+
+> **Übergangszustand, bewusst getragen (Stand 2026-09-14).** Die 28 Prospekt-PDFs liegen
+> **doppelt** im Repository, byte-identisch, je 39 MB:
+>
+> | Ort | Rolle |
+> | --- | --- |
+> | `public/assets/pdf/` | wird **heute ausgeliefert** — die Blade-Seiten verlinken `/assets/pdf/…` |
+> | `database/seeders/pdf/` | Quelle für den Seed in den Bucket |
+>
+> Das ist keine Schlamperei und **darf nicht „aufgeräumt" werden**, solange die Views
+> noch feste Pfade verlinken. Wer `public/assets/pdf/` löscht, nimmt der laufenden
+> Website 28 Downloads.
+>
+> **Aufgelöst wird es mit dem Umbau auf Objektspeicher:** Die PDFs wandern in den
+> Bucket, ihre Adresse kommt aus dem Artikeldatensatz statt aus dem Markup, und erst
+> **danach** entfällt `public/assets/pdf/`. Dieselbe Bewegung wie bei den Produktdaten
+> insgesamt — es ist der eigentliche Inhalt dieser ADR.
 - Ein Produkt braucht ein **Veröffentlichungsmerkmal**, das Website-Sichtbarkeit von
   Shop-Verfügbarkeit und ERP-Katalogpflege trennt. Nicht jeder Artikel im Warenwirtschafts-
   Stamm gehört auf die Website. Das ist beim Inventory-Schema zu berücksichtigen
@@ -1477,3 +1494,65 @@ Zwei-Faktor-Dialog entfällt.
 
 **Verbindlich für alles Weitere:** keine `dark:`-Utilities, keine `.dark`-Klasse, keine
 `prefers-color-scheme`-Abfrage. Wer eine zweite Palette braucht, hebt diese ADR auf.
+
+## ADR-045 — Object Storage unter eigenem Hostnamen `cdn.`; die Anwendung steht nicht im Abrufweg
+
+Status: Accepted (2026-09-14) · **schließt die offene Stelle in ADR-028**
+
+ADR-028 hat MinIO mit Cloudflare davor beschlossen, aber nie benannt, **unter welcher
+Adresse** der Bucket erreichbar ist. Das ist die Antwort.
+
+### Zwei Adressen für dasselbe Objekt
+
+| | Wer | Wofür |
+| --- | --- | --- |
+| `AWS_ENDPOINT` | das AWS-SDK in PHP | Hochladen, Löschen, Signieren. Läuft im internen Netz und **erreicht nie einen Browser** |
+| `AWS_URL` | der Browser | Basis für `Storage::url()` — das, was als `src`/`href` im Markup steht |
+
+`Storage::url()` **baut nur eine Zeichenkette**. Sobald das HTML ausgeliefert ist, ist die
+Anwendung aus dem Weg und der Browser holt die Datei direkt beim Speicher.
+
+```text
+Browser → cdn.dormed.de → Cloudflare (Cache) → Proxy → MinIO
+```
+
+Laravel kommt darin nicht vor. Der Proxy routet einen Hostnamen auf einen **anderen
+Container** — dasselbe Mittel wie bei den vier App-Domains, nur mit anderem Ziel.
+
+> **`cdn.` ist kein fünfter Zugriffspunkt.** Keine Route, kein Guard, keine
+> Datenbankrolle. ADR-033 bleibt unberührt.
+
+### Warum `cdn.` und nicht `s3.`
+
+Diese Adressen stehen später in Suchindizes, in gespeicherten PDFs und in versendeten
+E-Mails — sie sind praktisch unveränderlich. `s3.` backt den **Anbieter** in die Adresse;
+ein Wechsel von MinIO auf R2 oder Hetzner Object Storage machte den Namen falsch, ohne
+dass er sich korrigieren ließe, ohne Links zu brechen. `cdn.` benennt den **Zweck**.
+
+### Umsetzung
+
+```dotenv
+AWS_ENDPOINT=http://minio:9000                      # nur das SDK
+AWS_URL=http://cdn.dormed.test:9000/dormed-public   # landet im Markup
+```
+
+Produktion: `cdn.dormed.de` **ohne Port**, vom Proxy direkt auf MinIO geroutet. Lokal mit
+`:9000`, weil Port 80 die Anwendung belegt — `127.0.0.1 cdn.dormed.test` in `/etc/hosts`.
+
+**Voraussetzung, die dabei fehlte:** `league/flysystem-aws-s3-v3` war nicht installiert.
+`FILESYSTEM_DISK=s3` stand seit dem Aufsetzen in der `.env`, jeder Zugriff auf
+`Storage::disk('s3')` wäre mit `Class "…\PortableVisibilityConverter" not found`
+abgebrochen — auch die Linkerzeugung. Nachinstalliert; der erste Seeder, der ein
+Produktbild hochlädt, wäre sonst darüber gestolpert.
+
+**Verifiziert am 2026-09-14:** Upload durch Laravel über das interne Netz, Abruf über
+`cdn.dormed.test` mit HTTP 200 und korrektem Inhalt — ohne PHP im Abrufweg.
+
+### Nicht-öffentliche Dateien
+
+Für die ist der Weg **nicht** „durch die Anwendung durchreichen", sondern eine
+**vorsignierte URL**: Die Anwendung prüft die Berechtigung und gibt einen zeitlich
+begrenzten Direktlink aus. Autorisierung in der App, Auslieferung aus dem Speicher.
+
+Betrifft diesen Bucket vorerst nicht — ADR-028 hält Unterschriften und Einsatzfotos
+ausdrücklich heraus, genau weil er vollständig öffentlich ist.
