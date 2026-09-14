@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Responses\LoginResponse;
 use App\Modules\Core\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -17,16 +19,24 @@ class FortifyServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void
-    {
-        //
-    }
-
     /**
      * Bootstrap any application services.
      */
     public function boot(): void
     {
+        /*
+         * In boot(), nicht in register(): Fortifys eigener Provider bindet
+         * `LoginResponse` in seinem register() als Singleton und ueberschriebe
+         * eine frueher gesetzte Bindung. boot() laeuft nach allen register().
+         *
+         * Warum ueberhaupt: Fortifys Standardantwort folgt
+         * `redirect()->intended()` blind. Bei vier Zugriffspunkten auf einer
+         * geteilten Session (ADR-037) kann das gemerkte Ziel auf einem anderen
+         * Hostnamen liegen — dann landet eine Mitarbeiter-Anmeldung im Shop,
+         * und aus dem Inertia-XHR heraus als CORS-Fehler.
+         */
+        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
+
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();

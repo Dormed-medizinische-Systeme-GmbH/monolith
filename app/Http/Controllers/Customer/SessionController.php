@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\LoginRequest;
+use App\Support\AccessPointRedirect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -40,7 +41,10 @@ final class SessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended('/');
+        // Nicht `intended()` blind folgen: die Session ist ueber alle vier
+        // Zugriffspunkte geteilt (ADR-037), ein gemerktes Ziel kann also auf
+        // einem anderen Hostnamen liegen.
+        return redirect()->to(AccessPointRedirect::after($request, '/'));
     }
 
     public function destroy(Request $request): RedirectResponse

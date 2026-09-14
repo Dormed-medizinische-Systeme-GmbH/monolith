@@ -15,4 +15,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', HomeController::class)->name('erp.home');
+/*
+ * Hinter dem Gate. Der Login selbst kommt von Fortify und ist in
+ * bootstrap/app.php registriert — er liegt ausserhalb dieser Gruppe.
+ */
+Route::middleware('auth:staff')->group(function (): void {
+    Route::get('/', HomeController::class)->name('erp.home');
+});

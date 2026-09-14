@@ -101,3 +101,45 @@ test('der Kunden-Passwort-Reset bleibt davon unberuehrt', function (): void {
     // (ADR-043). Der Broker steht in config/auth.php mit eigener Token-Tabelle.
     expect(config('auth.passwords.customers.table'))->toBe('customer_password_reset_tokens');
 });
+
+test('die ERP-Wurzel ist ohne Anmeldung nicht erreichbar', function (): void {
+    /*
+     * War es bis zum 2026-09-14: die Route trug nur `web` und
+     * `UseStaffConnection`, kein `auth`. Portal und Shop hatten ihr Gate, das
+     * ERP nicht — ausgerechnet der Zugriffspunkt mit Zugang zum gesamten
+     * Kundenbestand.
+     */
+    $this->get('http://'.config('domains.erp').'/')
+        ->assertRedirect('http://'.config('domains.erp').'/login');
+});
+
+test('nach der Anmeldung bleibt man auf dem eigenen Hostnamen', function (): void {
+    /*
+     * Portal und Shop teilen sich eine Session (ADR-037), und weil sie auf
+     * verschiedenen Hostnamen liegen, sitzt das Cookie auf der Basisdomain.
+     * Damit teilen sich ALLE vier Zugriffspunkte `url.intended`.
+     *
+     * Real aufgetreten: als Gast im Shop gewesen, danach im ERP angemeldet —
+     * und Fortify schickte einen in den Shop. Aus dem Inertia-XHR heraus ein
+     * CORS-Fehler, also kein Login, nur eine unverständliche Meldung.
+     */
+    User::factory()->create(['email' => 'ziel@dormed.test']);
+
+    $this->withSession(['url.intended' => 'http://'.config('domains.shop').'/'])
+        ->post('http://'.config('domains.erp').'/login', [
+            'email' => 'ziel@dormed.test',
+            'password' => 'password',
+        ])
+        ->assertRedirect(config('fortify.home'));
+});
+
+test('ein gemerktes Ziel auf demselben Hostnamen wird befolgt', function (): void {
+    User::factory()->create(['email' => 'intern@dormed.test']);
+
+    $this->withSession(['url.intended' => 'http://'.config('domains.erp').'/settings/profile'])
+        ->post('http://'.config('domains.erp').'/login', [
+            'email' => 'intern@dormed.test',
+            'password' => 'password',
+        ])
+        ->assertRedirect('http://'.config('domains.erp').'/settings/profile');
+});
