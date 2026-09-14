@@ -42,7 +42,13 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-<Sidebar.Provider open={sidebarOpen}>
+<!--
+    Schmaler als die 16rem der Vorlage. Die laengste Beschriftung ist
+    „Verkaufschancen"; alles darueber hinaus waere Rand, der dem Inhalt fehlt.
+    Die Breite gehoert an diese Huelle und nicht in `components/ui` — dort
+    stehen die Werte der Vorlage, und die sollen bleiben, wo sie sind.
+-->
+<Sidebar.Provider open={sidebarOpen} style="--sidebar-width: 14rem;">
     <AppSidebar onOpenSearch={() => (searchOpen = true)} />
 
     <Sidebar.Inset>
