@@ -5,6 +5,21 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/*
+ * Ausrichtung: `data-horizontal:` / `data-vertical:`.
+ *
+ * Neun Komponenten unter `components/ui` schreiben so (Tabs, Toggle-Group,
+ * Separator, Slider, Scroll-Area, Button-Group …). OHNE diese beiden Zeilen
+ * uebersetzt Tailwind das als Datenattribut-Kurzform in `[data-horizontal]` —
+ * ein Attribut, das bits-ui nie setzt. Es schreibt `data-orientation`.
+ *
+ * Die Regel greift dann nirgends, und zwar lautlos: kein Fehler, keine Warnung,
+ * nur ein Layout, das falsch herum steht. Bei `Tabs` hiess das, dass die Wurzel
+ * `flex` blieb statt `flex-col` zu werden — Reiterleiste und Inhalt standen
+ * nebeneinander statt untereinander.
+ */
+@custom-variant data-horizontal (&[data-orientation='horizontal']);
+@custom-variant data-vertical (&[data-orientation='vertical']);
 
 @theme inline {
     --font-sans:
@@ -124,7 +139,6 @@
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(0 0% 98%);
 }
-
 
 @layer base {
     * {
