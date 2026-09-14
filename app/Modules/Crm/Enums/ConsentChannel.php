@@ -17,4 +17,15 @@ enum ConsentChannel: string
     case Post = 'post';
     case Sms = 'sms';
     case Telefon = 'telefon';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Fax => 'Fax',
+            self::Mail => 'E-Mail',
+            self::Post => 'Post',
+            self::Sms => 'SMS',
+            self::Telefon => 'Telefon',
+        };
+    }
 }

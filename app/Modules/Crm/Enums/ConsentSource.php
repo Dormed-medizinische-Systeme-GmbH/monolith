@@ -17,4 +17,15 @@ enum ConsentSource: string
     case Telefonisch = 'telefonisch';
     case Import = 'import';
     case Sonstige = 'sonstige';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Formular => 'Formular',
+            self::Muendlich => 'mündlich',
+            self::Telefonisch => 'telefonisch',
+            self::Import => 'Import',
+            self::Sonstige => 'sonstige',
+        };
+    }
 }

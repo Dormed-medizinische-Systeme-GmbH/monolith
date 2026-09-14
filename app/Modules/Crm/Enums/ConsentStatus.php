@@ -14,4 +14,12 @@ enum ConsentStatus: string
 {
     case Erteilt = 'erteilt';
     case Widerrufen = 'widerrufen';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Erteilt => 'erteilt',
+            self::Widerrufen => 'widerrufen',
+        };
+    }
 }

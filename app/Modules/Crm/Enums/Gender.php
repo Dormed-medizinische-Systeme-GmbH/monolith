@@ -16,4 +16,14 @@ enum Gender: string
     case Weiblich = 'weiblich';
     case Divers = 'divers';
     case Unbekannt = 'unbekannt';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Maennlich => 'männlich',
+            self::Weiblich => 'weiblich',
+            self::Divers => 'divers',
+            self::Unbekannt => 'unbekannt',
+        };
+    }
 }
