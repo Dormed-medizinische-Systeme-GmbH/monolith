@@ -1,13 +1,17 @@
 import type { Component } from 'svelte';
 import Boxes from '@lucide/svelte/icons/boxes';
 import Building from '@lucide/svelte/icons/building';
+import Calendar from '@lucide/svelte/icons/calendar';
+import CalendarClock from '@lucide/svelte/icons/calendar-clock';
 import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
 import FileText from '@lucide/svelte/icons/file-text';
 import HardDrive from '@lucide/svelte/icons/hard-drive';
 import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 import MapPin from '@lucide/svelte/icons/map-pin';
+import Plane from '@lucide/svelte/icons/plane';
 import ReceiptText from '@lucide/svelte/icons/receipt-text';
 import Settings from '@lucide/svelte/icons/settings';
+import ShieldCheck from '@lucide/svelte/icons/shield-check';
 import TrendingUp from '@lucide/svelte/icons/trending-up';
 import UserCog from '@lucide/svelte/icons/user-cog';
 import Users from '@lucide/svelte/icons/users';
@@ -45,6 +49,9 @@ export const navigation: NavGroup[] = [
                 icon: LayoutDashboard,
                 href: dashboard().url,
             },
+            { title: 'Kalender', icon: Calendar },
+            { title: 'Termine', icon: CalendarClock },
+            { title: 'Urlaube', icon: Plane },
         ],
     },
     {
@@ -76,6 +83,7 @@ export const navigation: NavGroup[] = [
         label: 'Verwaltung',
         items: [
             { title: 'Mitarbeiter', icon: UserCog },
+            { title: 'Administration', icon: ShieldCheck },
             { title: 'Einstellungen', icon: Settings },
         ],
     },
