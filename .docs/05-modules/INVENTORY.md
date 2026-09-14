@@ -5,6 +5,18 @@
 **Spezifiziert** (Grill-Runde 2026-09-12/13, D-099 – D-121). Autoritative Spec mit
 Feldform, Enums und Regeln: [`../04-domain/INVENTORY.md`](../04-domain/INVENTORY.md).
 
+**Gebaut ist seit 2026-09-15 der Katalog** — `article_groups`, `articles` und der
+benutzerdefinierte Feldkatalog (`article_group_fields`,
+`article_group_field_options`, `article_field_values`) samt Modellen und
+Schreib-Service. Der Katalog kam zuerst, weil die Shop-Migrationen unmittelbar
+daran hängen (Nutzer).
+
+**Noch nicht gebaut:** Läger, der Bewegungs-Ledger, die Belege (Wareneingang,
+Umbuchung, Abholbeleg, Reservierung, Inventur), der Leistungskatalog
+(`Offering`) und die Exemplare (`Device`, inklusive Modulumzug aus `Service`
+nach D-121). Bestand ist damit noch nirgends abfragbar — was der Katalog
+verspricht, ist ausschließlich Katalog.
+
 Dieses Dokument hält nur die **Prinzipien** fest — die Feldebene steht in der Spec.
 
 > **Kurswechsel gegenüber dem vorherigen Stand.** Inventory war als „spätere

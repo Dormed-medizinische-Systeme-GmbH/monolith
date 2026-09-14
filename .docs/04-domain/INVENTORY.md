@@ -660,3 +660,4 @@ sind entsprechend angepasst:
 | 7 | **Reduktion der `Article`-Feldliste** — bewusst breit angelegt, Streichungen folgen | laufend, je Streichung eine D-NNN (D-115) |
 | 7a | ~~Zusammenlegung der Katalog-Feldtabellen für Artikel und Leistungen~~ | ⛔ **verworfen** (D-135) — die beiden Kataloge bleiben getrennt, die Dopplung ist bewusst |
 | 8 | Nummernkreise für die neuen Belege (GoodsReceipt, StockTransfer, Reservation, …) | Format analog D-067 bei Umsetzung |
+| 9 | **Regex-Durchsetzung in der Datenbank** — als CHECK nicht möglich (siehe oben), Trigger wäre das Mittel. Bisher gibt es im Projekt keinen einzigen Trigger | eigene D-NNN |

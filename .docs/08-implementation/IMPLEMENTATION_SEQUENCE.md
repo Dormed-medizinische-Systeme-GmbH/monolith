@@ -171,7 +171,7 @@ Werden **nachgebaut**, nicht migriert (ADR-018). Der Code unter `.legacy/` ist V
 | ~~1~~ | ~~Tabellenform der Identität~~ — **entschieden in ADR-042: getrennt.** `users`/`User`/Guard `staff` für Mitarbeiter, `customer_accounts`/`CustomerAccount`/Guard `customer` für Kunden. `users.role_id` bleibt `NOT NULL`, D-124 unverändert. | — |
 | 2 | Ein Kontakt an mehreren Firmen: `app.company_id` wäre nicht eindeutig. Sitzung mit aktiver Firma, oder Policy auf eine Menge? (ADR-036/037) | Phase 7.3 |
 | ~~3~~ | ~~Ablage der Seed-Assets~~ — **entschieden 2026-09-14: die Dateien bleiben im Repository** (Nutzer). Kein Git LFS, keine externe Ablage. Folge: ~102 MB in jedem Clone und im Prod-Build-Kontext. Das ist bei einem Einzel-Node-Deploy unkritisch und der Preis dafür, dass der Seed-Lauf ohne Zusatzschritt funktioniert — in Dev bei jedem `up`, in Prod einmalig. `.dockerignore` schließt sie deshalb **nicht** aus. | — |
-| 4 | Veröffentlichungsmerkmal am Artikel, das Website-Sichtbarkeit von Shop-Verfügbarkeit und Katalogpflege trennt (ADR-038) | Phase 6.3 |
+| 4 | ~~Veröffentlichungsmerkmal am Artikel~~ — **beantwortet 2026-09-15 beim Katalogbau:** drei unabhängige Boolean-Spalten auf `articles`. `is_active` (Katalogpflege im ERP) · `is_public` (Website) · `is_orderable` (Shop). Kein Status-Enum, weil die drei Fälle sich nicht ausschließen — ein Gerät kann auf der Website stehen und nur auf Anfrage erhältlich sein. **Offen bleibt der Website-INHALT:** Slug, Marketingtext, Bilder und Prospekt-PDF sind kein Flag und gehören in eine eigene Tabelle, sobald die Website ihre Produkte aus der Datenbank zieht (ADR-038). Heute liegen sie als Markdown unter `resources/views/website/`. | — |
 
 ## Keine Big-Bang-Implementierung
 
