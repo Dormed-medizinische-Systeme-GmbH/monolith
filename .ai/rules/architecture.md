@@ -69,6 +69,17 @@ kommen von dort.
 - **Serverseitig**, nicht im Browser. Abweichend von der shadcn-Anleitung, die
   alle Zeilen lädt und clientseitig filtert: der Adressstamm hat rund 50.000
   Personen (`.docs/06-infrastructure/HOSTING.md`).
+- **Eine Zeile ist ein Datensatz der Basistabelle — nichts anderes.** Gejoint
+  wird nur, was höchstens einmal vorkommt (Sitzadresse, Fachrichtung). Eine
+  Zu-vielen-Beziehung wird **gezählt** (`withCount`), nie gejoint: ein
+  `LEFT JOIN` auf `company_contacts` macht aus einer Praxis mit sieben
+  Kontakten sieben Zeilen, `meta.total` zählt dann Beziehungen statt Firmen,
+  und derselbe Schlüssel erscheint mehrfach. Die Gegenseite gehört in die
+  Detailansicht, wo der Datensatz den Rahmen bildet.
+- **Verlinkt wird über `rowHref`**, nicht über eine eigene Spalte je Fläche.
+  Die ganze Zeile wird damit anklickbar; die Leitspalte trägt zusätzlich einen
+  `DataTableLink`, damit mittlere Maustaste, „in neuem Tab öffnen" und Tastatur
+  funktionieren.
 - **Sortierung nur über die Freigabeliste** im Controller. Der Spaltenname kommt
   aus der URL und landet in `ORDER BY`; ohne Prüfung ließe sich damit nach
   beliebigen Spalten ordnen, auch aus fremden Tabellen.

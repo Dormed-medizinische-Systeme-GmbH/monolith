@@ -1019,6 +1019,13 @@ werden soll.
 >    — dann braucht die Sitzung eine aktive Firma mit Umschaltung, oder die Policy muss
 >    auf eine Menge prüfen. Erst zu klären, wenn der Fall real vorkommt; die Policy ist
 >    dann eine Zeile, die Sitzungsführung nicht.
+>
+>    **Für das ERP ist die Frage erledigt (2026-09-14):** der Kundenstamm wird über die
+>    **Firma** betreten, nicht über die Person (`/firmen`, `/firmen/{company}`). Die Firma
+>    ist damit überall der Rahmen, und eine Person taucht bei jeder ihrer Praxen mit der
+>    dortigen Rolle auf — kein Sonderfall, sondern der Normalfall von D-005. Offen bleibt
+>    ausschließlich `app.company_id` im **Portal**: dort meldet sich die Person an, und
+>    welche ihrer Firmen sie dann sieht, ist weiterhin nicht bestimmt.
 
 ## ADR-038 — `dormed.de` ist Teil des Monolithen; Produktdaten kommen aus der einen Datenbank
 
