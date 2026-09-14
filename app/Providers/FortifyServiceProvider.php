@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Modules\Core\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -41,6 +43,34 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+
+        /*
+         * Inaktive Mitarbeiter kommen nicht durch (IDENTITY_RBAC.md: „inaktiv
+         * ⇒ kein Login"). Fortifys Standardpfad prueft das NICHT — er kennt nur
+         * Mailadresse und Passwort.
+         *
+         * `null` statt `false` zurueckgeben: damit faellt Fortify auf die
+         * uebliche Fehlermeldung zurueck, statt zwischen „falsches Passwort"
+         * und „gesperrt" zu unterscheiden. Wer ein Konto sperrt, will nicht,
+         * dass ein Angreifer daraus Gueltigkeit der Mailadresse ableitet.
+         */
+        Fortify::authenticateUsing(function (Request $request): ?User {
+            $user = User::query()
+                ->where('email', $request->string('email')->toString())
+                ->first();
+
+            if (! $user || ! $user->is_active || $user->password === null) {
+                return null;
+            }
+
+            if (! Hash::check((string) $request->string('password'), $user->password)) {
+                return null;
+            }
+
+            $user->forceFill(['last_login_at' => now()])->save();
+
+            return $user;
+        });
     }
 
     /**
@@ -60,10 +90,6 @@ class FortifyServiceProvider extends ServiceProvider
         ]));
 
         Fortify::requestPasswordResetLinkView(fn (Request $request) => Inertia::render('auth/ForgotPassword', [
-            'status' => $request->session()->get('status'),
-        ]));
-
-        Fortify::verifyEmailView(fn (Request $request) => Inertia::render('auth/VerifyEmail', [
             'status' => $request->session()->get('status'),
         ]));
 

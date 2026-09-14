@@ -9,7 +9,11 @@ use Illuminate\Support\Facades\Route;
  * domainspezifischen Startseiten verdecken, weil sie frueher registriert ist.
  */
 
-Route::middleware(['auth', 'verified'])->group(function () {
+/*
+ * Kein `verified`: die E-Mail-Verifizierung ist nach D-032 abgeschaltet, das
+ * Middleware taeuschte sonst eine Pruefung vor, die nicht stattfindet.
+ */
+Route::middleware('auth')->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
 });
 
