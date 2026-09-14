@@ -70,11 +70,13 @@
                             disabled={processing}
                             autofocus
                         >
-                            <InputOTPGroup>
-                                {#each { length: 6 } as _, i (i)}
-                                    <InputOTPSlot index={i} />
-                                {/each}
-                            </InputOTPGroup>
+                            {#snippet children({ cells })}
+                                <InputOTPGroup>
+                                    {#each cells as cell (cell)}
+                                        <InputOTPSlot {cell} />
+                                    {/each}
+                                </InputOTPGroup>
+                            {/snippet}
                         </InputOTP>
                     </div>
                     <InputError message={errors.code} />
