@@ -2,6 +2,7 @@
     import type { Snippet } from 'svelte';
     import { page } from '@inertiajs/svelte';
     import * as Sidebar from '@/components/ui/sidebar';
+    import { Toaster } from '@/components/ui/sonner';
     import AppHeader from './erp/AppHeader.svelte';
     import AppSidebar from './erp/AppSidebar.svelte';
     import CommandPalette from './erp/CommandPalette.svelte';
@@ -61,3 +62,11 @@
 </Sidebar.Provider>
 
 <CommandPalette bind:open={searchOpen} />
+
+<!--
+    Ohne diesen Empfänger liefen die Rückmeldungen ins Leere: `app.ts` horcht
+    seit jeher auf Inertias `flash`-Ereignis und ruft `toast()` auf, aber
+    gerendert hat das niemand. `theme="light"` fest, es gibt keinen Dark Mode
+    (ADR-044).
+-->
+<Toaster theme="light" richColors closeButton />
