@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -35,18 +35,18 @@ trait TracksBlame
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Employee, $this>
      */
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(Employee::class, 'created_by');
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Employee, $this>
      */
     public function updatedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'updated_by');
+        return $this->belongsTo(Employee::class, 'updated_by');
     }
 }

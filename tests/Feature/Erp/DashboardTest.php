@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use Database\Seeders\RoleSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -21,14 +21,14 @@ test('die ERP-Wurzel IST das Dashboard', function (): void {
      * dieselbe Flaeche heissen zwei Ziele nach dem Login und zwei Eintraege in
      * der Historie.
      */
-    $this->actingAs(User::factory()->create(), 'staff')
+    $this->actingAs(Employee::factory()->create(), 'staff')
         ->get('http://'.config('domains.erp').'/')
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->component('erp/Dashboard'));
 });
 
 test('es gibt keine /dashboard-Route mehr', function (): void {
-    $this->actingAs(User::factory()->create(), 'staff')
+    $this->actingAs(Employee::factory()->create(), 'staff')
         ->get('http://'.config('domains.erp').'/dashboard')
         ->assertNotFound();
 });

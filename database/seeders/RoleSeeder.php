@@ -10,7 +10,7 @@ use Illuminate\Database\Seeder;
 /**
  * Die fuenf Abteilungen (D-125, revidiert D-031).
  *
- * KEIN Demo-Seed: `users.role_id` ist NOT NULL (D-124), ohne diese Zeilen
+ * KEIN Demo-Seed: `employees.role_id` ist NOT NULL (D-124), ohne diese Zeilen
  * laesst sich kein Mitarbeiter anlegen. Laeuft deshalb auch in Produktion.
  *
  * Hart definiert ohne Dynamik (Nutzer). `accounting` und `it` sind gegenueber

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use App\Modules\Crm\Enums\Gender;
 use App\Modules\Crm\Models\Company;
 use App\Modules\Crm\Models\CompanyContact;
@@ -44,7 +44,7 @@ function kontaktBei(Company $company, string $vorname, string $nachname, string 
 
 function besucheFirmen(object $test, string $query = ''): object
 {
-    return $test->actingAs(User::factory()->create(), 'staff')
+    return $test->actingAs(Employee::factory()->create(), 'staff')
         ->get('http://'.config('domains.erp').'/firmen'.$query);
 }
 

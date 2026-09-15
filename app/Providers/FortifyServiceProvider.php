@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Http\Responses\LoginResponse;
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -58,8 +58,8 @@ class FortifyServiceProvider extends ServiceProvider
          * und „gesperrt" zu unterscheiden. Wer ein Konto sperrt, will nicht,
          * dass ein Angreifer daraus Gueltigkeit der Mailadresse ableitet.
          */
-        Fortify::authenticateUsing(function (Request $request): ?User {
-            $user = User::query()
+        Fortify::authenticateUsing(function (Request $request): ?Employee {
+            $user = Employee::query()
                 ->where('email', $request->string('email')->toString())
                 ->first();
 

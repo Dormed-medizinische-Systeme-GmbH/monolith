@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Core\Queries;
 
+use App\Modules\Core\Models\Employee;
 use App\Modules\Core\Models\Site;
-use App\Modules\Core\Models\User;
 
 /**
  * Die Detailansicht eines eigenen Standorts.
@@ -17,7 +17,7 @@ final class SiteProfile
      */
     public static function for(Site $site): array
     {
-        $site->load(['users' => fn ($query) => $query->with('role')->orderBy('last_name')]);
+        $site->load(['employees' => fn ($query) => $query->with('role')->orderBy('last_name')]);
 
         return [
             'id' => $site->id,
@@ -37,8 +37,8 @@ final class SiteProfile
              * beantwortet, die vor dem Stilllegen kommt — und weil ein Standort
              * mit Mitarbeitern nicht geloescht werden kann.
              */
-            'users' => $site->users
-                ->map(fn (User $user): array => [
+            'employees' => $site->employees
+                ->map(fn (Employee $user): array => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'role' => $user->role?->name,

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use App\Modules\Crm\Enums\ChannelLabel;
 use App\Modules\Crm\Enums\ChannelType;
 use App\Modules\Crm\Enums\ConsentChannel;
@@ -41,7 +41,7 @@ function besucheKontakt(object $test, CompanyContact $contact, ?Company $unter =
 {
     $company = $unter ?? $contact->company;
 
-    return $test->actingAs(User::factory()->create(), 'staff')
+    return $test->actingAs(Employee::factory()->create(), 'staff')
         ->get('http://'.config('domains.erp').'/firmen/'.$company->id.'/kontakte/'.$contact->id);
 }
 

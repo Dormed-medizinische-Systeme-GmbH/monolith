@@ -9,6 +9,28 @@ paths:
 Vollständige Begründung: `.docs/04-database/DATABASE.md`. Kurzfassung — verbindlich
 für jede Migration und jedes Model der Anwendung.
 
+## Migrationen: bestehende ändern, keine neuen — bis zum Produktivgang
+
+**Solange es keine produktive Datenbank gibt, wird eine Schemaänderung in der
+Migration gemacht, die die Tabelle anlegt.** Keine Folge-Migration, die eine
+Spalte umbenennt, nachträgt oder wieder entfernt.
+
+Der Stand läuft mit `migrate:fresh --seed`, es gibt keine Baseline und keine
+Daten, die eine Änderung überleben müssten. Eine Kette aus „Spalte anlegen,
+Spalte umbenennen, Spalte doch wieder ändern" wäre reine Archäologie: sie
+erzählt die Entstehungsgeschichte statt den Zustand, und wer das Schema lesen
+will, muss vier Dateien in der richtigen Reihenfolge durchgehen.
+
+**Ab dem ersten produktiven Deploy kippt die Regel** — dann ist jede bestehende
+Migration unantastbar und jede Änderung eine neue. Diese Zeile hier ist dann zu
+ersetzen.
+
+> **Dazu gehört: nach jeder Schemaänderung `migrate:fresh --seed` laufen
+> lassen.** Eine geänderte Migration wirkt sonst nicht — `migrate` sieht sie als
+> erledigt an. Genau daran hängt auch der Coolify-Stand: dort läuft `migrate
+> --force`, und eine geänderte Datei ändert nichts an einer Datenbank, die die
+> Migration schon verbucht hat.
+
 ## Normalisierung
 
 3NF-Baseline. Keine Spalte speichert etwas, das aus anderen Spalten ableitbar ist —
@@ -44,7 +66,7 @@ Auto-Increment-Schlüssel zu lesen, den es nicht gibt. Laravel 13 erzeugt darüb
 `Str::uuid7()`, also zeitgeordnet.
 
 **Ausgenommen:** Laravels Infrastrukturtabellen (`cache`, `cache_locks`, `jobs`,
-`job_batches`, `failed_jobs`). `sessions.user_id` folgt dagegen `users.id`.
+`job_batches`, `failed_jobs`). `sessions.user_id` folgt dagegen `employees.id` — der SPALTENNAME bleibt, Laravels `DatabaseSessionHandler` schreibt genau ihn.
 
 > **Selbstreferenz gehört hinter `Schema::create`.** Anders als bei `bigserial` setzt
 > Postgres den PRIMARY KEY hier per `ALTER TABLE` — und zwar NACH den Fremdschlüsseln.

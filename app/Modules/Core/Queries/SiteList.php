@@ -22,7 +22,7 @@ final class SiteList
     public const SORTABLE = [
         'name' => 'sites.name',
         'city' => 'sites.city',
-        'users' => 'users_count',
+        'employees' => 'employees_count',
     ];
 
     /**
@@ -40,7 +40,7 @@ final class SiteList
      */
     public static function query(): Builder
     {
-        return Site::query()->withCount('users');
+        return Site::query()->withCount('employees');
     }
 
     /**
@@ -53,7 +53,7 @@ final class SiteList
             'name' => $site->name,
             'addressLine' => $site->address_line,
             'city' => $site->city,
-            'userCount' => (int) $site->getAttribute('users_count'),
+            'employeeCount' => (int) $site->getAttribute('employees_count'),
             'photoUrl' => $site->photo_url,
         ];
     }

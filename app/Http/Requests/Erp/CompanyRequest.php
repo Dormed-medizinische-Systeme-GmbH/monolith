@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Erp;
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use App\Modules\Crm\Models\Company;
 use App\Modules\Crm\Models\MedicalSpecialty;
 use Illuminate\Foundation\Http\FormRequest;
@@ -106,7 +106,7 @@ final class CompanyRequest extends FormRequest
      */
     public static function auswaehlbar(string $rolle, ?string $bisher = null): array
     {
-        $ids = User::query()
+        $ids = Employee::query()
             ->where('is_active', true)
             ->whereRelation('role', 'key', $rolle)
             ->pluck('id')

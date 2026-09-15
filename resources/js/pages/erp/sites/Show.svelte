@@ -76,7 +76,7 @@
         <div class="flex items-center gap-2">
             <Users class="size-4 text-muted-foreground" />
             <h3 class="text-base font-medium">
-                Mitarbeiter ({site.users.length})
+                Mitarbeiter ({site.employees.length})
             </h3>
         </div>
         <!--
@@ -85,24 +85,24 @@
             kann.
         -->
 
-        {#if site.users.length > 0}
+        {#if site.employees.length > 0}
             <ul class="grid gap-3 sm:grid-cols-2">
-                {#each site.users as user (user.id)}
+                {#each site.employees as employee (employee.id)}
                     <li>
                         <Link
-                            href={employeeShow(user.id).url}
+                            href={employeeShow(employee.id).url}
                             class="flex items-center gap-3 rounded-md border p-2 transition-colors hover:bg-muted/50"
                         >
                             <Avatar.Root class="size-9">
-                                {#if user.photoUrl}
-                                    <Avatar.Image src={user.photoUrl} alt={user.name} />
+                                {#if employee.photoUrl}
+                                    <Avatar.Image src={employee.photoUrl} alt={employee.name} />
                                 {/if}
-                                <Avatar.Fallback>{initialen(user.name)}</Avatar.Fallback>
+                                <Avatar.Fallback>{initialen(employee.name)}</Avatar.Fallback>
                             </Avatar.Root>
                             <div class="min-w-0">
-                                <div class="truncate text-sm font-medium">{user.name}</div>
+                                <div class="truncate text-sm font-medium">{employee.name}</div>
                                 <div class="truncate text-xs text-muted-foreground">
-                                    {user.role ?? '—'}{user.isActive ? '' : ' · gesperrt'}
+                                    {employee.role ?? '—'}{employee.isActive ? '' : ' · gesperrt'}
                                 </div>
                             </div>
                         </Link>

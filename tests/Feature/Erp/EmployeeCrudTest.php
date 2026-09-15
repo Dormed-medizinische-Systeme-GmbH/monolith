@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Modules\Core\Models\Employee;
 use App\Modules\Core\Models\Role;
 use App\Modules\Core\Models\Site;
-use App\Modules\Core\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -14,7 +14,7 @@ beforeEach(function (): void {
     (new RoleSeeder)->run();
 
     $this->rolle = Role::query()->where('key', 'backoffice')->firstOrFail();
-    $this->ich = User::factory()->create();
+    $this->ich = Employee::factory()->create();
 });
 
 function erp(string $pfad = ''): string
@@ -27,7 +27,7 @@ test('die Liste verlangt eine Anmeldung', function (): void {
 });
 
 test('die Liste zeigt Name, Rolle und Zugangszustand', function (): void {
-    User::factory()->create([
+    Employee::factory()->create([
         'first_name' => 'Tim',
         'last_name' => 'Weber',
         'email' => 't.weber@dormed.de',
@@ -61,7 +61,7 @@ test('ein Mitarbeiter laesst sich anlegen', function (): void {
         ])
         ->assertRedirect();
 
-    $angelegt = User::query()->where('email', 'm.krause@dormed.de')->firstOrFail();
+    $angelegt = Employee::query()->where('email', 'm.krause@dormed.de')->firstOrFail();
 
     expect($angelegt->name)->toBe('Marlene Krause');
     expect($angelegt->is_active)->toBeTrue();
@@ -87,7 +87,7 @@ test('ohne Passwort angelegt bleibt das Feld leer statt leerer Zeichenkette', fu
         ])
         ->assertRedirect();
 
-    expect(User::query()->where('email', 't.weber@dormed.de')->value('password'))->toBeNull();
+    expect(Employee::query()->where('email', 't.weber@dormed.de')->value('password'))->toBeNull();
 });
 
 test('eine doppelte Mailadresse wird abgewiesen', function (): void {
@@ -122,7 +122,7 @@ test('eine stillgelegte Rolle laesst sich nicht zuweisen', function (): void {
 });
 
 test('ein leeres Passwort beim Bearbeiten behaelt das bestehende', function (): void {
-    $kollege = User::factory()->create(['password' => Hash::make('altes-passwort')]);
+    $kollege = Employee::factory()->create(['password' => Hash::make('altes-passwort')]);
 
     $this->actingAs($this->ich, 'staff')
         ->patch(erp('/'.$kollege->id), [
@@ -167,14 +167,14 @@ test('der eigene Zugang laesst sich nicht stilllegen', function (): void {
 
 test('ein Mitarbeiter wird ausgeblendet, nicht entfernt', function (): void {
     // SoftDeletes (D-018): `TracksBlame` anderer Tabellen zeigt weiter auf ihn.
-    $kollege = User::factory()->create();
+    $kollege = Employee::factory()->create();
 
     $this->actingAs($this->ich, 'staff')
         ->delete(erp('/'.$kollege->id))
         ->assertRedirect();
 
-    expect(User::query()->find($kollege->id))->toBeNull();
-    expect(User::withTrashed()->find($kollege->id))->not->toBeNull();
+    expect(Employee::query()->find($kollege->id))->toBeNull();
+    expect(Employee::withTrashed()->find($kollege->id))->not->toBeNull();
 });
 
 test('der eigene Zugang laesst sich nicht loeschen', function (): void {
@@ -182,11 +182,11 @@ test('der eigene Zugang laesst sich nicht loeschen', function (): void {
         ->delete(erp('/'.$this->ich->id))
         ->assertRedirect();
 
-    expect(User::query()->find($this->ich->id))->not->toBeNull();
+    expect(Employee::query()->find($this->ich->id))->not->toBeNull();
 });
 
 test('das Bearbeitungsformular ist vorbelegt', function (): void {
-    $kollege = User::factory()->create(['role_id' => $this->rolle->id]);
+    $kollege = Employee::factory()->create(['role_id' => $this->rolle->id]);
 
     $this->actingAs($this->ich, 'staff')
         ->get(erp('/'.$kollege->id.'/bearbeiten'))
@@ -201,7 +201,7 @@ test('das Bearbeitungsformular ist vorbelegt', function (): void {
 });
 
 test('die Detailansicht trennt die drei Anmeldewege', function (): void {
-    $kollege = User::factory()->withTwoFactor()->create(['last_login_at' => now()]);
+    $kollege = Employee::factory()->withTwoFactor()->create(['last_login_at' => now()]);
 
     $this->actingAs($this->ich, 'staff')
         ->get(erp('/'.$kollege->id))
@@ -221,7 +221,7 @@ test('das Foto kommt aus dem Object Storage und ist nicht ueber die Maske setzba
      * kann es nicht setzen. Gepflegt wird es aus dem Seed, spaeter aus einem
      * eigenen Vorgang mit eigener Ability.
      */
-    $kollege = User::factory()->create();
+    $kollege = Employee::factory()->create();
     $kollege->photo_path = 'employees/A.Draheim.jpg';
     $kollege->save();
 

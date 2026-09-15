@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use App\Modules\Inventory\Enums\FieldScope;
 use App\Modules\Inventory\Enums\FieldType;
 use App\Modules\Inventory\Models\Article;
@@ -33,7 +33,7 @@ beforeEach(function (): void {
 
 function besucheArtikelDetail(object $test, Article $artikel): object
 {
-    return $test->actingAs(User::factory()->create(), 'staff')
+    return $test->actingAs(Employee::factory()->create(), 'staff')
         ->get('http://'.config('domains.erp').'/artikel/'.$artikel->id);
 }
 
@@ -127,7 +127,7 @@ test('Felder je Exemplar erscheinen nicht am Artikel', function (): void {
 });
 
 test('ein unsinniger Schluessel wird zu 404', function (): void {
-    $this->actingAs(User::factory()->create(), 'staff')
+    $this->actingAs(Employee::factory()->create(), 'staff')
         ->get('http://'.config('domains.erp').'/artikel/keine-uuid')
         ->assertNotFound();
 });

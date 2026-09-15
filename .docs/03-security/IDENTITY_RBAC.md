@@ -10,7 +10,7 @@ Navigations-/Cockpit-Wirkung: [`../09-ui/NAVIGATION.md`](../09-ui/NAVIGATION.md)
 - **Mitarbeiter = User** (ein Modell, D-026). Kein separates `Employee`.
 - **Zielbild: SSO-only über Microsoft Entra ID** (D-027) — kommt als eigener
   ROADMAP-Slice „oben drauf".
-- **Interim** (bis SSO): selbstverwaltete `users` mit lokaler Auth, geschlossen
+- **Interim** (bis SSO): selbstverwaltete `employees` mit lokaler Auth, geschlossen
   (keine Registrierung, kein Self-Service-Passwort-Reset, D-032).
 - **Keine Passkeys** — ersatzlos gestrichen, auf beiden Seiten (ADR-043).
 - **TOTP-2FA optional, nie Pflicht** (ADR-043). Für Mitarbeiter bewusst als
@@ -22,11 +22,21 @@ Navigations-/Cockpit-Wirkung: [`../09-ui/NAVIGATION.md`](../09-ui/NAVIGATION.md)
 - **Genau eine Rolle je Mitarbeiter** (D-124, revidiert D-031).
 - **Kunden** (Portal/Shop) sind **nicht** hier — eigene Tabelle `customer_accounts`,
   eigenes Model `CustomerAccount`, eigener Guard `customer` (ADR-042). Dieses Dokument
-  beschreibt ausschließlich `users` / Guard `staff`. Der Kundenzugang hängt fachlich am
+  beschreibt ausschließlich `employees` / Guard `staff`. Der Kundenzugang hängt fachlich am
   CRM-Kontakt (`customer_accounts.person_id` → `people`, ADR-037) und wird vom ERP aus
   verwaltet — das Recht dazu ist eine eigene Ability im Vokabular aus D-136.
 
-## `users`
+## `employees`
+
+> **Umbenannt 2026-09-15: `users` → `employees`.** D-026 sagt „Employee = User,
+> ein Modell" — dann soll der Datensatz auch heißen, was er ist. Model
+> `Employee`, Tabelle `employees`, Broker-Tabelle
+> `employee_password_reset_tokens`, Routenparameter `{employee}`.
+>
+> **Ausgenommen: `sessions.user_id`.** Laravels `DatabaseSessionHandler`
+> schreibt genau diesen Spaltennamen; umbenannt bliebe die Spalte leer, ohne
+> Fehlermeldung. Ebenso bleibt der geteilte Inertia-Prop `auth.user` — er trägt
+> je Zugriffspunkt etwas anderes, im Portal später einen `CustomerAccount`.
 
 | Feld | Typ | Null | Notiz |
 | --- | --- | :-: | --- |
@@ -69,7 +79,7 @@ Spalte (D-093; ursprünglicher Breeze-Kompat-Grund entfällt mit ADR-023/Fortify
 
 > **Revidiert (D-124).** Der Pivot `role_user` und das Feld `is_primary`
 > **entfallen ersatzlos**. Jeder aktive User hat **genau eine** Rolle über
-> `users.role_id`. Nutzer: „anpassen auf eine Rolle pro Mitarbeiter, das ist nach
+> `employees.role_id`. Nutzer: „anpassen auf eine Rolle pro Mitarbeiter, das ist nach
 > heutigem Stand falsch mit mehreren Rollen."
 
 **Seed (D-125, revidiert D-031)** — genau diese 5, hart definiert ohne Dynamik:
@@ -193,7 +203,7 @@ zweite Rolle→Menü-Konfiguration. Siehe [`../09-ui/NAVIGATION.md`](../09-ui/NA
 - `Gate::before(fn (User $u) => $u->is_admin ?: null)` — nur der Bootstrap-Bypass.
 - Alle Policies rufen `$user->can('<ability>')` bzw. Gate; **kein** direkter
   Rollen-Check in Policies (Rollen können sich ändern, Abilities sind stabil).
-- `responsible_*_id` (D-016) → `users.id`, Auswahl = aktive User; **rein
+- `responsible_*_id` (D-016) → `employees.id`, Auswahl = aktive Mitarbeiter DER JEWEILIGEN Abteilung; **rein
   informativ, keine AuthZ**.
 - **Papierkorb (D-139, revidiert D-023):** `delete`/`restore` je Ressource, **nur**
   `management` und `geschaeftsfuehrung`. Die Ability
@@ -213,7 +223,7 @@ zweite Rolle→Menü-Konfiguration. Siehe [`../09-ui/NAVIGATION.md`](../09-ui/NA
 ## SSO (später, D-029) — additiv
 
 - OIDC gegen Entra (Single-Tenant), `league/oauth2-client` + Azure-Provider.
-- Callback: `entra_oid` upsert; `roles`-Claim (aus **Entra App Roles**) → `users.role_id`.
+- Callback: `entra_oid` upsert; `roles`-Claim (aus **Entra App Roles**) → `employees.role_id`.
   **Achtung (D-124):** das Mapping ist jetzt **einwertig** — mehrere App-Rollen für
   einen Nutzer sind ein **Fehlerfall**, kein Normalfall. Vor dem SSO-Slice zu klären.
 - Nächtlicher Microsoft-Graph-Sync einer Gruppe „ERP-Users" für Vor-Provisionierung

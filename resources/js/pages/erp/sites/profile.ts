@@ -12,7 +12,7 @@ export type SiteProfile = {
         city: string | null;
         line: string | null;
     };
-    users: {
+    employees: {
         id: string;
         name: string;
         role: string | null;

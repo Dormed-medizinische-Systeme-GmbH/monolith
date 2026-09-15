@@ -81,16 +81,16 @@ Route::middleware('auth:staff')->group(function (): void {
      * ausschliesslich von hier: es gibt keine Registrierung und keinen
      * Self-Service (D-032).
      *
-     * `neu` steht VOR `{user}`, sonst versuchte Laravel, das Wort als
+     * `neu` steht VOR `{employee}`, sonst versuchte Laravel, das Wort als
      * Schluessel aufzuloesen.
      */
     Route::get('/mitarbeiter', [EmployeeController::class, 'index'])->name('erp.employees.index');
     Route::get('/mitarbeiter/neu', [EmployeeController::class, 'create'])->name('erp.employees.create');
     Route::post('/mitarbeiter', [EmployeeController::class, 'store'])->name('erp.employees.store');
-    Route::get('/mitarbeiter/{user}', [EmployeeController::class, 'show'])->name('erp.employees.show');
-    Route::get('/mitarbeiter/{user}/bearbeiten', [EmployeeController::class, 'edit'])->name('erp.employees.edit');
-    Route::patch('/mitarbeiter/{user}', [EmployeeController::class, 'update'])->name('erp.employees.update');
-    Route::delete('/mitarbeiter/{user}', [EmployeeController::class, 'destroy'])->name('erp.employees.destroy');
+    Route::get('/mitarbeiter/{employee}', [EmployeeController::class, 'show'])->name('erp.employees.show');
+    Route::get('/mitarbeiter/{employee}/bearbeiten', [EmployeeController::class, 'edit'])->name('erp.employees.edit');
+    Route::patch('/mitarbeiter/{employee}', [EmployeeController::class, 'update'])->name('erp.employees.update');
+    Route::delete('/mitarbeiter/{employee}', [EmployeeController::class, 'destroy'])->name('erp.employees.destroy');
 
     /*
      * Die EIGENEN Standorte von Dormed. Die der Kunden liegen unter der Firma

@@ -28,7 +28,7 @@ const helper = createColumnHelper<DataTableFeatures, EmployeeRow>();
 
 /**
  * Nur die Spalten. Die Schlüssel müssen zur Freigabeliste in
- * `UserList::SORTABLE` passen.
+ * `EmployeeList::SORTABLE` passen.
  */
 export function employeeColumns(
     meta: DataTableMeta,

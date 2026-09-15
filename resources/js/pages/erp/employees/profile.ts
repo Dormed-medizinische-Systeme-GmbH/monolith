@@ -1,5 +1,5 @@
 /**
- * Was `App\Modules\Core\Queries\UserProfile` liefert.
+ * Was `App\Modules\Core\Queries\EmployeeProfile` liefert.
  */
 export type EmployeeProfile = {
     id: string;

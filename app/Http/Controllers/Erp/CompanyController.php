@@ -7,7 +7,7 @@ namespace App\Http\Controllers\Erp;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Erp\CompanyRequest;
 use App\Http\Requests\Erp\LocationRequest;
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use App\Modules\Crm\Models\Company;
 use App\Modules\Crm\Models\CompanyContact;
 use App\Modules\Crm\Models\Location;
@@ -166,12 +166,12 @@ final class CompanyController extends Controller
      */
     private static function abteilung(string $rolle, ?string $bisher): array
     {
-        return User::query()
+        return Employee::query()
             ->whereIn('id', CompanyRequest::auswaehlbar($rolle, $bisher))
             ->with('role')
             ->orderBy('last_name')
             ->get()
-            ->map(fn (User $user): array => [
+            ->map(fn (Employee $user): array => [
                 'id' => $user->id,
                 'name' => $user->name,
                 // Kennzeichnet den Sonderfall, statt ihn zu verstecken.

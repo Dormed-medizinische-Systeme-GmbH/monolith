@@ -135,7 +135,7 @@ docker compose exec -T pgsql psql -U dormed -tAc \
    where datname='dormed_test' and pid <> pg_backend_pid()"
 ```
 
-Bei zerschossenem Schema (`relation "users" already exists`) hilft nur der Neuaufbau:
+Bei zerschossenem Schema (`relation "employees" already exists`) hilft nur der Neuaufbau:
 `docker compose down && docker compose up -d` — alles ist flüchtig.
 
 ## Migrations

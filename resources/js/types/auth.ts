@@ -1,10 +1,10 @@
 /**
- * Der angemeldete MITARBEITER (`users`, Guard `staff`, ADR-042).
+ * Der angemeldete MITARBEITER (`employees`, Guard `staff`, ADR-042).
  *
  * Kein `name`-Feld (D-093) und seit ADR-046 eine UUID als Schluessel — der Typ
  * aus dem Starter-Kit stimmte in beidem nicht.
  */
-export type User = {
+export type Employee = {
     id: string;
     first_name: string;
     last_name: string;
@@ -20,8 +20,13 @@ export type User = {
 };
 
 export type Auth = {
-    /** Leer auf den Anmeldemasken und ueberall dort, wo niemand angemeldet ist. */
-    user: User | null;
+    /**
+     * Wer diesen Request fuehrt. Der Schluessel heisst `user` und nicht
+     * `employee`, weil er je Zugriffspunkt etwas anderes traegt: im ERP einen
+     * Mitarbeiter, im Portal und Shop spaeter einen `CustomerAccount`
+     * (ADR-042). Leer auf den Anmeldemasken.
+     */
+    user: Employee | null;
 };
 
 export type TwoFactorConfigContent = {

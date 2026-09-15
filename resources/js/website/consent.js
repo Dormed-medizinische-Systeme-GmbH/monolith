@@ -35,7 +35,8 @@ CookieConsent.run({
             de: {
                 consentModal: {
                     title: 'Cookie-Einstellungen',
-                    description: 'Wir verwenden Cookies, um unsere Website zu betreiben. Optionale Cookies setzen wir nur mit Ihrer Zustimmung.',
+                    description:
+                        'Wir verwenden Cookies, um unsere Website zu betreiben. Optionale Cookies setzen wir nur mit Ihrer Zustimmung.',
                     acceptAllBtn: 'Alle akzeptieren',
                     acceptNecessaryBtn: 'Nur notwendige',
                     showPreferencesBtn: 'Einstellungen',
@@ -48,17 +49,20 @@ CookieConsent.run({
                     sections: [
                         {
                             title: 'Notwendig',
-                            description: 'Erforderlich, damit die Website grundlegend funktioniert.',
+                            description:
+                                'Erforderlich, damit die Website grundlegend funktioniert.',
                             linkedCategory: 'necessary',
                         },
                         {
                             title: 'Analyse',
-                            description: 'Hilft uns zu verstehen, wie die Website genutzt wird.',
+                            description:
+                                'Hilft uns zu verstehen, wie die Website genutzt wird.',
                             linkedCategory: 'analytics',
                         },
                         {
                             title: 'Marketing',
-                            description: 'Für personalisierte Werbung und Kampagnenmessung.',
+                            description:
+                                'Für personalisierte Werbung und Kampagnenmessung.',
                             linkedCategory: 'marketing',
                         },
                     ],
@@ -78,12 +82,22 @@ function initBanner() {
     }
 
     const acceptAllBtn = banner.querySelector('[data-consent-accept-all]');
-    const acceptNecessaryBtn = banner.querySelector('[data-consent-accept-necessary]');
-    const togglePrefsBtn = banner.querySelector('[data-consent-toggle-preferences]');
-    const savePrefsBtn = banner.querySelector('[data-consent-save-preferences]');
+    const acceptNecessaryBtn = banner.querySelector(
+        '[data-consent-accept-necessary]',
+    );
+    const togglePrefsBtn = banner.querySelector(
+        '[data-consent-toggle-preferences]',
+    );
+    const savePrefsBtn = banner.querySelector(
+        '[data-consent-save-preferences]',
+    );
     const prefsPanel = banner.querySelector('[data-consent-preferences]');
-    const analyticsToggle = banner.querySelector('[data-consent-category="analytics"]');
-    const marketingToggle = banner.querySelector('[data-consent-category="marketing"]');
+    const analyticsToggle = banner.querySelector(
+        '[data-consent-category="analytics"]',
+    );
+    const marketingToggle = banner.querySelector(
+        '[data-consent-category="marketing"]',
+    );
 
     function hideBanner() {
         banner.classList.remove('consent-banner--visible');

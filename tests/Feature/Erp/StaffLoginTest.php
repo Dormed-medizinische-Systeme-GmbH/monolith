@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use Database\Seeders\RoleSeeder;
 
 /*
@@ -25,7 +25,7 @@ function loginAt(object $test, string $email, string $password = 'password'): ob
 }
 
 test('ein aktiver Mitarbeiter kommt durch', function (): void {
-    $user = User::factory()->create(['email' => 'aktiv@dormed.test']);
+    $user = Employee::factory()->create(['email' => 'aktiv@dormed.test']);
 
     loginAt($this, 'aktiv@dormed.test')->assertRedirect();
 
@@ -33,7 +33,7 @@ test('ein aktiver Mitarbeiter kommt durch', function (): void {
 });
 
 test('ein inaktiver Mitarbeiter kommt nicht durch', function (): void {
-    User::factory()->inactive()->create(['email' => 'inaktiv@dormed.test']);
+    Employee::factory()->inactive()->create(['email' => 'inaktiv@dormed.test']);
 
     loginAt($this, 'inaktiv@dormed.test')->assertSessionHasErrors('email');
 
@@ -43,7 +43,7 @@ test('ein inaktiver Mitarbeiter kommt nicht durch', function (): void {
 test('ein Mitarbeiter ohne Passwort kommt nicht durch', function (): void {
     // Der spaetere SSO-Fall (D-029): `password` ist nullable. Ein solcher
     // Datensatz darf kein Passwort-Login zulassen — mit keinem Passwort.
-    User::factory()->create(['email' => 'sso@dormed.test', 'password' => null]);
+    Employee::factory()->create(['email' => 'sso@dormed.test', 'password' => null]);
 
     loginAt($this, 'sso@dormed.test', 'irgendetwas')->assertSessionHasErrors('email');
 
@@ -51,7 +51,7 @@ test('ein Mitarbeiter ohne Passwort kommt nicht durch', function (): void {
 });
 
 test('ein geloeschter Mitarbeiter kommt nicht durch', function (): void {
-    User::factory()->create(['email' => 'weg@dormed.test'])->delete();
+    Employee::factory()->create(['email' => 'weg@dormed.test'])->delete();
 
     loginAt($this, 'weg@dormed.test')->assertSessionHasErrors('email');
 
@@ -59,7 +59,7 @@ test('ein geloeschter Mitarbeiter kommt nicht durch', function (): void {
 });
 
 test('die Anmeldung haelt den Zeitpunkt fest', function (): void {
-    $user = User::factory()->create(['email' => 'stempel@dormed.test', 'last_login_at' => null]);
+    $user = Employee::factory()->create(['email' => 'stempel@dormed.test', 'last_login_at' => null]);
 
     loginAt($this, 'stempel@dormed.test');
 
@@ -68,7 +68,7 @@ test('die Anmeldung haelt den Zeitpunkt fest', function (): void {
 
 test('die Fehlermeldung unterscheidet nicht zwischen gesperrt und falschem Passwort', function (): void {
     // Sonst liesse sich aus der Antwort ableiten, dass es die Mailadresse gibt.
-    User::factory()->inactive()->create(['email' => 'gesperrt@dormed.test']);
+    Employee::factory()->inactive()->create(['email' => 'gesperrt@dormed.test']);
 
     $gesperrt = loginAt($this, 'gesperrt@dormed.test')->assertSessionHasErrors('email');
     $falsch = loginAt($this, 'gesperrt@dormed.test', 'falsch')->assertSessionHasErrors('email');
@@ -123,7 +123,7 @@ test('nach der Anmeldung bleibt man auf dem eigenen Hostnamen', function (): voi
      * und Fortify schickte einen in den Shop. Aus dem Inertia-XHR heraus ein
      * CORS-Fehler, also kein Login, nur eine unverständliche Meldung.
      */
-    User::factory()->create(['email' => 'ziel@dormed.test']);
+    Employee::factory()->create(['email' => 'ziel@dormed.test']);
 
     $this->withSession(['url.intended' => 'http://'.config('domains.shop').'/'])
         ->post('http://'.config('domains.erp').'/login', [
@@ -134,7 +134,7 @@ test('nach der Anmeldung bleibt man auf dem eigenen Hostnamen', function (): voi
 });
 
 test('ein gemerktes Ziel auf demselben Hostnamen wird befolgt', function (): void {
-    User::factory()->create(['email' => 'intern@dormed.test']);
+    Employee::factory()->create(['email' => 'intern@dormed.test']);
 
     $this->withSession(['url.intended' => 'http://'.config('domains.erp').'/firmen'])
         ->post('http://'.config('domains.erp').'/login', [

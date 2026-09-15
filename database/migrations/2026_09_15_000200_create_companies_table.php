@@ -33,8 +33,8 @@ return new class extends Migration
             $table->date('avv_signed_at')->nullable();
 
             // Informativ, KEINE Autorisierung (D-016).
-            $table->foreignUuid('responsible_sales_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignUuid('responsible_service_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignUuid('responsible_sales_id')->nullable()->constrained('employees')->nullOnDelete();
+            $table->foreignUuid('responsible_service_id')->nullable()->constrained('employees')->nullOnDelete();
 
             // Abweichende Rechnungsanschrift => andere Company (D-004/D-066).
             // Alle Rechnungen dieser Praxis gehen dorthin; keine

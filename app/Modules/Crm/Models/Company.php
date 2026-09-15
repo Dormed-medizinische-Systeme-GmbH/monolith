@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Crm\Models;
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use App\Modules\Crm\Enums\AvvStatus;
 use App\Support\TracksBlame;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -106,19 +106,19 @@ final class Company extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Employee, $this>
      */
     public function responsibleSales(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'responsible_sales_id');
+        return $this->belongsTo(Employee::class, 'responsible_sales_id');
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Employee, $this>
      */
     public function responsibleService(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'responsible_service_id');
+        return $this->belongsTo(Employee::class, 'responsible_service_id');
     }
 
     protected function casts(): array

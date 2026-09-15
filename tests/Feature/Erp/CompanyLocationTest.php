@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use App\Modules\Crm\Models\Company;
 use App\Modules\Crm\Models\Location;
 use Database\Seeders\RoleSeeder;
@@ -10,7 +10,7 @@ use Database\Seeders\RoleSeeder;
 beforeEach(function (): void {
     (new RoleSeeder)->run();
 
-    $this->ich = User::factory()->create();
+    $this->ich = Employee::factory()->create();
     $this->company = Company::query()->create(['name' => 'Praxis Alpha']);
 });
 

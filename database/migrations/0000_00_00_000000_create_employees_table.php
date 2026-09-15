@@ -7,12 +7,18 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Mitarbeiter-Identitaet (IDENTITY_RBAC.md, D-124/D-125, ADR-042).
+ * Mitarbeiter-Identitaet (IDENTITY_RBAC.md, D-026/D-124/D-125, ADR-042).
  *
- * `users` sind ausschliesslich MITARBEITER. Kundenzugaenge liegen in
- * `customer_accounts` — getrennte Tabelle, getrenntes Model, getrennter Guard.
- * Bei 1.600 Kundenkonten gegen 20 Mitarbeiterkonten in einer Tabelle waere das
- * Einzige, was sie trennt, ein `where`, das jemand vergessen kann.
+ * Die Tabelle heisst `employees` und nicht `users`: D-026 sagt „Employee =
+ * User, ein Modell" — dann soll der Datensatz auch so heissen, was er ist.
+ * Kundenzugaenge liegen in `customer_accounts`, getrennte Tabelle, getrenntes
+ * Model, getrennter Guard. Bei 1.600 Kundenkonten gegen 20 Mitarbeiterkonten in
+ * einer Tabelle waere das Einzige, was sie trennt, ein `where`, das jemand
+ * vergessen kann.
+ *
+ * `sessions.user_id` behaelt seinen Namen: Laravels
+ * `DatabaseSessionHandler::addUserInformation()` schreibt genau diese Spalte.
+ * Umbenannt bliebe sie leer, ohne Fehlermeldung.
  */
 return new class extends Migration
 {
@@ -26,7 +32,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('users', function (Blueprint $table): void {
+        Schema::create('employees', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('first_name');
             $table->string('last_name');
@@ -79,7 +85,7 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        Schema::create('password_reset_tokens', function (Blueprint $table): void {
+        Schema::create('employee_password_reset_tokens', function (Blueprint $table): void {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
@@ -87,6 +93,8 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table): void {
             $table->string('id')->primary();
+            // NICHT umbenennen: Laravels DatabaseSessionHandler schreibt
+            // genau diesen Spaltennamen.
             $table->foreignUuid('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
@@ -98,8 +106,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('sessions');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('employee_password_reset_tokens');
+        Schema::dropIfExists('employees');
         Schema::dropIfExists('roles');
     }
 };

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Modules\Core\Models\Employee;
 use App\Modules\Core\Models\Site;
-use App\Modules\Core\Models\User;
 use Database\Seeders\RoleSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -17,7 +17,7 @@ beforeEach(function (): void {
      * liesse sich nicht pruefen.
      */
     $this->anderswo = Site::query()->create(['name' => 'Anderswo']);
-    $this->ich = User::factory()->create(['site_id' => $this->anderswo->id]);
+    $this->ich = Employee::factory()->create(['site_id' => $this->anderswo->id]);
 
     $this->standort = Site::query()->create([
         'name' => 'Buchholz',
@@ -37,7 +37,7 @@ test('die Liste verlangt eine Anmeldung', function (): void {
 });
 
 test('sie zeigt Standort, Anschrift und die Zahl der Mitarbeiter', function (): void {
-    User::factory()->count(2)->create(['site_id' => $this->standort->id]);
+    Employee::factory()->count(2)->create(['site_id' => $this->standort->id]);
 
     $this->actingAs($this->ich, 'staff')->get(betrieb())
         ->assertOk()
@@ -48,7 +48,7 @@ test('sie zeigt Standort, Anschrift und die Zahl der Mitarbeiter', function (): 
             ->where('rows.1.addressLine', 'Musterstraße 1, 21244 Buchholz in der Nordheide')
             // Gezaehlt, nicht gejoint — sonst waeren aus einem Standort mit zwei
             // Mitarbeitern zwei Zeilen geworden.
-            ->where('rows.1.userCount', 2)
+            ->where('rows.1.employeeCount', 2)
             ->has('rows', 2)
         );
 });
@@ -87,7 +87,7 @@ test('ein Standort mit Mitarbeitern wird nicht geloescht', function (): void {
      * Mitarbeiter zeigten auf einen ausgeblendeten Standort — in der Liste
      * sichtbar, in der Auswahl verschwunden.
      */
-    User::factory()->create(['site_id' => $this->standort->id]);
+    Employee::factory()->create(['site_id' => $this->standort->id]);
 
     $this->actingAs($this->ich, 'staff')
         ->delete(betrieb('/'.$this->standort->id))
@@ -106,14 +106,14 @@ test('ein leerer Standort wird ausgeblendet, nicht entfernt', function (): void 
 });
 
 test('die Detailansicht fuehrt auf, wer dort sitzt', function (): void {
-    User::factory()->create(['site_id' => $this->standort->id, 'last_name' => 'Draheim']);
+    Employee::factory()->create(['site_id' => $this->standort->id, 'last_name' => 'Draheim']);
 
     $this->actingAs($this->ich, 'staff')
         ->get(betrieb('/'.$this->standort->id))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('erp/sites/Show')
-            ->has('site.users', 1)
+            ->has('site.employees', 1)
             ->where('site.address.line', 'Musterstraße 1, 21244 Buchholz in der Nordheide')
         );
 });

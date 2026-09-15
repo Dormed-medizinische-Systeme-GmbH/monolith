@@ -16,7 +16,7 @@ export type SiteRow = {
     name: string;
     addressLine: string | null;
     city: string | null;
-    userCount: number;
+    employeeCount: number;
     photoUrl: string | null;
 };
 
@@ -45,9 +45,9 @@ export function siteColumns(
                     sublabel: row.original.addressLine,
                 }),
         }),
-        helper.accessor('userCount', {
-            header: () => sortable('users', 'Mitarbeiter'),
-            cell: ({ row }) => String(row.original.userCount),
+        helper.accessor('employeeCount', {
+            header: () => sortable('employees', 'Mitarbeiter'),
+            cell: ({ row }) => String(row.original.employeeCount),
         }),
     ]);
 }

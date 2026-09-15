@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use App\Modules\Inventory\Models\Article;
 use App\Modules\Inventory\Models\ArticleGroup;
 use Database\Seeders\RoleSeeder;
@@ -27,7 +27,7 @@ function artikel(ArticleGroup $gruppe, string $nummer, string $name, array $attr
 
 function besucheArtikel(object $test, string $query = ''): object
 {
-    return $test->actingAs(User::factory()->create(), 'staff')
+    return $test->actingAs(Employee::factory()->create(), 'staff')
         ->get('http://'.config('domains.erp').'/artikel'.$query);
 }
 

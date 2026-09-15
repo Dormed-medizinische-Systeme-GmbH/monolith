@@ -6,11 +6,11 @@ namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Erp\EmployeeRequest;
+use App\Modules\Core\Models\Employee;
 use App\Modules\Core\Models\Role;
 use App\Modules\Core\Models\Site;
-use App\Modules\Core\Models\User;
-use App\Modules\Core\Queries\UserList;
-use App\Modules\Core\Queries\UserProfile;
+use App\Modules\Core\Queries\EmployeeList;
+use App\Modules\Core\Queries\EmployeeProfile;
 use App\Modules\Core\Services\Employees;
 use App\Support\DataTable\DataTable;
 use App\Support\Flash;
@@ -31,21 +31,21 @@ final class EmployeeController extends Controller
     public function index(Request $request): Response
     {
         $table = DataTable::make(
-            query: UserList::query(),
+            query: EmployeeList::query(),
             request: $request,
-            sortable: UserList::SORTABLE,
-            searchable: UserList::SEARCHABLE,
-            map: UserList::row(...),
+            sortable: EmployeeList::SORTABLE,
+            searchable: EmployeeList::SEARCHABLE,
+            map: EmployeeList::row(...),
             defaultSort: 'name',
         );
 
         return Inertia::render('erp/employees/Index', $table);
     }
 
-    public function show(User $user): Response
+    public function show(Employee $employee): Response
     {
         return Inertia::render('erp/employees/Show', [
-            'employee' => UserProfile::for($user),
+            'employee' => EmployeeProfile::for($employee),
         ]);
     }
 
@@ -66,36 +66,36 @@ final class EmployeeController extends Controller
             ->to(route('erp.employees.show', $employee));
     }
 
-    public function edit(User $user): Response
+    public function edit(Employee $employee): Response
     {
         return Inertia::render('erp/employees/Form', [
-            'employee' => UserProfile::for($user),
+            'employee' => EmployeeProfile::for($employee),
             'roles' => self::roles(),
             'sites' => self::sites(),
         ]);
     }
 
-    public function update(EmployeeRequest $request, User $user): RedirectResponse
+    public function update(EmployeeRequest $request, Employee $employee): RedirectResponse
     {
         try {
-            Employees::update($user, $request->validated(), $request->user());
+            Employees::update($employee, $request->validated(), $request->user());
         } catch (RuntimeException $e) {
             return back()->withErrors(['is_active' => $e->getMessage()]);
         }
 
         return Flash::success('Änderungen gespeichert.')
-            ->to(route('erp.employees.show', $user));
+            ->to(route('erp.employees.show', $employee));
     }
 
-    public function destroy(Request $request, User $user): RedirectResponse
+    public function destroy(Request $request, Employee $employee): RedirectResponse
     {
         try {
-            Employees::delete($user, $request->user());
+            Employees::delete($employee, $request->user());
         } catch (RuntimeException $e) {
             return Flash::error($e->getMessage())->back();
         }
 
-        return Flash::success("{$user->name} wurde gelöscht.")
+        return Flash::success("{$employee->name} wurde gelöscht.")
             ->to(route('erp.employees.index'));
     }
 

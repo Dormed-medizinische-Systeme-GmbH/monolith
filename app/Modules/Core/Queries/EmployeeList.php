@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Core\Queries;
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
 
@@ -20,42 +20,42 @@ use Illuminate\Database\Query\JoinClause;
  * `customer_accounts` (ADR-042). Das ist der Zweck der Trennung — kein
  * vergessenes `where` kann sie hereinlassen.
  */
-final class UserList
+final class EmployeeList
 {
     /**
      * @var array<string, string>
      */
     public const SORTABLE = [
-        'name' => 'users.last_name',
-        'email' => 'users.email',
+        'name' => 'employees.last_name',
+        'email' => 'employees.email',
         'role' => 'roles.name',
         'site' => 'sites.name',
-        'lastLogin' => 'users.last_login_at',
+        'lastLogin' => 'employees.last_login_at',
     ];
 
     /**
      * @var list<string>
      */
     public const SEARCHABLE = [
-        "users.first_name || ' ' || users.last_name",
-        'users.email',
+        "employees.first_name || ' ' || employees.last_name",
+        'employees.email',
         'roles.name',
         'sites.name',
     ];
 
     /**
-     * @return Builder<User>
+     * @return Builder<Employee>
      */
     public static function query(): Builder
     {
-        return User::query()
-            ->select('users.*')
+        return Employee::query()
+            ->select('employees.*')
             ->addSelect(['roles.name as role_name', 'sites.name as site_name'])
             ->leftJoin('roles', function (JoinClause $join): void {
-                $join->on('roles.id', '=', 'users.role_id');
+                $join->on('roles.id', '=', 'employees.role_id');
             })
             ->leftJoin('sites', function (JoinClause $join): void {
-                $join->on('sites.id', '=', 'users.site_id')
+                $join->on('sites.id', '=', 'employees.site_id')
                     ->whereNull('sites.deleted_at');
             });
     }
@@ -63,7 +63,7 @@ final class UserList
     /**
      * @return array<string, mixed>
      */
-    public static function row(User $user): array
+    public static function row(Employee $user): array
     {
         return [
             'id' => $user->id,

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Erp;
 
+use App\Modules\Core\Models\Employee;
 use App\Modules\Core\Models\Role;
 use App\Modules\Core\Models\Site;
-use App\Modules\Core\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -34,14 +34,14 @@ final class EmployeeRequest extends FormRequest
      */
     public function rules(): array
     {
-        $employee = $this->route('user');
+        $employee = $this->route('employee');
 
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required', 'email', 'max:255',
-                Rule::unique(User::class, 'email')->ignore($employee instanceof User ? $employee->id : null),
+                Rule::unique(Employee::class, 'email')->ignore($employee instanceof Employee ? $employee->id : null),
             ],
 
             /*

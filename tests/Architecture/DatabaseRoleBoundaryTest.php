@@ -44,13 +44,13 @@ test('die Anwendung verbindet sich nicht als Schema-Eigentuemer', function (): v
     }
 });
 
-test('die oeffentliche Rolle kann users nicht lesen', function (): void {
-    expect(fn () => DB::connection('pgsql_public')->select('select * from users limit 1'))
+test('die oeffentliche Rolle kann employees nicht lesen', function (): void {
+    expect(fn () => DB::connection('pgsql_public')->select('select * from employees limit 1'))
         ->toThrow(QueryException::class);
 });
 
-test('die Mitarbeiterrolle kann users lesen', function (): void {
-    expect(DB::connection('pgsql')->select('select * from users limit 1'))->toBeArray();
+test('die Mitarbeiterrolle kann employees lesen', function (): void {
+    expect(DB::connection('pgsql')->select('select * from employees limit 1'))->toBeArray();
 });
 
 test('die oeffentliche Rolle bekommt keine Default-Privileges auf neue Tabellen', function (): void {

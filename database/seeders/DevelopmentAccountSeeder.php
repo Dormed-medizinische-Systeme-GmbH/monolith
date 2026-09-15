@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Modules\Core\Models\Employee;
 use App\Modules\Core\Models\Role;
 use App\Modules\Core\Models\Site;
-use App\Modules\Core\Models\User;
 use App\Modules\Crm\Enums\ChannelLabel;
 use App\Modules\Crm\Enums\ChannelType;
 use App\Modules\Crm\Enums\ConsentChannel;
@@ -87,7 +87,7 @@ final class DevelopmentAccountSeeder extends Seeder
                 continue;
             }
 
-            $user = User::query()->updateOrCreate(
+            $user = Employee::query()->updateOrCreate(
                 ['email' => $email],
                 [
                     'first_name' => mb_strtoupper($initiale).'.',
@@ -157,13 +157,13 @@ final class DevelopmentAccountSeeder extends Seeder
      */
     private function besondereZustaende(): void
     {
-        $ohneZugang = User::query()->where('email', '!=', 'l.everding@dormed.de')
+        $ohneZugang = Employee::query()->where('email', '!=', 'l.everding@dormed.de')
             ->orderBy('email')->skip(1)->first();
 
-        $stillgelegt = User::query()->where('email', '!=', 'l.everding@dormed.de')
+        $stillgelegt = Employee::query()->where('email', '!=', 'l.everding@dormed.de')
             ->orderBy('email')->skip(2)->first();
 
-        $mitZweitemFaktor = User::query()->where('email', '!=', 'l.everding@dormed.de')
+        $mitZweitemFaktor = Employee::query()->where('email', '!=', 'l.everding@dormed.de')
             ->orderBy('email')->first();
 
         $ohneZugang?->forceFill(['password' => null, 'last_login_at' => null])->save();
@@ -274,9 +274,9 @@ final class DevelopmentAccountSeeder extends Seeder
      */
     private function assignResponsibles(): void
     {
-        $vertrieb = User::query()->whereRelation('role', 'key', 'sales')
+        $vertrieb = Employee::query()->whereRelation('role', 'key', 'sales')
             ->where('is_active', true)->orderBy('last_name')->pluck('id');
-        $service = User::query()->whereRelation('role', 'key', 'service')
+        $service = Employee::query()->whereRelation('role', 'key', 'service')
             ->where('is_active', true)->orderBy('last_name')->pluck('id');
 
         if ($vertrieb->isEmpty() || $service->isEmpty()) {
@@ -328,7 +328,7 @@ final class DevelopmentAccountSeeder extends Seeder
 
     private function staffAccount(): void
     {
-        User::query()->updateOrCreate(
+        Employee::query()->updateOrCreate(
             ['email' => 'l.everding@dormed.de'],
             [
                 'first_name' => 'Linus',

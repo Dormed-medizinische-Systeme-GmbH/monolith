@@ -34,13 +34,13 @@ final class Sites
     {
         /*
          * Der Fremdschluessel ist `nullOnDelete` — das greift aber nur beim
-         * HARTEN Loeschen. `SoftDeletes` (D-018) laesst `users.site_id` stehen,
+         * HARTEN Loeschen. `SoftDeletes` (D-018) laesst `employees.site_id` stehen,
          * und die Mitarbeiter zeigten dann auf einen ausgeblendeten Standort:
          * in der Liste stuende weiter „Buchholz", in der Auswahl gaebe es ihn
          * nicht mehr. Deshalb hier ein ausdruecklicher Riegel statt einer
          * stillen Inkonsistenz.
          */
-        if ($site->users()->exists()) {
+        if ($site->employees()->exists()) {
             throw new RuntimeException(
                 'Dem Standort sind noch Mitarbeiter zugeordnet. Erst umsetzen, dann löschen.'
             );

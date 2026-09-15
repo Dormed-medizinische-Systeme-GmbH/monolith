@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use App\Modules\Crm\Models\CustomerAccount;
 
 return [
@@ -42,7 +42,7 @@ return [
     'providers' => [
         'staff' => [
             'driver' => 'eloquent',
-            'model' => User::class,
+            'model' => Employee::class,
         ],
 
         'customers' => [
@@ -62,7 +62,7 @@ return [
     'passwords' => [
         'staff' => [
             'provider' => 'staff',
-            'table' => 'password_reset_tokens',
+            'table' => 'employee_password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

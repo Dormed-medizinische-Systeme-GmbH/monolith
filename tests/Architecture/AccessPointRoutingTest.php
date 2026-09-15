@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use App\Modules\Crm\Models\CustomerAccount;
 use App\Modules\Crm\Models\Person;
 use Database\Seeders\RoleSeeder;
@@ -32,7 +32,7 @@ function actingAtAccessPoint(object $test, string $key): object
     if ($key === 'erp') {
         (new RoleSeeder)->run();
 
-        return $test->actingAs(User::factory()->create(), 'staff');
+        return $test->actingAs(Employee::factory()->create(), 'staff');
     }
 
     if (in_array($key, ['portal', 'shop'], true)) {

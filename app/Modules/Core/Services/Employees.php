@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Core\Services;
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use RuntimeException;
 
 /**
@@ -25,15 +25,15 @@ final class Employees
     /**
      * @param  array<string, mixed>  $attributes
      */
-    public static function create(array $attributes): User
+    public static function create(array $attributes): Employee
     {
-        return User::query()->create(self::withoutEmptyPassword($attributes));
+        return Employee::query()->create(self::withoutEmptyPassword($attributes));
     }
 
     /**
      * @param  array<string, mixed>  $attributes
      */
-    public static function update(User $user, array $attributes, ?User $actor = null): User
+    public static function update(Employee $employee, array $attributes, ?Employee $actor = null): Employee
     {
         $attributes = self::withoutEmptyPassword($attributes);
 
@@ -44,25 +44,25 @@ final class Employees
          * niemanden, der zwingend noch hereinkaeme. Das ist keine
          * Abteilungsregel, sondern ein Riegel gegen das Aussperren.
          */
-        if ($actor !== null && $actor->is($user) && array_key_exists('is_active', $attributes)
+        if ($actor !== null && $actor->is($employee) && array_key_exists('is_active', $attributes)
             && $attributes['is_active'] === false) {
             throw new RuntimeException('Der eigene Zugang kann nicht stillgelegt werden.');
         }
 
-        $user->update($attributes);
+        $employee->update($attributes);
 
-        return $user;
+        return $employee;
     }
 
-    public static function delete(User $user, ?User $actor = null): void
+    public static function delete(Employee $employee, ?Employee $actor = null): void
     {
-        if ($actor !== null && $actor->is($user)) {
+        if ($actor !== null && $actor->is($employee)) {
             throw new RuntimeException('Der eigene Zugang kann nicht geloescht werden.');
         }
 
         // `SoftDeletes` (D-018): der Datensatz bleibt, `TracksBlame` anderer
         // Tabellen zeigt weiter auf ihn und laeuft nicht ins Leere.
-        $user->delete();
+        $employee->delete();
     }
 
     /**

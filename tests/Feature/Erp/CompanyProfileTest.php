@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Modules\Core\Models\User;
+use App\Modules\Core\Models\Employee;
 use App\Modules\Crm\Enums\ChannelLabel;
 use App\Modules\Crm\Enums\ChannelType;
 use App\Modules\Crm\Enums\Gender;
@@ -51,7 +51,7 @@ function person(string $vorname, string $nachname): Person
 
 function besucheFirma(object $test, Company $company): object
 {
-    return $test->actingAs(User::factory()->create(), 'staff')
+    return $test->actingAs(Employee::factory()->create(), 'staff')
         ->get('http://'.config('domains.erp').'/firmen/'.$company->id);
 }
 
@@ -176,7 +176,7 @@ test('ein unsinniger Schluessel wird zu 404, nicht zu einem Datenbankfehler', fu
      * mit 500 statt 404. Laravel faengt das im Route-Model-Binding ab; dieser
      * Test haelt fest, dass wir uns darauf verlassen.
      */
-    $this->actingAs(User::factory()->create(), 'staff')
+    $this->actingAs(Employee::factory()->create(), 'staff')
         ->get('http://'.config('domains.erp').'/firmen/keine-uuid')
         ->assertNotFound();
 });

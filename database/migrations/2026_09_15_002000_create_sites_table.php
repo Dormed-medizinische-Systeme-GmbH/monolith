@@ -68,7 +68,7 @@ return new class extends Migration
          * die laeuft zuerst, `sites` gibt es zu dem Zeitpunkt noch nicht. Die
          * Spalte selbst wird dort angelegt, damit `users` vollstaendig bleibt.
          */
-        Schema::table('users', function (Blueprint $table): void {
+        Schema::table('employees', function (Blueprint $table): void {
             /*
              * `restrictOnDelete`, nicht `nullOnDelete`: die Spalte ist NOT NULL.
              * Einen Standort mit Mitarbeitern zu loeschen lehnt ausserdem schon
@@ -81,7 +81,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table): void {
+        Schema::table('employees', function (Blueprint $table): void {
             $table->dropForeign(['site_id']);
         });
 

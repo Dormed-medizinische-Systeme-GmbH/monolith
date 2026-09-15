@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Core\Models;
 
-use Database\Factories\UserFactory;
+use Database\Factories\EmployeeFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -39,21 +39,21 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string|null $photo_path
  * @property-read string|null $photo_url
  */
-final class User extends Authenticatable
+final class Employee extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
+    /** @use HasFactory<EmployeeFactory> */
     use HasFactory, HasUuids, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * Die Fabrik muss benannt werden: Laravel leitet ihren Namen sonst aus dem
      * Model-Namespace ab und sucht sie unter
-     * `Database\Factories\Modules\Core\Models\UserFactory`. Das ist die
+     * `Database\Factories\Modules\Core\Models\EmployeeFactory`. Das ist die
      * Folge davon, dass Models in Modulen liegen (ADR-033) und nicht in
      * `app/Models`.
      */
-    protected static function newFactory(): UserFactory
+    protected static function newFactory(): EmployeeFactory
     {
-        return UserFactory::new();
+        return EmployeeFactory::new();
     }
 
     /**

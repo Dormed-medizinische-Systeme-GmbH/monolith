@@ -24,7 +24,7 @@ final class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            // Ohne Rollen kein Mitarbeiter: `users.role_id` ist NOT NULL (D-124).
+            // Ohne Rollen kein Mitarbeiter: `employees.role_id` ist NOT NULL (D-124).
             RoleSeeder::class,
             // Ohne Fachrichtungen kein Fachgebiet-Feld im Kontaktformular (D-133).
             MedicalSpecialtySeeder::class,

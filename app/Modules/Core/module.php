@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 return [
     'name' => 'Core',
-    'description' => 'Identitaet und Autorisierung der Mitarbeiter: User, Role, Permission-Katalog.',
+    'description' => 'Identitaet und Autorisierung: Employee, Role, Site, Permission-Katalog.',
     'depends_on' => [],
 ];

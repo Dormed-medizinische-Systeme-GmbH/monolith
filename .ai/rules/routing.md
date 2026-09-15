@@ -52,7 +52,7 @@ Zwei Guards, zwei Tabellen, zwei Models (ADR-042) — **nie vermischen**:
 
 | Guard | Tabelle | Model | Wo |
 | --- | --- | --- | --- |
-| `staff` | `users` | `User` | `erp.` |
+| `staff` | `employees` | `Employee` | `erp.` |
 | `customer` | `customer_accounts` | `CustomerAccount` | `my.` + `shop.` |
 
 - **Immer den Guard explizit nennen** (`Auth::guard('customer')`). Der Standard-Guard
@@ -73,8 +73,8 @@ Zwei Guards, zwei Tabellen, zwei Models (ADR-042) — **nie vermischen**:
   `SESSION_DOMAIN` mit führendem Punkt, damit das Cookie über `my.` und `shop.` gilt.
   Der Cross-App-Mechanismus aus ADR-016 (geteilter `APP_KEY`, geteilte `sessions`-Tabelle)
   entfällt ersatzlos.
-- **`TracksBlame` zeigt auf `users`** und bedeutet damit immer „welcher Mitarbeiter".
-  Was ein Kunde erzeugt, referenziert `people` — nicht `users`.
+- **`TracksBlame` zeigt auf `employees`** und bedeutet damit immer „welcher Mitarbeiter".
+  Was ein Kunde erzeugt, referenziert `people` — nicht `employees`.
 - **`dormed.de`:** anonym, kein Login.
 
 In `phpunit.xml`: `SESSION_DOMAIN=null`, Tests laufen gegen `localhost`.

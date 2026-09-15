@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Modules\Core\Models\Employee;
 use App\Modules\Core\Models\Role;
-use App\Modules\Core\Models\User;
 use App\Modules\Crm\Models\Company;
 use Database\Seeders\RoleSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -11,12 +11,12 @@ use Inertia\Testing\AssertableInertia as Assert;
 beforeEach(function (): void {
     (new RoleSeeder)->run();
 
-    $this->ich = User::factory()->create();
+    $this->ich = Employee::factory()->create();
 
     // Beide Verantwortlichen sind Pflicht — ohne je einen liesse sich keine
     // Firma speichern.
-    $this->vertrieb = User::factory()->role('sales')->create();
-    $this->service = User::factory()->role('service')->create();
+    $this->vertrieb = Employee::factory()->role('sales')->create();
+    $this->service = Employee::factory()->role('service')->create();
 
     $this->company = Company::query()->create(['name' => 'Praxis Alpha']);
 });
@@ -85,7 +85,7 @@ test('ohne Verantwortliche wird abgewiesen', function (): void {
 test('ein stillgelegter Mitarbeiter laesst sich nicht als zustaendig setzen', function (): void {
     // Ein stillgelegter Zugang gehoert nicht mehr ins Haus und wird aus den
     // `responsible_*`-Feldern ausgeblendet (IDENTITY_RBAC.md).
-    $ausgeschieden = User::factory()->role('sales')->inactive()->create();
+    $ausgeschieden = Employee::factory()->role('sales')->inactive()->create();
 
     $this->actingAs($this->ich, 'staff')
         ->patch(firmen('/'.$this->company->id), [
@@ -102,7 +102,7 @@ test('nur die eigene Abteilung steht zur Auswahl', function (): void {
      * Die Rolle ist die einzige Quelle dafuer, wer wozu gehoert (D-124). Wer im
      * Service sitzt, taucht im Vertriebsfeld nicht auf — und umgekehrt.
      */
-    $techniker = User::factory()->role('service')->create();
+    $techniker = Employee::factory()->role('service')->create();
 
     $this->actingAs($this->ich, 'staff')
         ->patch(firmen('/'.$this->company->id), [
@@ -120,7 +120,7 @@ test('der bisherige Zustaendige bleibt waehlbar, auch nach Abteilungswechsel', f
      * benannt hat — man koennte an der Firma nicht einmal die Anschrift
      * aendern, ohne zuerst eine Personalfrage zu klaeren.
      */
-    $wechsler = User::factory()->role('sales')->create();
+    $wechsler = Employee::factory()->role('sales')->create();
     $this->company->update(['responsible_sales_id' => $wechsler->id]);
 
     // Wechselt in den Service.
@@ -159,7 +159,7 @@ test('eine Firma kann nicht ihr eigener Rechnungsempfaenger sein', function (): 
 });
 
 test('die Maske bietet nicht die Firma selbst als Rechnungsempfaenger an', function (): void {
-    User::factory()->inactive()->create();
+    Employee::factory()->inactive()->create();
     Company::query()->create(['name' => 'Praxis Beta']);
 
     $this->actingAs($this->ich, 'staff')
