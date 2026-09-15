@@ -5,7 +5,6 @@
     import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
     import Clock from '@lucide/svelte/icons/clock';
     import Cloud from '@lucide/svelte/icons/cloud';
-    import IdCard from '@lucide/svelte/icons/id-card';
     import KeyRound from '@lucide/svelte/icons/key-round';
     import Mail from '@lucide/svelte/icons/mail';
     import Pencil from '@lucide/svelte/icons/pencil';
@@ -43,7 +42,6 @@
 
     const zeilen: Zeile[] = $derived([
         { icon: Mail, label: 'E-Mail', value: employee.email },
-        { icon: IdCard, label: 'Rolle', value: employee.role.name },
         {
             icon: KeyRound,
             label: 'Passwort',
@@ -99,7 +97,10 @@
                 <Avatar.Fallback>{initialen}</Avatar.Fallback>
             </Avatar.Root>
 
-            <h2 class="text-xl font-semibold tracking-tight">{employee.name}</h2>
+            <div>
+                <h2 class="text-xl font-semibold tracking-tight">{employee.name}</h2>
+                <p class="text-sm text-muted-foreground">{employee.role.name}</p>
+            </div>
         </div>
 
         <div class="flex shrink-0 flex-wrap items-center gap-2">
