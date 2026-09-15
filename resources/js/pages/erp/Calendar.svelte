@@ -2,16 +2,19 @@
     import { setLayoutProps } from '@inertiajs/svelte';
     import CalendarDays from '@lucide/svelte/icons/calendar-days';
     import CalendarRange from '@lucide/svelte/icons/calendar-range';
+    import CalendarClock from '@lucide/svelte/icons/calendar-clock';
     import ChevronDown from '@lucide/svelte/icons/chevron-down';
     import ChevronLeft from '@lucide/svelte/icons/chevron-left';
     import ChevronRight from '@lucide/svelte/icons/chevron-right';
     import Columns3 from '@lucide/svelte/icons/columns-3';
     import List from '@lucide/svelte/icons/list';
     import MapPin from '@lucide/svelte/icons/map-pin';
+    import User from '@lucide/svelte/icons/user';
     import AppHead from '@/components/AppHead.svelte';
     import * as Avatar from '@/components/ui/avatar';
     import { Badge } from '@/components/ui/badge';
     import { Button } from '@/components/ui/button';
+    import * as Dialog from '@/components/ui/dialog';
     import * as DropdownMenu from '@/components/ui/dropdown-menu';
     import { ScrollArea } from '@/components/ui/scroll-area';
     import { Separator } from '@/components/ui/separator';
@@ -34,6 +37,11 @@
      *
      * Die Woche beginnt am MONTAG. Das Original beginnt am Sonntag; hier wäre
      * das schlicht falsch.
+     *
+     * **Verschieben wirkt nur im Browser.** Es gibt keine Terminverwaltung,
+     * gegen die man speichern könnte; eine Verschiebung ist beim nächsten Laden
+     * weg. Das ist kein Mangel des Entwurfs, sondern sein Zweck — die Bedienung
+     * soll beurteilbar sein, bevor das Schema steht.
      */
     type Employee = { id: string; name: string; photoUrl: string | null };
 
@@ -72,6 +80,23 @@
      * niemand angehakt ist und folglich nichts zu sehen sein soll.
      */
     let gewaehlt = $state<Set<string> | null>(null);
+
+    /**
+     * Verschobene Termine — NUR im Browser.
+     *
+     * Es gibt keine Terminverwaltung, gegen die man speichern könnte. Eine
+     * Verschiebung lebt deshalb in dieser Tabelle und ist beim nächsten Laden
+     * weg. Absichtlich als Überlagerung über den Prop und nicht als Kopie der
+     * ganzen Liste: so ist im Code sichtbar, was echt ist und was nur
+     * angefasst wurde.
+     */
+    let verschoben = $state<Record<string, { start: string; end: string }>>({});
+
+    /** Der Termin, dessen Kartei offen ist. */
+    let offen = $state<Termin | null>(null);
+
+    /** Was gerade am Mauszeiger hängt. */
+    let zieht = $state<string | null>(null);
 
     const alleGewaehlt = $derived(gewaehlt === null || gewaehlt.size === employees.length);
     const sichtbar = $derived(gewaehlt === null ? new Set(employees.map((e) => e.id)) : gewaehlt);
@@ -171,9 +196,17 @@
         events
             .filter((e) => e.employeeId === null || sichtbar.has(e.employeeId))
             .map((e) => {
-                const von = new Date(e.start);
-                const bis = new Date(e.end);
-                return { ...e, von, bis, mehrtaegig: e.allDay || !isSameDay(von, bis) };
+                const zeiten = verschoben[e.id] ?? { start: e.start, end: e.end };
+                const von = new Date(zeiten.start);
+                const bis = new Date(zeiten.end);
+
+                return {
+                    ...e,
+                    ...zeiten,
+                    von,
+                    bis,
+                    mehrtaegig: e.allDay || !isSameDay(von, bis),
+                };
             })
             .sort((a, b) => a.von.getTime() - b.von.getTime()),
     );
@@ -214,6 +247,92 @@
             gruppe.map((termin) => ({ termin, spalte, von: gruppen.length })),
         );
     }
+
+    /* ------------------------------------------------------------------ */
+    /* Ziehen und Ablegen                                                  */
+    /* ------------------------------------------------------------------ */
+
+    /*
+     * Natives HTML5-Drag-and-Drop statt einer Bibliothek: das Projekt hat
+     * keine, und für „Block aufnehmen, woanders fallen lassen" braucht es
+     * keine. Der Preis ist, dass der Ziehschatten der Browser-Standard ist.
+     */
+    function aufnehmen(event: DragEvent, t: Termin): void {
+        zieht = t.id;
+        event.dataTransfer?.setData('text/plain', t.id);
+
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+        }
+    }
+
+    function ablegenErlauben(event: DragEvent): void {
+        if (zieht === null) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'move';
+        }
+    }
+
+    /** Verschiebt den gezogenen Termin, Dauer bleibt. */
+    function verschiebeAuf(ziel: Date): void {
+        const t = termine.find((x) => x.id === zieht);
+        zieht = null;
+
+        if (!t) {
+            return;
+        }
+
+        const dauer = t.bis.getTime() - t.von.getTime();
+
+        verschoben = {
+            ...verschoben,
+            [t.id]: {
+                start: ziel.toISOString(),
+                end: new Date(ziel.getTime() + dauer).toISOString(),
+            },
+        };
+    }
+
+    /** Im Zeitraster: auf Tag und Stunde, Minuten bleiben erhalten. */
+    function ablegenImRaster(event: DragEvent, tag: Date, stunde: number): void {
+        event.preventDefault();
+
+        const t = termine.find((x) => x.id === zieht);
+
+        if (!t) {
+            zieht = null;
+            return;
+        }
+
+        const ziel = startOfDay(tag);
+        ziel.setHours(stunde, t.von.getMinutes(), 0, 0);
+
+        verschiebeAuf(ziel);
+    }
+
+    /** Im Monat: nur der TAG wechselt, die Uhrzeit bleibt. */
+    function ablegenAmTag(event: DragEvent, tag: Date): void {
+        event.preventDefault();
+
+        const t = termine.find((x) => x.id === zieht);
+
+        if (!t) {
+            zieht = null;
+            return;
+        }
+
+        const ziel = startOfDay(tag);
+        ziel.setHours(t.von.getHours(), t.von.getMinutes(), 0, 0);
+
+        verschiebeAuf(ziel);
+    }
+
+    const verschobeneAnzahl = $derived(Object.keys(verschoben).length);
 
     /* ------------------------------------------------------------------ */
     /* Zeitraster                                                          */
@@ -473,6 +592,11 @@
                     <div
                         class="flex min-h-28 flex-col gap-1 border-t border-l p-1.5 first:border-l-0 [&:nth-child(7n+1)]:border-l-0"
                         class:bg-muted-30={!zelle.imMonat}
+                        class:ring-1={zieht !== null}
+                        class:ring-primary-40={zieht !== null}
+                        role="presentation"
+                        ondragover={ablegenErlauben}
+                        ondrop={(e) => ablegenAmTag(e, zelle.datum)}
                     >
                         <span
                             class="flex size-6 items-center justify-center self-start rounded-full text-xs font-semibold"
@@ -484,11 +608,17 @@
                         </span>
 
                         {#each eintraege.slice(0, 3) as t (t.id)}
-                            <div
-                                class="flex items-center gap-1.5 truncate rounded border px-1.5 py-0.5 text-xs {farben[
+                            <button
+                                type="button"
+                                draggable="true"
+                                ondragstart={(e) => aufnehmen(e, t)}
+                                ondragend={() => (zieht = null)}
+                                onclick={() => (offen = t)}
+                                class="flex cursor-grab items-center gap-1.5 truncate rounded border px-1.5 py-0.5 text-left text-xs active:cursor-grabbing {farben[
                                     t.color
                                 ]}"
                                 class:opacity-50={!zelle.imMonat}
+                                class:opacity-40={zieht === t.id}
                                 title="{t.title} · {t.location}"
                             >
                                 {#if !t.mehrtaegig}
@@ -497,7 +627,7 @@
                                     </span>
                                 {/if}
                                 <span class="truncate">{t.title}</span>
-                            </div>
+                            </button>
                         {/each}
 
                         {#if eintraege.length > 3}
@@ -601,19 +731,34 @@
                             {@const belegt = spalten(anTag(eintaegig, tag))}
                             <div class="relative border-l first:border-l-0">
                                 {#each stunden as stunde (stunde)}
+                                    <!--
+                                        Jede Stunde ist ein Ablageziel. Die
+                                        Minuten des Termins bleiben erhalten —
+                                        ein Termin um 9:15 landet beim Ablegen
+                                        auf 14 Uhr auf 14:15 und nicht auf 14:00.
+                                    -->
                                     <div
                                         class="border-t border-dashed first:border-t-0"
                                         style="height:{STUNDEN_HOEHE}px"
                                         class:bg-muted-20={stunde < 8 || stunde >= 17}
+                                        class:bg-accent={zieht !== null}
+                                        role="presentation"
+                                        ondragover={ablegenErlauben}
+                                        ondrop={(e) => ablegenImRaster(e, tag, stunde)}
                                     ></div>
                                 {/each}
 
                                 {#each belegt as { termin, spalte, von } (termin.id)}
                                     <button
                                         type="button"
-                                        class="absolute overflow-hidden rounded border px-1.5 py-0.5 text-left text-xs {farben[
+                                        draggable="true"
+                                        ondragstart={(e) => aufnehmen(e, termin)}
+                                        ondragend={() => (zieht = null)}
+                                        onclick={() => (offen = termin)}
+                                        class="absolute cursor-grab overflow-hidden rounded border px-1.5 py-0.5 text-left text-xs active:cursor-grabbing {farben[
                                             termin.color
                                         ]}"
+                                        class:opacity-40={zieht === termin.id}
                                         style={blockStil(termin, tag, spalte, von)}
                                         title="{termin.title} · {termin.location} · {termin.assignee}"
                                     >
@@ -666,7 +811,12 @@
 
                     <ul class="flex-1 space-y-2">
                         {#each eintraege as t (t.id)}
-                            <li class="flex items-start gap-3 text-sm">
+                            <li>
+                                <button
+                                    type="button"
+                                    class="flex w-full items-start gap-3 rounded text-left text-sm hover:bg-muted/50"
+                                    onclick={() => (offen = t)}
+                                >
                                 <span
                                     class="mt-1.5 size-2 shrink-0 rounded-full {punkte[t.color]}"
                                 ></span>
@@ -686,9 +836,13 @@
                                         </span>
                                     {/if}
                                 </span>
-                                <Badge variant="outline" class="shrink-0 text-muted-foreground">
-                                    {t.assignee}
-                                </Badge>
+                                    <Badge
+                                        variant="outline"
+                                        class="shrink-0 text-muted-foreground"
+                                    >
+                                        {t.assignee}
+                                    </Badge>
+                                </button>
                             </li>
                         {/each}
                     </ul>
@@ -705,8 +859,93 @@
         Entwurf. Die Termine sind erfunden — es gibt weder eine Terminverwaltung
         noch ein Scheduling-Modul (Phase 6.1). Diese Fläche dient dazu, die
         Bedienung zu beurteilen, bevor das Schema steht.
+        {#if verschobeneAnzahl > 0}
+            <span class="font-medium text-foreground">
+                {verschobeneAnzahl}
+                {verschobeneAnzahl === 1 ? 'Termin wurde' : 'Termine wurden'} verschoben —
+                nur hier im Browser, beim nächsten Laden ist es weg.
+            </span>
+        {/if}
     </p>
 </div>
+
+<!--
+    Die Kartei eines Termins. Im Entwurf nur lesend: Bearbeiten und Löschen
+    hängen an einer Terminverwaltung, die es noch nicht gibt.
+-->
+<Dialog.Root
+    open={offen !== null}
+    onOpenChange={(o) => {
+        if (!o) {
+            offen = null;
+        }
+    }}
+>
+    <Dialog.Content class="sm:max-w-md">
+        {#if offen}
+            <Dialog.Header>
+                <Dialog.Title class="flex items-center gap-2">
+                    <span class="size-2.5 shrink-0 rounded-full {punkte[offen.color]}"></span>
+                    {offen.title}
+                </Dialog.Title>
+            </Dialog.Header>
+
+            <dl class="space-y-3 text-sm">
+                <div class="flex items-start gap-3">
+                    <CalendarClock class="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <div>
+                        <dt class="font-medium">Zeitraum</dt>
+                        <dd class="text-muted-foreground">
+                            {#if offen.mehrtaegig}
+                                {tagLang.format(offen.von)} – {tagLang.format(offen.bis)}
+                                <span class="block">ganztägig</span>
+                            {:else}
+                                {tagLang.format(offen.von)}
+                                <span class="block tabular-nums">
+                                    {zeit.format(offen.von)} – {zeit.format(offen.bis)} Uhr
+                                </span>
+                            {/if}
+                        </dd>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <User class="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <div>
+                        <dt class="font-medium">Verantwortlich</dt>
+                        <dd class="text-muted-foreground">{offen.assignee}</dd>
+                    </div>
+                </div>
+
+                {#if offen.location && offen.location !== '—'}
+                    <div class="flex items-start gap-3">
+                        <MapPin class="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                        <div>
+                            <dt class="font-medium">Ort</dt>
+                            <dd class="text-muted-foreground">{offen.location}</dd>
+                        </div>
+                    </div>
+                {/if}
+            </dl>
+
+            <Dialog.Footer>
+                {#if verschoben[offen.id]}
+                    <Button
+                        variant="ghost"
+                        onclick={() => {
+                            const { [offen!.id]: _, ...rest } = verschoben;
+                            verschoben = rest;
+                            offen = null;
+                        }}
+                    >
+                        Verschiebung zurücknehmen
+                    </Button>
+                {/if}
+                <Button variant="outline" onclick={() => (offen = null)}>Schließen</Button>
+            </Dialog.Footer>
+        {/if}
+    </Dialog.Content>
+</Dialog.Root>
 
 <style>
     /* Zwei Abstufungen, die als Utility-Klasse mit Schrägstrich nicht durch
@@ -717,5 +956,10 @@
 
     .bg-muted-20 {
         background-color: color-mix(in oklab, var(--color-muted) 40%, transparent);
+    }
+
+    /* Zeigt beim Ziehen, wohin man ablegen darf. */
+    .ring-primary-40 {
+        --tw-ring-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
     }
 </style>
