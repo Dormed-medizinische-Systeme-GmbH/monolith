@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Erp\CompanyRequest;
 use App\Http\Requests\Erp\LocationRequest;
+use App\Modules\Core\Models\User;
 use App\Modules\Crm\Models\Company;
 use App\Modules\Crm\Models\CompanyContact;
 use App\Modules\Crm\Models\Location;
+use App\Modules\Crm\Models\MedicalSpecialty;
 use App\Modules\Crm\Queries\CompanyContactProfile;
 use App\Modules\Crm\Queries\CompanyList;
 use App\Modules\Crm\Queries\CompanyProfile;
+use App\Modules\Crm\Services\Companies;
 use App\Modules\Crm\Services\Locations;
 use App\Support\DataTable\DataTable;
 use App\Support\Flash;
@@ -63,6 +67,93 @@ final class CompanyController extends Controller
         return Inertia::render('erp/companies/contacts/Show', [
             'contact' => CompanyContactProfile::for($contact),
         ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('erp/companies/Form', [
+            'company' => null,
+            ...self::auswahlfelder(null),
+        ]);
+    }
+
+    public function store(CompanyRequest $request): RedirectResponse
+    {
+        $company = Companies::create($request->companyAttributes(), $request->addressAttributes());
+
+        return Flash::success("{$company->name} wurde angelegt.")
+            ->to(route('erp.companies.show', $company));
+    }
+
+    public function edit(Company $company): Response
+    {
+        return Inertia::render('erp/companies/Form', [
+            'company' => CompanyProfile::for($company),
+            ...self::auswahlfelder($company),
+        ]);
+    }
+
+    public function update(CompanyRequest $request, Company $company): RedirectResponse
+    {
+        try {
+            Companies::update($company, $request->companyAttributes(), $request->addressAttributes());
+        } catch (RuntimeException $e) {
+            return Flash::error($e->getMessage())->back();
+        }
+
+        return Flash::success('Änderungen gespeichert.')
+            ->to(route('erp.companies.show', $company));
+    }
+
+    public function destroy(Company $company): RedirectResponse
+    {
+        Companies::delete($company);
+
+        return Flash::success("{$company->name} wurde gelöscht.")
+            ->to(route('erp.companies.index'));
+    }
+
+    /**
+     * Die Auswahllisten der Firmenmaske.
+     *
+     * Zustaendige nur unter den AKTIVEN Mitarbeitern: ein stillgelegter Zugang
+     * gehoert nicht mehr ins Haus und wird aus den `responsible_*`-Feldern
+     * ausgeblendet (IDENTITY_RBAC.md). Die Zuordnung bleibt informativ, sie ist
+     * keine Berechtigung (D-016).
+     *
+     * @return array<string, mixed>
+     */
+    private static function auswahlfelder(?Company $company): array
+    {
+        return [
+            'employees' => User::query()
+                ->where('is_active', true)
+                ->orderBy('last_name')
+                ->get()
+                ->map(fn (User $user): array => ['id' => $user->id, 'name' => $user->name])
+                ->all(),
+
+            'specialties' => MedicalSpecialty::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn (MedicalSpecialty $fach): array => [
+                    'id' => $fach->id,
+                    'name' => $fach->name,
+                ])
+                ->all(),
+
+            // Eine Firma kann nicht ihr eigener Rechnungsempfaenger sein.
+            'companies' => Company::query()
+                ->when($company !== null, fn ($query) => $query->whereKeyNot($company->getKey()))
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn (Company $andere): array => [
+                    'id' => $andere->id,
+                    'name' => $andere->name,
+                ])
+                ->all(),
+        ];
     }
 
     /**

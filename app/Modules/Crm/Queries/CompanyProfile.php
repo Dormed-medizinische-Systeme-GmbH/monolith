@@ -81,6 +81,36 @@ final class CompanyProfile
             'address' => self::address($company->address),
             'channels' => self::channels($company->contactChannels),
 
+            /*
+             * Die Rohwerte fuer die Maske. Die aufbereiteten Bloecke darueber
+             * sind fuers Lesen gemacht — sie filtern Leeres heraus und
+             * formatieren Datumsangaben, taugen also nicht zum Vorbelegen eines
+             * Formulars.
+             */
+            'fields' => [
+                'name' => $company->name,
+                'name_addition' => $company->name_addition,
+                'medical_specialty_id' => $company->medical_specialty_id,
+                'debitor_number' => $company->debitor_number,
+                'responsible_sales_id' => $company->responsible_sales_id,
+                'responsible_service_id' => $company->responsible_service_id,
+                'billing_company_id' => $company->billing_company_id,
+                'avv_status' => $company->avv_status->value,
+                'avv_signed_at' => $company->avv_signed_at?->format('Y-m-d'),
+                'legal_form' => $company->legal_form,
+                'tax_number' => $company->tax_number,
+                'vat_id' => $company->vat_id,
+                'iban' => $company->iban,
+                'bic' => $company->bic,
+                'bank_account_holder' => $company->bank_account_holder,
+                'bank_name' => $company->bank_name,
+                'notes' => $company->notes,
+                'street' => $company->address?->street,
+                'house_number' => $company->address?->house_number,
+                'postal_code' => $company->address?->postal_code,
+                'city' => $company->address?->city,
+            ],
+
             'billingCompany' => $company->billingCompany === null ? null : [
                 'id' => $company->billingCompany->id,
                 'name' => $company->billingCompany->name,

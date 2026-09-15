@@ -44,6 +44,8 @@ export type CompanyProfile = {
     bank: Record<string, string>;
     address: Address | null;
     channels: Channel[];
+    /** Rohwerte für die Maske — die Blöcke oben sind fürs Lesen aufbereitet. */
+    fields: Record<string, string | null>;
     billingCompany: { id: string; name: string } | null;
     responsible: { sales: string | null; service: string | null };
     locations: {
@@ -64,3 +66,5 @@ export type CompanyProfile = {
     }[];
     contacts: Contact[];
 };
+
+export type Option = { id: string; name: string };

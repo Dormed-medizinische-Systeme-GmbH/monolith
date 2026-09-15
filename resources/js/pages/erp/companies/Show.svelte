@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Link, router } from '@inertiajs/svelte';
+    import { Link, router, setLayoutProps } from '@inertiajs/svelte';
     import ArrowLeft from '@lucide/svelte/icons/arrow-left';
     import Boxes from '@lucide/svelte/icons/boxes';
     import Building from '@lucide/svelte/icons/building';
@@ -21,7 +21,7 @@
     import { Separator } from '@/components/ui/separator';
     import * as Table from '@/components/ui/table';
     import * as Tabs from '@/components/ui/tabs';
-    import { index } from '@/routes/erp/companies';
+    import { edit, index } from '@/routes/erp/companies';
     import { destroy as locationDestroy } from '@/routes/erp/companies/locations';
     import { show as contactShow } from '@/routes/erp/companies/contacts';
     import AccessBadge from './AccessBadge.svelte';
@@ -64,6 +64,12 @@
             );
         }
     }
+
+    $effect(() => {
+        setLayoutProps({
+            actions: [{ label: 'Bearbeiten', icon: Pencil, href: edit(company.id).url }],
+        });
+    });
 
     const weitereAngaben = $derived(Object.entries(company.stammdaten));
     const bank = $derived(Object.entries(company.bank));
@@ -240,7 +246,6 @@
         <div class="overflow-x-auto">
             <Tabs.List>
                 <Tabs.Trigger value="gesamt">Gesamt</Tabs.Trigger>
-                <Tabs.Trigger value="ansprechpartner">Ansprechpartner</Tabs.Trigger>
                 <Tabs.Trigger value="standorte">Standorte</Tabs.Trigger>
                 {#each akten as akte (akte.value)}
                     <Tabs.Trigger value={akte.value}>{akte.label}</Tabs.Trigger>
@@ -255,15 +260,6 @@
                 Fachmodulen dazu.
             </p>
             {@render ansprechpartner()}
-        </Tabs.Content>
-
-        <Tabs.Content value="ansprechpartner" class="space-y-3 pt-4">
-            <p class="text-sm text-muted-foreground">
-                Die Rolle gilt gegenüber dieser Firma. Dieselbe Person kann bei einer
-                anderen Praxis eine andere Rolle haben (D-005).
-            </p>
-            {@render ansprechpartner()}
-            {@render standorte()}
         </Tabs.Content>
 
         <Tabs.Content value="standorte" class="space-y-3 pt-4">

@@ -36,7 +36,13 @@ Route::middleware('auth:staff')->group(function (): void {
      * gilt immer gegenueber einer bestimmten Firma (D-005).
      */
     Route::get('/firmen', [CompanyController::class, 'index'])->name('erp.companies.index');
+    // `neu` steht VOR `{company}`, sonst wird das Wort als Schluessel aufgeloest.
+    Route::get('/firmen/neu', [CompanyController::class, 'create'])->name('erp.companies.create');
+    Route::post('/firmen', [CompanyController::class, 'store'])->name('erp.companies.store');
     Route::get('/firmen/{company}', [CompanyController::class, 'show'])->name('erp.companies.show');
+    Route::get('/firmen/{company}/bearbeiten', [CompanyController::class, 'edit'])->name('erp.companies.edit');
+    Route::patch('/firmen/{company}', [CompanyController::class, 'update'])->name('erp.companies.update');
+    Route::delete('/firmen/{company}', [CompanyController::class, 'destroy'])->name('erp.companies.destroy');
 
     /*
      * Verschachtelt gebunden: `{contact}` wird ueber `$company->contacts()`
