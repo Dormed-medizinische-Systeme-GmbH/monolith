@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Core\Models\Employee;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,45 +26,77 @@ final class CalendarController extends Controller
 {
     public function __invoke(): Response
     {
+        $employees = self::employees();
+
         return Inertia::render('erp/Calendar', [
-            'events' => self::platzhalter(),
+            'employees' => $employees,
+            'events' => self::platzhalter($employees),
         ]);
     }
 
     /**
+     * Die Mitarbeiter fuer den Filter — echte Datensaetze samt Foto.
+     *
+     * Die Termine sind erfunden, die Personen nicht: nur so laesst sich
+     * beurteilen, ob die Auswahl mit den vorhandenen Bildern trägt und ob 13
+     * Eintraege im Menue noch bedienbar sind.
+     *
      * @return list<array<string, mixed>>
      */
-    private static function platzhalter(): array
+    private static function employees(): array
+    {
+        return Employee::query()
+            ->where('is_active', true)
+            ->orderBy('last_name')
+            ->get()
+            ->map(fn (Employee $employee): array => [
+                'id' => $employee->id,
+                'name' => $employee->name,
+                'photoUrl' => $employee->photo_url,
+            ])
+            ->all();
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $employees
+     * @return list<array<string, mixed>>
+     */
+    private static function platzhalter(array $employees): array
     {
         $montag = Carbon::today()->startOfWeek();
 
-        /** @var list<array{int, int, int, string, string, string, string}> */
+        /** @var list<array{int, int, int, string, string, string}> */
         $vorlage = [
-            // Tagesversatz ab Montag, Start, Dauer in Minuten, Titel, Ort, Farbe, Zustaendiger
-            [0, 8, 90, 'Wartung Ultraschall', 'Musterpraxis Dr. Muster', 'blue', 'R. Falk'],
-            [0, 10, 60, 'Einweisung Resona i9', 'Gemeinschaftspraxis Nord', 'green', 'D. Kowol'],
-            [0, 14, 120, 'Servicefall: Sonde defekt', 'Praxis Dr. Ahrens', 'red', 'E. Meitsch'],
-            [1, 9, 45, 'Angebotstermin', 'Praxis am Markt', 'purple', 'M. Niewitz'],
-            [1, 11, 30, 'Rückruf Frau Brehm', '—', 'gray', 'S. Ortmann'],
-            [1, 13, 180, 'Wartungstour Hamburg', 'drei Praxen', 'orange', 'O. Hobbie'],
-            [2, 8, 30, 'Teambesprechung', 'Buchholz', 'gray', 'alle'],
-            [2, 9, 240, 'Installation Neugerät', 'Gemeinschaftspraxis Nord', 'blue', 'R. Falk'],
-            [3, 10, 60, 'Abnahme MPG', 'Musterpraxis Dr. Muster', 'green', 'E. Meitsch'],
-            [3, 15, 90, 'Schulung Personal', 'Praxis am Markt', 'yellow', 'D. Kowol'],
-            [4, 8, 120, 'Servicefall: Bildstörung', 'Praxis Dr. Ahrens', 'red', 'O. Hobbie'],
-            [4, 13, 60, 'Nachbesprechung Angebot', '—', 'purple', 'M. Niewitz'],
+            // Tagesversatz ab Montag, Start, Dauer in Minuten, Titel, Ort, Farbe
+            [0, 8, 90, 'Wartung Ultraschall', 'Musterpraxis Dr. Muster', 'blue'],
+            [0, 10, 60, 'Einweisung Resona i9', 'Gemeinschaftspraxis Nord', 'green'],
+            [0, 14, 120, 'Servicefall: Sonde defekt', 'Praxis Dr. Ahrens', 'red'],
+            [1, 9, 45, 'Angebotstermin', 'Praxis am Markt', 'purple'],
+            [1, 11, 30, 'Rückruf Frau Brehm', '—', 'gray'],
+            [1, 13, 180, 'Wartungstour Hamburg', 'drei Praxen', 'orange'],
+            [2, 8, 30, 'Teambesprechung', 'Buchholz', 'gray'],
+            [2, 9, 240, 'Installation Neugerät', 'Gemeinschaftspraxis Nord', 'blue'],
+            [3, 10, 60, 'Abnahme MPG', 'Musterpraxis Dr. Muster', 'green'],
+            [3, 15, 90, 'Schulung Personal', 'Praxis am Markt', 'yellow'],
+            [4, 8, 120, 'Servicefall: Bildstörung', 'Praxis Dr. Ahrens', 'red'],
+            [4, 13, 60, 'Nachbesprechung Angebot', '—', 'purple'],
         ];
 
         $termine = [];
 
-        foreach ($vorlage as $i => [$tag, $stunde, $dauer, $titel, $ort, $farbe, $wer]) {
+        foreach ($vorlage as $i => [$tag, $stunde, $dauer, $titel, $ort, $farbe]) {
             $start = $montag->copy()->addDays($tag)->setTime($stunde, 0);
+
+            // Reihum auf die vorhandenen Mitarbeiter verteilt, damit der Filter
+            // etwas zu filtern hat.
+            $wer = $employees === [] ? null : $employees[$i % count($employees)];
 
             $termine[] = [
                 'id' => 'e'.($i + 1),
                 'title' => $titel,
                 'location' => $ort,
-                'assignee' => $wer,
+                'employeeId' => $wer['id'] ?? null,
+                'assignee' => $wer['name'] ?? '—',
                 'color' => $farbe,
                 'allDay' => false,
                 'start' => $start->toIso8601String(),
@@ -75,9 +108,10 @@ final class CalendarController extends Controller
         // Positionen vergeben muss und nicht einfach untereinander stapelt.
         $termine[] = [
             'id' => 'u1',
-            'title' => 'Urlaub B. Gopin',
+            'title' => 'Urlaub',
             'location' => '',
-            'assignee' => 'B. Gopin',
+            'employeeId' => $employees[0]['id'] ?? null,
+            'assignee' => $employees[0]['name'] ?? '—',
             'color' => 'yellow',
             'allDay' => true,
             'start' => $montag->copy()->addDays(2)->startOfDay()->toIso8601String(),
@@ -88,7 +122,8 @@ final class CalendarController extends Controller
             'id' => 'm1',
             'title' => 'MEDICA Düsseldorf',
             'location' => 'Messe',
-            'assignee' => 'Vertrieb',
+            'employeeId' => $employees[1]['id'] ?? null,
+            'assignee' => $employees[1]['name'] ?? '—',
             'color' => 'orange',
             'allDay' => true,
             'start' => $montag->copy()->addDays(9)->startOfDay()->toIso8601String(),

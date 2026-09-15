@@ -11,6 +11,11 @@ use Inertia\Testing\AssertableInertia as Assert;
 beforeEach(function (): void {
     (new RoleSeeder)->run();
     (new SiteSeeder)->run();
+
+    // Mehrere, damit die Rundverteilung der Platzhaltertermine ueberhaupt
+    // verteilen kann — mit einem einzigen haengt alles an derselben Person.
+    $this->ich = Employee::factory()->create();
+    Employee::factory()->count(3)->create();
 });
 
 test('der Kalender verlangt eine Anmeldung', function (): void {
@@ -23,7 +28,7 @@ test('er liefert Platzhaltertermine rund um heute', function (): void {
      * Die Termine haengen an HEUTE statt an festen Datumsangaben — ein Entwurf,
      * der naechste Woche leer aussieht, laesst sich nicht beurteilen.
      */
-    $this->actingAs(Employee::factory()->create(), 'staff')
+    $this->actingAs($this->ich, 'staff')
         ->get('http://'.config('domains.erp').'/kalender')
         ->assertOk()
         ->assertInertia(function (Assert $page): void {
@@ -32,6 +37,17 @@ test('er liefert Platzhaltertermine rund um heute', function (): void {
             $events = collect($page->toArray()['props']['events']);
 
             expect($events)->not->toBeEmpty();
+
+            // Jeder Termin haengt an einem echten Mitarbeiter — sonst haette
+            // der Personenfilter nichts zu filtern.
+            $employees = collect($page->toArray()['props']['employees']);
+
+            expect($employees)->not->toBeEmpty();
+            expect($employees->first())->toHaveKeys(['id', 'name', 'photoUrl']);
+            expect($events->pluck('employeeId')->filter()->unique()->count())
+                ->toBeGreaterThan(1);
+            expect($events->pluck('employeeId')->filter()->diff($employees->pluck('id')))
+                ->toBeEmpty();
 
             $dieseWoche = $events->filter(fn (array $e): bool => Carbon::parse($e['start'])
                 ->between(now()->startOfWeek(), now()->endOfWeek()));

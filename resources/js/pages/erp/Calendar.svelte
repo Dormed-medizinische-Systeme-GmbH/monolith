@@ -1,14 +1,18 @@
 <script lang="ts">
+    import { setLayoutProps } from '@inertiajs/svelte';
     import CalendarDays from '@lucide/svelte/icons/calendar-days';
     import CalendarRange from '@lucide/svelte/icons/calendar-range';
+    import ChevronDown from '@lucide/svelte/icons/chevron-down';
     import ChevronLeft from '@lucide/svelte/icons/chevron-left';
     import ChevronRight from '@lucide/svelte/icons/chevron-right';
     import Columns3 from '@lucide/svelte/icons/columns-3';
     import List from '@lucide/svelte/icons/list';
     import MapPin from '@lucide/svelte/icons/map-pin';
     import AppHead from '@/components/AppHead.svelte';
+    import * as Avatar from '@/components/ui/avatar';
     import { Badge } from '@/components/ui/badge';
     import { Button } from '@/components/ui/button';
+    import * as DropdownMenu from '@/components/ui/dropdown-menu';
     import { ScrollArea } from '@/components/ui/scroll-area';
     import { Separator } from '@/components/ui/separator';
 
@@ -18,7 +22,8 @@
      * **Bewusst eine einzige Datei.** Der Kalender wird an keiner zweiten Stelle
      * gebraucht; ihn über zwanzig Komponenten zu verteilen hieße, eine Struktur
      * zu bauen, die niemand wiederverwendet. Geteilt wird nur, was ohnehin
-     * geteilt ist: Button, Badge, ScrollArea aus `components/ui`.
+     * geteilt ist: Button, Badge, Avatar, DropdownMenu, ScrollArea und
+     * Separator aus `components/ui`.
      *
      * Aufbau übernommen von `github.com/lramos33/big-calendar` (React) — die
      * Terminlogik ist dieselbe, das Datumsrechnen nicht: das Original benutzt
@@ -30,10 +35,13 @@
      * Die Woche beginnt am MONTAG. Das Original beginnt am Sonntag; hier wäre
      * das schlicht falsch.
      */
+    type Employee = { id: string; name: string; photoUrl: string | null };
+
     type CalendarEvent = {
         id: string;
         title: string;
         location: string;
+        employeeId: string | null;
         assignee: string;
         color: 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'orange' | 'gray';
         allDay: boolean;
@@ -43,10 +51,63 @@
 
     type View = 'month' | 'week' | 'day' | 'agenda';
 
-    let { events = [] }: { events?: CalendarEvent[] } = $props();
+    let {
+        events = [],
+        employees = [],
+    }: { events?: CalendarEvent[]; employees?: Employee[] } = $props();
+
+    const ansichten: { key: View; label: string; icon: typeof List }[] = [
+        { key: 'day', label: 'Tag', icon: List },
+        { key: 'week', label: 'Woche', icon: Columns3 },
+        { key: 'month', label: 'Monat', icon: CalendarDays },
+        { key: 'agenda', label: 'Agenda', icon: CalendarRange },
+    ];
 
     let view = $state<View>('week');
     let anchor = $state(new Date());
+
+    /*
+     * Der Personenfilter. `null` heisst „noch nichts angefasst" und damit
+     * ALLE — das ist etwas anderes als eine leere Auswahl, bei der bewusst
+     * niemand angehakt ist und folglich nichts zu sehen sein soll.
+     */
+    let gewaehlt = $state<Set<string> | null>(null);
+
+    const alleGewaehlt = $derived(gewaehlt === null || gewaehlt.size === employees.length);
+    const sichtbar = $derived(gewaehlt === null ? new Set(employees.map((e) => e.id)) : gewaehlt);
+
+    function umschalten(id: string): void {
+        const naechste = new Set(gewaehlt ?? employees.map((e) => e.id));
+
+        if (naechste.has(id)) {
+            naechste.delete(id);
+        } else {
+            naechste.add(id);
+        }
+
+        gewaehlt = naechste;
+    }
+
+    function initialen(name: string): string {
+        return name
+            .split(' ')
+            .map((teil) => teil[0] ?? '')
+            .slice(0, 2)
+            .join('')
+            .toUpperCase();
+    }
+
+    /** Die Ansichtsumschaltung sitzt in der App-Kopfzeile, wie auf jeder Fläche. */
+    $effect(() => {
+        setLayoutProps({
+            actions: ansichten.map((a) => ({
+                label: a.label,
+                icon: a.icon,
+                variant: view === a.key ? ('default' as const) : ('outline' as const),
+                onSelect: () => (view = a.key),
+            })),
+        });
+    });
 
     /* ------------------------------------------------------------------ */
     /* Datumsrechnen                                                       */
@@ -108,6 +169,7 @@
 
     const termine: Termin[] = $derived(
         events
+            .filter((e) => e.employeeId === null || sichtbar.has(e.employeeId))
             .map((e) => {
                 const von = new Date(e.start);
                 const bis = new Date(e.end);
@@ -288,12 +350,6 @@
         gray: 'bg-neutral-400',
     };
 
-    const ansichten: { key: View; label: string; icon: typeof List }[] = [
-        { key: 'day', label: 'Tag', icon: List },
-        { key: 'week', label: 'Woche', icon: Columns3 },
-        { key: 'month', label: 'Monat', icon: CalendarDays },
-        { key: 'agenda', label: 'Agenda', icon: CalendarRange },
-    ];
 </script>
 
 <AppHead title="Kalender" />
@@ -330,25 +386,74 @@
             <span class="ps-1 text-sm font-medium">{titel}</span>
         </div>
 
-        <div class="flex">
-            {#each ansichten as a, i (a.key)}
-                <Button
-                    variant={view === a.key ? 'default' : 'outline'}
-                    size="sm"
-                    class={[
-                        i === 0 && 'rounded-r-none',
-                        i > 0 && i < ansichten.length - 1 && '-ms-px rounded-none',
-                        i === ansichten.length - 1 && '-ms-px rounded-l-none',
-                    ]
-                        .filter(Boolean)
-                        .join(' ')}
-                    onclick={() => (view = a.key)}
+        <!--
+            Personenfilter. Mehrfachauswahl, deshalb Kästchen und kein
+            Auswahlfeld — man will „Falk und Meitsch" sehen können, nicht
+            „einen oder alle". Das Menü bleibt beim Anhaken offen, sonst müsste
+            man es je Person neu aufziehen.
+        -->
+        <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+                {#snippet child({ props })}
+                    <Button {...props} variant="outline" size="sm" class="gap-2">
+                        <span class="flex -space-x-2">
+                            {#each employees.filter((e) => sichtbar.has(e.id)).slice(0, 3) as e (e.id)}
+                                <Avatar.Root class="size-5 ring-2 ring-background">
+                                    {#if e.photoUrl}
+                                        <Avatar.Image src={e.photoUrl} alt={e.name} />
+                                    {/if}
+                                    <Avatar.Fallback class="text-[9px]">
+                                        {initialen(e.name)}
+                                    </Avatar.Fallback>
+                                </Avatar.Root>
+                            {/each}
+                        </span>
+                        {alleGewaehlt
+                            ? 'Alle Mitarbeiter'
+                            : `${sichtbar.size} von ${employees.length}`}
+                        <ChevronDown class="size-4 text-muted-foreground" />
+                    </Button>
+                {/snippet}
+            </DropdownMenu.Trigger>
+
+            <DropdownMenu.Content align="end" class="w-64">
+                <DropdownMenu.Label>Mitarbeiter</DropdownMenu.Label>
+                <DropdownMenu.Separator />
+
+                <DropdownMenu.CheckboxItem
+                    checked={alleGewaehlt}
+                    closeOnSelect={false}
+                    onCheckedChange={() =>
+                        (gewaehlt = alleGewaehlt ? new Set() : new Set(employees.map((e) => e.id)))}
                 >
-                    <a.icon class="size-4" />
-                    {a.label}
-                </Button>
-            {/each}
-        </div>
+                    Alle
+                </DropdownMenu.CheckboxItem>
+
+                <DropdownMenu.Separator />
+
+                <div class="max-h-72 overflow-y-auto">
+                    {#each employees as e (e.id)}
+                        <DropdownMenu.CheckboxItem
+                            checked={sichtbar.has(e.id)}
+                            closeOnSelect={false}
+                            onCheckedChange={() => umschalten(e.id)}
+                        >
+                            <span class="flex min-w-0 items-center gap-2">
+                                <Avatar.Root class="size-6">
+                                    {#if e.photoUrl}
+                                        <Avatar.Image src={e.photoUrl} alt={e.name} />
+                                    {/if}
+                                    <Avatar.Fallback class="text-[10px]">
+                                        {initialen(e.name)}
+                                    </Avatar.Fallback>
+                                </Avatar.Root>
+                                <span class="truncate">{e.name}</span>
+                            </span>
+                        </DropdownMenu.CheckboxItem>
+                    {/each}
+                </div>
+            </DropdownMenu.Content>
+        </DropdownMenu.Root>
     </div>
 
     <!-- =============================== MONAT =============================== -->
