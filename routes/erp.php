@@ -6,6 +6,7 @@ use App\Http\Controllers\Erp\ArticleController;
 use App\Http\Controllers\Erp\CompanyController;
 use App\Http\Controllers\Erp\DashboardController;
 use App\Http\Controllers\Erp\EmployeeController;
+use App\Http\Controllers\Erp\SiteController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -66,4 +67,17 @@ Route::middleware('auth:staff')->group(function (): void {
     Route::get('/mitarbeiter/{user}/bearbeiten', [EmployeeController::class, 'edit'])->name('erp.employees.edit');
     Route::patch('/mitarbeiter/{user}', [EmployeeController::class, 'update'])->name('erp.employees.update');
     Route::delete('/mitarbeiter/{user}', [EmployeeController::class, 'destroy'])->name('erp.employees.destroy');
+
+    /*
+     * Die EIGENEN Standorte von Dormed. Die der Kunden liegen unter der Firma
+     * und heissen `locations` (D-007) — zwei Begriffe, die dasselbe Wort
+     * benutzen, deshalb hier eine eigene Adresse.
+     */
+    Route::get('/betriebsstaetten', [SiteController::class, 'index'])->name('erp.sites.index');
+    Route::get('/betriebsstaetten/neu', [SiteController::class, 'create'])->name('erp.sites.create');
+    Route::post('/betriebsstaetten', [SiteController::class, 'store'])->name('erp.sites.store');
+    Route::get('/betriebsstaetten/{site}', [SiteController::class, 'show'])->name('erp.sites.show');
+    Route::get('/betriebsstaetten/{site}/bearbeiten', [SiteController::class, 'edit'])->name('erp.sites.edit');
+    Route::patch('/betriebsstaetten/{site}', [SiteController::class, 'update'])->name('erp.sites.update');
+    Route::delete('/betriebsstaetten/{site}', [SiteController::class, 'destroy'])->name('erp.sites.destroy');
 });

@@ -13,9 +13,9 @@ use App\Modules\Core\Queries\UserList;
 use App\Modules\Core\Queries\UserProfile;
 use App\Modules\Core\Services\Employees;
 use App\Support\DataTable\DataTable;
+use App\Support\Flash;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Redirector;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
@@ -62,7 +62,7 @@ final class EmployeeController extends Controller
     {
         $employee = Employees::create($request->validated());
 
-        return self::melde('success', "{$employee->name} wurde angelegt.")
+        return Flash::success("{$employee->name} wurde angelegt.")
             ->to(route('erp.employees.show', $employee));
     }
 
@@ -83,7 +83,7 @@ final class EmployeeController extends Controller
             return back()->withErrors(['is_active' => $e->getMessage()]);
         }
 
-        return self::melde('success', 'Änderungen gespeichert.')
+        return Flash::success('Änderungen gespeichert.')
             ->to(route('erp.employees.show', $user));
     }
 
@@ -92,26 +92,11 @@ final class EmployeeController extends Controller
         try {
             Employees::delete($user, $request->user());
         } catch (RuntimeException $e) {
-            return self::melde('error', $e->getMessage())->back();
+            return Flash::error($e->getMessage())->back();
         }
 
-        return self::melde('success', "{$user->name} wurde gelöscht.")
+        return Flash::success("{$user->name} wurde gelöscht.")
             ->to(route('erp.employees.index'));
-    }
-
-    /**
-     * Eine Rueckmeldung fuer die naechste Seite.
-     *
-     * `Inertia::flash()` und NICHT `->with(...)`: Inertia v3 fuehrt einen
-     * eigenen Flash-Speicher und liest die Laravel-Session dafuer nicht aus.
-     * Ueber `->with()` gesetzte Meldungen kaemen im Browser nie an — ohne
-     * Fehler, es taete nur nichts.
-     */
-    private static function melde(string $type, string $message): Redirector
-    {
-        Inertia::flash('toast', ['type' => $type, 'message' => $message]);
-
-        return redirect();
     }
 
     /**

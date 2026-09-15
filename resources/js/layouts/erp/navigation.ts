@@ -1,6 +1,7 @@
 import type { Component } from 'svelte';
 import Boxes from '@lucide/svelte/icons/boxes';
 import Building from '@lucide/svelte/icons/building';
+import Factory from '@lucide/svelte/icons/factory';
 import Calendar from '@lucide/svelte/icons/calendar';
 import CalendarClock from '@lucide/svelte/icons/calendar-clock';
 import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
@@ -20,6 +21,7 @@ import { dashboard } from '@/routes/erp';
 import { index as articles } from '@/routes/erp/articles';
 import { index as companies } from '@/routes/erp/companies';
 import { index as employees } from '@/routes/erp/employees';
+import { index as sites } from '@/routes/erp/sites';
 
 export type NavItem = {
     title: string;
@@ -85,6 +87,7 @@ export const navigation: NavGroup[] = [
         label: 'Verwaltung',
         items: [
             { title: 'Mitarbeiter', icon: UserCog, href: employees().url },
+            { title: 'Betriebsstätten', icon: Factory, href: sites().url },
             { title: 'Administration', icon: ShieldCheck },
             { title: 'Einstellungen', icon: Settings },
         ],
