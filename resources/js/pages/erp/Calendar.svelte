@@ -15,6 +15,10 @@
     import { Badge } from '@/components/ui/badge';
     import { Button } from '@/components/ui/button';
     import * as Dialog from '@/components/ui/dialog';
+    import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+    import { Input } from '@/components/ui/input';
+    import { NativeSelect } from '@/components/ui/native-select';
+    import { Textarea } from '@/components/ui/textarea';
     import * as DropdownMenu from '@/components/ui/dropdown-menu';
     import { ScrollArea } from '@/components/ui/scroll-area';
     import { Separator } from '@/components/ui/separator';
@@ -38,10 +42,10 @@
      * Die Woche beginnt am MONTAG. Das Original beginnt am Sonntag; hier wäre
      * das schlicht falsch.
      *
-     * **Verschieben wirkt nur im Browser.** Es gibt keine Terminverwaltung,
-     * gegen die man speichern könnte; eine Verschiebung ist beim nächsten Laden
-     * weg. Das ist kein Mangel des Entwurfs, sondern sein Zweck — die Bedienung
-     * soll beurteilbar sein, bevor das Schema steht.
+     * **Anlegen, Bearbeiten und Verschieben wirken nur im Browser.** Es gibt
+     * keine Terminverwaltung, gegen die man speichern könnte; alles ist beim
+     * nächsten Laden weg. Das ist kein Mangel des Entwurfs, sondern sein Zweck
+     * — die Bedienung soll beurteilbar sein, bevor das Schema steht.
      */
     type Employee = { id: string; name: string; photoUrl: string | null };
 
@@ -49,6 +53,7 @@
         id: string;
         title: string;
         location: string;
+        description: string;
         employeeId: string | null;
         assignee: string;
         color: 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'orange' | 'gray';
@@ -82,15 +87,19 @@
     let gewaehlt = $state<Set<string> | null>(null);
 
     /**
-     * Verschobene Termine — NUR im Browser.
+     * Änderungen — NUR im Browser.
      *
-     * Es gibt keine Terminverwaltung, gegen die man speichern könnte. Eine
-     * Verschiebung lebt deshalb in dieser Tabelle und ist beim nächsten Laden
-     * weg. Absichtlich als Überlagerung über den Prop und nicht als Kopie der
-     * ganzen Liste: so ist im Code sichtbar, was echt ist und was nur
-     * angefasst wurde.
+     * Es gibt keine Terminverwaltung, gegen die man speichern könnte. Was hier
+     * geändert oder angelegt wird, lebt in diesen beiden Feldern und ist beim
+     * nächsten Laden weg. Absichtlich als Überlagerung über den Prop und nicht
+     * als Kopie der ganzen Liste: so ist im Code sichtbar, was vom Server kommt
+     * und was nur angefasst wurde.
+     *
+     * Verschieben per Ziehen schreibt in dieselbe Tabelle wie das Formular —
+     * es ist dieselbe Art Änderung, nur mit der Maus.
      */
-    let verschoben = $state<Record<string, { start: string; end: string }>>({});
+    let entwurf = $state<Record<string, Partial<CalendarEvent>>>({});
+    let angelegt = $state<CalendarEvent[]>([]);
 
     /** Der Termin, dessen Kartei offen ist. */
     let offen = $state<Termin | null>(null);
@@ -193,20 +202,14 @@
     type Termin = CalendarEvent & { von: Date; bis: Date; mehrtaegig: boolean };
 
     const termine: Termin[] = $derived(
-        events
+        [...events, ...angelegt]
+            .map((e) => ({ ...e, ...entwurf[e.id] }))
             .filter((e) => e.employeeId === null || sichtbar.has(e.employeeId))
             .map((e) => {
-                const zeiten = verschoben[e.id] ?? { start: e.start, end: e.end };
-                const von = new Date(zeiten.start);
-                const bis = new Date(zeiten.end);
+                const von = new Date(e.start);
+                const bis = new Date(e.end);
 
-                return {
-                    ...e,
-                    ...zeiten,
-                    von,
-                    bis,
-                    mehrtaegig: e.allDay || !isSameDay(von, bis),
-                };
+                return { ...e, von, bis, mehrtaegig: e.allDay || !isSameDay(von, bis) };
             })
             .sort((a, b) => a.von.getTime() - b.von.getTime()),
     );
@@ -289,13 +292,10 @@
 
         const dauer = t.bis.getTime() - t.von.getTime();
 
-        verschoben = {
-            ...verschoben,
-            [t.id]: {
-                start: ziel.toISOString(),
-                end: new Date(ziel.getTime() + dauer).toISOString(),
-            },
-        };
+        aendere(t.id, {
+            start: ziel.toISOString(),
+            end: new Date(ziel.getTime() + dauer).toISOString(),
+        });
     }
 
     /** Im Zeitraster: auf Tag und Stunde, Minuten bleiben erhalten. */
@@ -332,7 +332,142 @@
         verschiebeAuf(ziel);
     }
 
-    const verschobeneAnzahl = $derived(Object.keys(verschoben).length);
+    /** Eine Änderung an einem Termin ablegen — egal ob per Maus oder Formular. */
+    function aendere(id: string, werte: Partial<CalendarEvent>): void {
+        entwurf = { ...entwurf, [id]: { ...entwurf[id], ...werte } };
+    }
+
+    const aenderungen = $derived(Object.keys(entwurf).length + angelegt.length);
+
+    /* ------------------------------------------------------------------ */
+    /* Anlegen und Bearbeiten                                              */
+    /* ------------------------------------------------------------------ */
+
+    type FormWerte = {
+        id: string | null;
+        title: string;
+        employeeId: string;
+        location: string;
+        description: string;
+        color: CalendarEvent['color'];
+        allDay: boolean;
+        startDate: string;
+        startTime: string;
+        endDate: string;
+        endTime: string;
+    };
+
+    let form = $state<FormWerte | null>(null);
+
+    /** `yyyy-mm-dd` — was ein `<input type="date">` erwartet, in ORTSZEIT. */
+    function alsDatum(d: Date): string {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function alsUhrzeit(d: Date): string {
+        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    /*
+     * `new Date('2026-09-15T08:00')` OHNE Zeitzonenangabe wird als Ortszeit
+     * gelesen — genau das ist hier gewollt. Mit angehängtem `Z` wäre 8 Uhr
+     * plötzlich 10 Uhr.
+     */
+    function ausFeldern(datum: string, uhrzeit: string): Date {
+        return new Date(`${datum}T${uhrzeit || '00:00'}`);
+    }
+
+    function bearbeiten(t: Termin): void {
+        offen = null;
+
+        form = {
+            id: t.id,
+            title: t.title,
+            employeeId: t.employeeId ?? '',
+            location: t.location,
+            description: t.description,
+            color: t.color,
+            allDay: t.allDay,
+            startDate: alsDatum(t.von),
+            startTime: alsUhrzeit(t.von),
+            endDate: alsDatum(t.bis),
+            endTime: alsUhrzeit(t.bis),
+        };
+    }
+
+    /** Klick in einen leeren Platz: neuer Termin, dort beginnend. */
+    function anlegen(tag: Date, stunde: number | null): void {
+        const start = startOfDay(tag);
+        start.setHours(stunde ?? 9, 0, 0, 0);
+
+        const ende = new Date(start.getTime() + 60 * 60 * 1000);
+
+        form = {
+            id: null,
+            title: '',
+            employeeId: employees[0]?.id ?? '',
+            location: '',
+            description: '',
+            color: 'blue',
+            allDay: false,
+            startDate: alsDatum(start),
+            startTime: alsUhrzeit(start),
+            endDate: alsDatum(ende),
+            endTime: alsUhrzeit(ende),
+        };
+    }
+
+    const formularGueltig = $derived(
+        form !== null &&
+            form.title.trim() !== '' &&
+            ausFeldern(form.endDate, form.endTime) > ausFeldern(form.startDate, form.startTime),
+    );
+
+    function speichern(): void {
+        if (!form || !formularGueltig) {
+            return;
+        }
+
+        const start = form.allDay
+            ? ausFeldern(form.startDate, '00:00')
+            : ausFeldern(form.startDate, form.startTime);
+
+        const ende = form.allDay
+            ? ausFeldern(form.endDate, '23:59')
+            : ausFeldern(form.endDate, form.endTime);
+
+        const werte = {
+            title: form.title.trim(),
+            employeeId: form.employeeId || null,
+            assignee: employees.find((e) => e.id === form!.employeeId)?.name ?? '—',
+            location: form.location,
+            description: form.description,
+            color: form.color,
+            allDay: form.allDay,
+            start: start.toISOString(),
+            end: ende.toISOString(),
+        };
+
+        if (form.id) {
+            aendere(form.id, werte);
+        } else {
+            // Der Schluessel ist lokal und bewusst erkennbar: nichts davon
+            // erreicht je einen Server.
+            angelegt = [...angelegt, { id: `lokal-${Date.now()}`, ...werte }];
+        }
+
+        form = null;
+    }
+
+    const farbnamen: { wert: CalendarEvent['color']; label: string }[] = [
+        { wert: 'blue', label: 'Blau' },
+        { wert: 'green', label: 'Grün' },
+        { wert: 'red', label: 'Rot' },
+        { wert: 'yellow', label: 'Gelb' },
+        { wert: 'purple', label: 'Violett' },
+        { wert: 'orange', label: 'Orange' },
+        { wert: 'gray', label: 'Grau' },
+    ];
 
     /* ------------------------------------------------------------------ */
     /* Zeitraster                                                          */
@@ -589,14 +724,20 @@
             <div class="grid grid-cols-7">
                 {#each monatszellen as zelle (zelle.datum.getTime())}
                     {@const eintraege = anTag(termine, zelle.datum)}
+                    <!--
+                        Der Klick auf die freie Fläche legt an. Die Termine
+                        darin fangen ihn selbst ab — sonst öffnete ein Klick auf
+                        einen Termin zugleich die Neuanlage darunter.
+                    -->
                     <div
-                        class="flex min-h-28 flex-col gap-1 border-t border-l p-1.5 first:border-l-0 [&:nth-child(7n+1)]:border-l-0"
+                        class="flex min-h-28 flex-col gap-1 border-t border-l p-1.5 first:border-l-0 hover:bg-accent/40 [&:nth-child(7n+1)]:border-l-0"
                         class:bg-muted-30={!zelle.imMonat}
                         class:ring-1={zieht !== null}
                         class:ring-primary-40={zieht !== null}
                         role="presentation"
                         ondragover={ablegenErlauben}
                         ondrop={(e) => ablegenAmTag(e, zelle.datum)}
+                        onclick={() => anlegen(zelle.datum, null)}
                     >
                         <span
                             class="flex size-6 items-center justify-center self-start rounded-full text-xs font-semibold"
@@ -613,7 +754,10 @@
                                 draggable="true"
                                 ondragstart={(e) => aufnehmen(e, t)}
                                 ondragend={() => (zieht = null)}
-                                onclick={() => (offen = t)}
+                                onclick={(e) => {
+                                    e.stopPropagation();
+                                    offen = t;
+                                }}
                                 class="flex cursor-grab items-center gap-1.5 truncate rounded border px-1.5 py-0.5 text-left text-xs active:cursor-grabbing {farben[
                                     t.color
                                 ]}"
@@ -631,9 +775,17 @@
                         {/each}
 
                         {#if eintraege.length > 3}
-                            <span class="px-1 text-xs text-muted-foreground">
+                            <button
+                                type="button"
+                                class="px-1 text-left text-xs text-muted-foreground hover:underline"
+                                onclick={(e) => {
+                                    e.stopPropagation();
+                                    anchor = zelle.datum;
+                                    view = 'day';
+                                }}
+                            >
                                 +{eintraege.length - 3} weitere
-                            </span>
+                            </button>
                         {/if}
                     </div>
                 {/each}
@@ -754,15 +906,17 @@
                                         ein Termin um 9:15 landet beim Ablegen
                                         auf 14 Uhr auf 14:15 und nicht auf 14:00.
                                     -->
-                                    <div
-                                        class="border-t border-dashed first:border-t-0"
+                                    <button
+                                        type="button"
+                                        aria-label="Termin anlegen"
+                                        class="block w-full border-t border-dashed first:border-t-0 hover:bg-accent/60"
                                         style="height:{STUNDEN_HOEHE}px"
                                         class:bg-muted-20={stunde < 8 || stunde >= 17}
                                         class:bg-accent={zieht !== null}
-                                        role="presentation"
                                         ondragover={ablegenErlauben}
                                         ondrop={(e) => ablegenImRaster(e, tag, stunde)}
-                                    ></div>
+                                        onclick={() => anlegen(tag, stunde)}
+                                    ></button>
                                 {/each}
 
                                 {#each belegt as { termin, spalte, von } (termin.id)}
@@ -876,11 +1030,11 @@
         Entwurf. Die Termine sind erfunden — es gibt weder eine Terminverwaltung
         noch ein Scheduling-Modul (Phase 6.1). Diese Fläche dient dazu, die
         Bedienung zu beurteilen, bevor das Schema steht.
-        {#if verschobeneAnzahl > 0}
+        {#if aenderungen > 0}
             <span class="font-medium text-foreground">
-                {verschobeneAnzahl}
-                {verschobeneAnzahl === 1 ? 'Termin wurde' : 'Termine wurden'} verschoben —
-                nur hier im Browser, beim nächsten Laden ist es weg.
+                {aenderungen}
+                {aenderungen === 1 ? 'Änderung' : 'Änderungen'} — nur hier im Browser, beim
+                nächsten Laden ist alles wieder wie vorher.
             </span>
         {/if}
     </p>
@@ -946,19 +1100,21 @@
             </dl>
 
             <Dialog.Footer>
-                {#if verschoben[offen.id]}
+                {#if entwurf[offen.id]}
                     <Button
                         variant="ghost"
+                        class="me-auto"
                         onclick={() => {
-                            const { [offen!.id]: _, ...rest } = verschoben;
-                            verschoben = rest;
+                            const { [offen!.id]: _, ...rest } = entwurf;
+                            entwurf = rest;
                             offen = null;
                         }}
                     >
-                        Verschiebung zurücknehmen
+                        Änderung zurücknehmen
                     </Button>
                 {/if}
                 <Button variant="outline" onclick={() => (offen = null)}>Schließen</Button>
+                <Button onclick={() => bearbeiten(offen!)}>Bearbeiten</Button>
             </Dialog.Footer>
         {/if}
     </Dialog.Content>
@@ -980,3 +1136,139 @@
         --tw-ring-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
     }
 </style>
+
+<!--
+    Anlegen und Bearbeiten in einer Maske — die Felder sind dieselben, nur das
+    Ziel unterscheidet sich. Wie alles hier: reiner Entwurf, gespeichert wird
+    nichts.
+-->
+<Dialog.Root
+    open={form !== null}
+    onOpenChange={(o) => {
+        if (!o) {
+            form = null;
+        }
+    }}
+>
+    <Dialog.Content class="sm:max-w-lg">
+        {#if form}
+            <Dialog.Header>
+                <Dialog.Title>
+                    {form.id ? 'Termin bearbeiten' : 'Termin anlegen'}
+                </Dialog.Title>
+                <Dialog.Description>
+                    Die Änderung bleibt im Browser. Es gibt noch keine
+                    Terminverwaltung, gegen die gespeichert werden könnte.
+                </Dialog.Description>
+            </Dialog.Header>
+
+            <FieldGroup>
+                <Field>
+                    <FieldLabel for="termin_title">Betreff</FieldLabel>
+                    <Input id="termin_title" bind:value={form.title} autofocus />
+                </Field>
+
+                <Field>
+                    <FieldLabel for="termin_employee">Verantwortlich</FieldLabel>
+                    <NativeSelect
+                        id="termin_employee"
+                        class="w-full"
+                        bind:value={form.employeeId}
+                    >
+                        {#each employees as e (e.id)}
+                            <option value={e.id}>{e.name}</option>
+                        {/each}
+                    </NativeSelect>
+                </Field>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <Field>
+                        <FieldLabel for="termin_start_date">Beginn</FieldLabel>
+                        <Input
+                            id="termin_start_date"
+                            type="date"
+                            bind:value={form.startDate}
+                        />
+                    </Field>
+
+                    <Field>
+                        <FieldLabel for="termin_start_time">Uhrzeit</FieldLabel>
+                        <Input
+                            id="termin_start_time"
+                            type="time"
+                            disabled={form.allDay}
+                            bind:value={form.startTime}
+                        />
+                    </Field>
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <Field>
+                        <FieldLabel for="termin_end_date">Ende</FieldLabel>
+                        <Input id="termin_end_date" type="date" bind:value={form.endDate} />
+                    </Field>
+
+                    <Field>
+                        <FieldLabel for="termin_end_time">Uhrzeit</FieldLabel>
+                        <Input
+                            id="termin_end_time"
+                            type="time"
+                            disabled={form.allDay}
+                            bind:value={form.endTime}
+                        />
+                    </Field>
+                </div>
+
+                <Field orientation="horizontal">
+                    <input
+                        id="termin_all_day"
+                        type="checkbox"
+                        class="size-4 accent-primary"
+                        bind:checked={form.allDay}
+                    />
+                    <FieldLabel for="termin_all_day">Ganztägig</FieldLabel>
+                </Field>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <Field>
+                        <FieldLabel for="termin_color">Farbe</FieldLabel>
+                        <NativeSelect id="termin_color" class="w-full" bind:value={form.color}>
+                            {#each farbnamen as f (f.wert)}
+                                <option value={f.wert}>{f.label}</option>
+                            {/each}
+                        </NativeSelect>
+                    </Field>
+
+                    <Field>
+                        <FieldLabel for="termin_location">Ort</FieldLabel>
+                        <Input id="termin_location" bind:value={form.location} />
+                    </Field>
+                </div>
+
+                <Field>
+                    <FieldLabel for="termin_description">Beschreibung</FieldLabel>
+                    <Textarea id="termin_description" rows={3} bind:value={form.description} />
+                </Field>
+            </FieldGroup>
+
+            <Dialog.Footer>
+                {#if form.id && angelegt.some((e) => e.id === form!.id)}
+                    <Button
+                        variant="ghost"
+                        class="me-auto text-destructive hover:text-destructive"
+                        onclick={() => {
+                            angelegt = angelegt.filter((e) => e.id !== form!.id);
+                            form = null;
+                        }}
+                    >
+                        Löschen
+                    </Button>
+                {/if}
+                <Button variant="outline" onclick={() => (form = null)}>Abbrechen</Button>
+                <Button disabled={!formularGueltig} onclick={speichern}>
+                    {form.id ? 'Speichern' : 'Anlegen'}
+                </Button>
+            </Dialog.Footer>
+        {/if}
+    </Dialog.Content>
+</Dialog.Root>
