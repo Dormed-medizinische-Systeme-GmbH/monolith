@@ -44,6 +44,12 @@ final class CompanyRequest extends FormRequest
              * ist die einzige Quelle dafuer, wer wozu gehoert (D-124) — eine
              * zweite Liste daneben liefe unweigerlich auseinander.
              *
+             * **Pflichtfelder in der Maske, aber nullable in der Spalte.** Jede
+             * Praxis, die jemand anlegt, bekommt einen Verantwortlichen. Die
+             * Spalte bleibt trotzdem offen, weil die Uebernahme aus CAS
+             * Datensaetze bringen wird, denen die Angabe fehlt — ein NOT NULL
+             * zwaenge dazu, beim Import jemanden zu erfinden.
+             *
              * Nur AKTIVE: ein stillgelegter Zugang gehoert nicht mehr ins Haus
              * und wird aus den `responsible_*`-Feldern ausgeblendet
              * (IDENTITY_RBAC.md).
@@ -51,11 +57,11 @@ final class CompanyRequest extends FormRequest
              * Informativ, KEINE Berechtigung (D-016).
              */
             'responsible_sales_id' => [
-                'nullable',
+                'required',
                 Rule::in(self::auswaehlbar('sales', $company?->responsible_sales_id)),
             ],
             'responsible_service_id' => [
-                'nullable',
+                'required',
                 Rule::in(self::auswaehlbar('service', $company?->responsible_service_id)),
             ],
 

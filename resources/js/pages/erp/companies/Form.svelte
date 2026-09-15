@@ -145,10 +145,11 @@
                         <NativeSelect
                             id="responsible_sales_id"
                             name="responsible_sales_id"
+                            required
                             class="w-full"
                             value={f.responsible_sales_id ?? ''}
                         >
-                            <option value="">— niemand —</option>
+                            <option value="" disabled>Bitte wählen</option>
                             {#each salesEmployees as person (person.id)}
                                 <option value={person.id}>
                                     {person.name}{person.foreign
@@ -167,10 +168,11 @@
                         <NativeSelect
                             id="responsible_service_id"
                             name="responsible_service_id"
+                            required
                             class="w-full"
                             value={f.responsible_service_id ?? ''}
                         >
-                            <option value="">— niemand —</option>
+                            <option value="" disabled>Bitte wählen</option>
                             {#each serviceEmployees as person (person.id)}
                                 <option value={person.id}>
                                     {person.name}{person.foreign

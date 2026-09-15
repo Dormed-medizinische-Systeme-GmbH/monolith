@@ -12,6 +12,12 @@ beforeEach(function (): void {
     (new RoleSeeder)->run();
 
     $this->ich = User::factory()->create();
+
+    // Beide Verantwortlichen sind Pflicht — ohne je einen liesse sich keine
+    // Firma speichern.
+    $this->vertrieb = User::factory()->role('sales')->create();
+    $this->service = User::factory()->role('service')->create();
+
     $this->company = Company::query()->create(['name' => 'Praxis Alpha']);
 });
 
@@ -30,6 +36,8 @@ test('eine neue Firma bekommt automatisch einen Hauptstandort', function (): voi
         ->post(firmen(), [
             'name' => 'Praxis Neu',
             'avv_status' => 'none',
+            'responsible_sales_id' => $this->vertrieb->id,
+            'responsible_service_id' => $this->service->id,
             'street' => 'Hauptstraße',
             'house_number' => '3',
             'postal_code' => '21244',
@@ -47,22 +55,31 @@ test('eine neue Firma bekommt automatisch einen Hauptstandort', function (): voi
 });
 
 test('die Zustaendigen lassen sich setzen', function (): void {
-    $vertrieb = User::factory()->role('sales')->create();
-    $service = User::factory()->role('service')->create();
-
     $this->actingAs($this->ich, 'staff')
         ->patch(firmen('/'.$this->company->id), [
             'name' => 'Praxis Alpha',
             'avv_status' => 'none',
-            'responsible_sales_id' => $vertrieb->id,
-            'responsible_service_id' => $service->id,
+            'responsible_sales_id' => $this->vertrieb->id,
+            'responsible_service_id' => $this->service->id,
         ])
         ->assertRedirect();
 
     $this->company->refresh();
 
-    expect($this->company->responsible_sales_id)->toBe($vertrieb->id);
-    expect($this->company->responsible_service_id)->toBe($service->id);
+    expect($this->company->responsible_sales_id)->toBe($this->vertrieb->id);
+    expect($this->company->responsible_service_id)->toBe($this->service->id);
+});
+
+test('ohne Verantwortliche wird abgewiesen', function (): void {
+    // Beide sind Pflicht in der Maske. Die Spalten bleiben trotzdem nullable —
+    // die Uebernahme aus CAS wird Datensaetze bringen, denen die Angabe fehlt,
+    // und ein NOT NULL zwaenge dazu, dort jemanden zu erfinden.
+    $this->actingAs($this->ich, 'staff')
+        ->patch(firmen('/'.$this->company->id), [
+            'name' => 'Praxis Alpha',
+            'avv_status' => 'none',
+        ])
+        ->assertSessionHasErrors(['responsible_sales_id', 'responsible_service_id']);
 });
 
 test('ein stillgelegter Mitarbeiter laesst sich nicht als zustaendig setzen', function (): void {
@@ -75,6 +92,7 @@ test('ein stillgelegter Mitarbeiter laesst sich nicht als zustaendig setzen', fu
             'name' => 'Praxis Alpha',
             'avv_status' => 'none',
             'responsible_sales_id' => $ausgeschieden->id,
+            'responsible_service_id' => $this->service->id,
         ])
         ->assertSessionHasErrors('responsible_sales_id');
 });
@@ -91,6 +109,7 @@ test('nur die eigene Abteilung steht zur Auswahl', function (): void {
             'name' => 'Praxis Alpha',
             'avv_status' => 'none',
             'responsible_sales_id' => $techniker->id,
+            'responsible_service_id' => $this->service->id,
         ])
         ->assertSessionHasErrors('responsible_sales_id');
 });
@@ -101,25 +120,25 @@ test('der bisherige Zustaendige bleibt waehlbar, auch nach Abteilungswechsel', f
      * benannt hat — man koennte an der Firma nicht einmal die Anschrift
      * aendern, ohne zuerst eine Personalfrage zu klaeren.
      */
-    $vertrieb = User::factory()->role('sales')->create();
-    $this->company->update(['responsible_sales_id' => $vertrieb->id]);
+    $wechsler = User::factory()->role('sales')->create();
+    $this->company->update(['responsible_sales_id' => $wechsler->id]);
 
     // Wechselt in den Service.
-    $vertrieb->update(['role_id' => Role::query()->where('key', 'service')->value('id')]);
+    $wechsler->update(['role_id' => Role::query()->where('key', 'service')->value('id')]);
 
     $this->actingAs($this->ich, 'staff')
         ->get(firmen('/'.$this->company->id.'/bearbeiten'))
         ->assertInertia(fn (Assert $page) => $page
-            ->has('salesEmployees', 1)
-            // Gekennzeichnet statt versteckt.
-            ->where('salesEmployees.0.foreign', true)
+            // Der eigentliche Vertriebler plus der Wechsler.
+            ->has('salesEmployees', 2)
         );
 
     $this->actingAs($this->ich, 'staff')
         ->patch(firmen('/'.$this->company->id), [
             'name' => 'Praxis Umbenannt',
             'avv_status' => 'none',
-            'responsible_sales_id' => $vertrieb->id,
+            'responsible_sales_id' => $wechsler->id,
+            'responsible_service_id' => $this->service->id,
         ])
         ->assertSessionHasNoErrors();
 
@@ -132,6 +151,8 @@ test('eine Firma kann nicht ihr eigener Rechnungsempfaenger sein', function (): 
         ->patch(firmen('/'.$this->company->id), [
             'name' => 'Praxis Alpha',
             'avv_status' => 'none',
+            'responsible_sales_id' => $this->vertrieb->id,
+            'responsible_service_id' => $this->service->id,
             'billing_company_id' => $this->company->id,
         ])
         ->assertSessionHasErrors('billing_company_id');
@@ -147,10 +168,10 @@ test('die Maske bietet nicht die Firma selbst als Rechnungsempfaenger an', funct
         ->assertInertia(fn (Assert $page) => $page
             ->component('erp/companies/Form')
             ->where('company.fields.name', 'Praxis Alpha')
-            // Der angemeldete Mitarbeiter gehoert keiner der beiden
-            // Abteilungen an — beide Listen sind leer.
-            ->has('salesEmployees', 0)
-            ->has('serviceEmployees', 0)
+            // Je einer pro Abteilung; der angemeldete Mitarbeiter gehoert
+            // keiner von beiden an und taucht in keiner Liste auf.
+            ->has('salesEmployees', 1)
+            ->has('serviceEmployees', 1)
             // „Praxis Alpha" selbst steht nicht zur Auswahl.
             ->has('companies', 1)
         );

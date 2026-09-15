@@ -52,6 +52,7 @@ final class DevelopmentAccountSeeder extends Seeder
         $this->furtherEmployees();
         $this->customerAccount();
         $this->furtherContacts();
+        $this->assignResponsibles();
     }
 
     /**
@@ -260,6 +261,33 @@ final class DevelopmentAccountSeeder extends Seeder
                 ['person_id' => $person->id],
                 ['email' => $mail, 'password' => 'password', 'is_active' => $aktiv],
             );
+        }
+    }
+
+    /**
+     * Verantwortliche je Praxis.
+     *
+     * In der Maske sind beide Felder Pflicht — die Seed-Firmen sollen deshalb
+     * nicht in einem Zustand liegen, den man ueber die Oberflaeche gar nicht
+     * herstellen koennte. Wer zustaendig ist, ist wie die Rollen selbst
+     * Platzhalter.
+     */
+    private function assignResponsibles(): void
+    {
+        $vertrieb = User::query()->whereRelation('role', 'key', 'sales')
+            ->where('is_active', true)->orderBy('last_name')->pluck('id');
+        $service = User::query()->whereRelation('role', 'key', 'service')
+            ->where('is_active', true)->orderBy('last_name')->pluck('id');
+
+        if ($vertrieb->isEmpty() || $service->isEmpty()) {
+            return;
+        }
+
+        foreach (Company::query()->orderBy('name')->get() as $index => $company) {
+            $company->update([
+                'responsible_sales_id' => $vertrieb[$index % $vertrieb->count()],
+                'responsible_service_id' => $service[$index % $service->count()],
+            ]);
         }
     }
 
