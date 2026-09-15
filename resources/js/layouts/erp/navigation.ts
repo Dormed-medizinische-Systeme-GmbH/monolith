@@ -19,6 +19,7 @@ import Users from '@lucide/svelte/icons/users';
 import Wrench from '@lucide/svelte/icons/wrench';
 import { dashboard } from '@/routes/erp';
 import { index as articles } from '@/routes/erp/articles';
+import { calendar } from '@/routes/erp';
 import { index as companies } from '@/routes/erp/companies';
 import { index as employees } from '@/routes/erp/employees';
 import { index as sites } from '@/routes/erp/sites';
@@ -53,7 +54,7 @@ export const navigation: NavGroup[] = [
                 icon: LayoutDashboard,
                 href: dashboard().url,
             },
-            { title: 'Kalender', icon: Calendar },
+            { title: 'Kalender', icon: Calendar, href: calendar().url },
             { title: 'Termine', icon: CalendarClock },
             { title: 'Urlaube', icon: Plane },
         ],

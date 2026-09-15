@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Erp\ArticleController;
+use App\Http\Controllers\Erp\CalendarController;
 use App\Http\Controllers\Erp\CompanyController;
 use App\Http\Controllers\Erp\DashboardController;
 use App\Http\Controllers\Erp\EmployeeController;
@@ -71,6 +72,13 @@ Route::middleware('auth:staff')->group(function (): void {
     Route::delete('/firmen/{company}/standorte/{location}', [CompanyController::class, 'destroyLocation'])
         ->scopeBindings()
         ->name('erp.companies.locations.destroy');
+
+    /*
+     * Kalendervorschau. Noch ohne Fachlichkeit: es gibt weder Termine in der
+     * Datenbank noch ein Scheduling-Modul (Phase 6.1). Die Flaeche existiert,
+     * um die Bedienung zu beurteilen, bevor das Schema steht.
+     */
+    Route::get('/kalender', CalendarController::class)->name('erp.calendar');
 
     // Katalog, kein Bestand — der kommt mit dem Ledger (D-102).
     Route::get('/artikel', [ArticleController::class, 'index'])->name('erp.articles.index');
