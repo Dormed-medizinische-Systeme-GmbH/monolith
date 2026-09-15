@@ -1188,18 +1188,20 @@
         </span>
     </div>
 
-    <p class="text-xs text-muted-foreground">
-        Entwurf. Die Termine sind erfunden — es gibt weder eine Terminverwaltung
-        noch ein Scheduling-Modul (Phase 6.1). Diese Fläche dient dazu, die
-        Bedienung zu beurteilen, bevor das Schema steht.
-        {#if aenderungen > 0}
+    <!--
+        Nur der Zähler bleibt: solange es keine Terminverwaltung gibt, muss
+        sichtbar sein, dass Änderungen den nächsten Seitenaufruf nicht
+        überleben. Er zeigt sich erst, wenn es etwas zu zeigen gibt.
+    -->
+    {#if aenderungen > 0}
+        <p class="text-xs text-muted-foreground">
             <span class="font-medium text-foreground">
                 {aenderungen}
-                {aenderungen === 1 ? 'Änderung' : 'Änderungen'} — nur hier im Browser, beim
-                nächsten Laden ist alles wieder wie vorher.
+                {aenderungen === 1 ? 'Änderung' : 'Änderungen'}
             </span>
-        {/if}
-    </p>
+            — nur hier im Browser, beim nächsten Laden ist alles wieder wie vorher.
+        </p>
+    {/if}
 </div>
 
 <!--

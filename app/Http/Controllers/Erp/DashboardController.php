@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Core\Models\Employee;
 use App\Support\AccessPoint;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,6 +29,21 @@ final class DashboardController extends Controller
             // Beweist im Browser und im Architekturtest, welche Postgres-Rolle
             // den Request bedient hat (ADR-036).
             'accessPoint' => AccessPoint::describe('erp', 'ERP', 'Inertia + Svelte'),
+
+            /*
+             * Fuer die Auswahl oben rechts. Noch ohne Wirkung — sobald das
+             * Cockpit steht (D-126), entscheidet sie, wessen Zahlen es zeigt.
+             */
+            'employees' => Employee::query()
+                ->where('is_active', true)
+                ->orderBy('last_name')
+                ->get()
+                ->map(fn (Employee $employee): array => [
+                    'id' => $employee->id,
+                    'name' => $employee->name,
+                    'photoUrl' => $employee->photo_url,
+                ])
+                ->all(),
         ]);
     }
 }
