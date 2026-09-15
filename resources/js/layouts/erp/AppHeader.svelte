@@ -1,13 +1,19 @@
 <script lang="ts">
-    import * as Sidebar from '@/components/ui/sidebar';
+    import { Link } from '@inertiajs/svelte';
+    import { Button, buttonVariants } from '@/components/ui/button';
     import { Separator } from '@/components/ui/separator';
+    import * as Sidebar from '@/components/ui/sidebar';
+    import type { PageAction } from './page-actions';
 
     /**
-     * Die Kopfzeile über dem Inhalt: Umschalter für die Seitenleiste und der
-     * Name der aktuellen Fläche. Der Titel kommt von der Seite, nicht aus einer
-     * zweiten Zuordnung von Pfad zu Bezeichnung.
+     * Die Kopfzeile über dem Inhalt: Umschalter für die Seitenleiste, der Name
+     * der aktuellen Fläche und rechts deren Aktionen.
+     *
+     * Die Aktionen stehen hier und nicht in der Seite, damit sie immer an
+     * derselben Stelle sitzen — unabhängig davon, wie weit man gescrollt hat
+     * und wie die Fläche darunter aufgebaut ist.
      */
-    let { title }: { title?: string } = $props();
+    let { title, actions = [] }: { title?: string; actions?: PageAction[] } = $props();
 </script>
 
 <header
@@ -17,5 +23,37 @@
     {#if title}
         <Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
         <span class="text-sm font-medium">{title}</span>
+    {/if}
+
+    {#if actions.length > 0}
+        <div class="ms-auto flex items-center gap-2">
+            {#each actions as action (action.label)}
+                {#if action.href}
+                    <Link
+                        href={action.href}
+                        class={buttonVariants({
+                            variant: action.variant ?? 'outline',
+                            size: 'sm',
+                        })}
+                    >
+                        {#if action.icon}
+                            <action.icon class="size-4" />
+                        {/if}
+                        {action.label}
+                    </Link>
+                {:else}
+                    <Button
+                        variant={action.variant ?? 'outline'}
+                        size="sm"
+                        onclick={action.onSelect}
+                    >
+                        {#if action.icon}
+                            <action.icon class="size-4" />
+                        {/if}
+                        {action.label}
+                    </Button>
+                {/if}
+            {/each}
+        </div>
     {/if}
 </header>

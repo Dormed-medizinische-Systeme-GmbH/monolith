@@ -1,7 +1,9 @@
 <script lang="ts">
-    import { Form, Link } from '@inertiajs/svelte';
+    import { Form, Link, router } from '@inertiajs/svelte';
     import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+    import Trash from '@lucide/svelte/icons/trash';
     import AppHead from '@/components/AppHead.svelte';
+    import * as AlertDialog from '@/components/ui/alert-dialog';
     import Heading from '@/components/Heading.svelte';
     import InputError from '@/components/InputError.svelte';
     import { Button, buttonVariants } from '@/components/ui/button';
@@ -10,7 +12,7 @@
     import { NativeSelect } from '@/components/ui/native-select';
     import { Spinner } from '@/components/ui/spinner';
     import { Switch } from '@/components/ui/switch';
-    import { index, show, store, update } from '@/routes/erp/employees';
+    import { destroy, index, show, store, update } from '@/routes/erp/employees';
     import type { EmployeeProfile, RoleOption } from './profile';
 
     /**
@@ -31,6 +33,12 @@
      * Schalter sendete sonst gar nichts, und `boolean` in der Prüfung schlüge
      * fehl statt `false` zu lesen.
      */
+    let loeschenOffen = $state(false);
+
+    function loeschen(): void {
+        router.delete(destroy(employee!.id).url);
+    }
+
     let aktivGewaehlt = $state<boolean | null>(null);
     let bypassGewaehlt = $state<boolean | null>(null);
 
@@ -186,8 +194,44 @@
                     >
                         Abbrechen
                     </Link>
+
+                    {#if !neu}
+                        <!--
+                            Abgesetzt nach rechts und nur beim Bearbeiten: eine
+                            zerstörende Aktion gehört nicht neben „Speichern",
+                            und in der reinen Ansicht hat sie gar nichts verloren.
+                        -->
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            class="ms-auto text-destructive hover:text-destructive"
+                            onclick={() => (loeschenOffen = true)}
+                        >
+                            <Trash class="size-4" />
+                            Löschen
+                        </Button>
+                    {/if}
                 </div>
             </FieldGroup>
         {/snippet}
     </Form>
 </div>
+
+{#if !neu}
+    <AlertDialog.Root bind:open={loeschenOffen}>
+        <AlertDialog.Content>
+            <AlertDialog.Header>
+                <AlertDialog.Title>{employee?.name} löschen?</AlertDialog.Title>
+                <AlertDialog.Description>
+                    Der Datensatz bleibt erhalten und wird nur ausgeblendet (D-018) —
+                    Spuren in anderen Datensätzen laufen dadurch nicht ins Leere. Der
+                    Zugang ist danach gesperrt.
+                </AlertDialog.Description>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+                <AlertDialog.Cancel>Abbrechen</AlertDialog.Cancel>
+                <AlertDialog.Action onclick={loeschen}>Löschen</AlertDialog.Action>
+            </AlertDialog.Footer>
+        </AlertDialog.Content>
+    </AlertDialog.Root>
+{/if}

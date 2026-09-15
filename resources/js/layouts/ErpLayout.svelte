@@ -7,6 +7,7 @@
     import AppSidebar from './erp/AppSidebar.svelte';
     import CommandPalette from './erp/CommandPalette.svelte';
     import { isCurrent, navigation } from './erp/navigation';
+    import type { PageAction } from './erp/page-actions';
 
     /**
      * Die Hülle aller ERP-Flächen: Seitenleiste, Kopfzeile, Inhalt.
@@ -15,7 +16,11 @@
      * anders aus, und ein Layout, das beides kann, könnte am Ende keins von
      * beidem richtig. Die Zuordnung Seite → Layout steht in `app.ts`.
      */
-    let { children }: { children?: Snippet } = $props();
+    let {
+        children,
+        // Kommt aus der Seite über `setLayoutProps` (siehe `erp/page-actions.ts`).
+        actions = [],
+    }: { children?: Snippet; actions?: PageAction[] } = $props();
 
     let searchOpen = $state(false);
 
@@ -53,7 +58,7 @@
     <AppSidebar onOpenSearch={() => (searchOpen = true)} />
 
     <Sidebar.Inset>
-        <AppHeader title={section} />
+        <AppHeader title={section} {actions} />
 
         <div class="flex flex-1 flex-col gap-4 p-4 md:p-6">
             {@render children?.()}

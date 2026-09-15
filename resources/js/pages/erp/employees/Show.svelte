@@ -1,27 +1,72 @@
 <script lang="ts">
-    import { Link, router } from '@inertiajs/svelte';
+    import type { Component } from 'svelte';
+    import { Link, setLayoutProps } from '@inertiajs/svelte';
     import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+    import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
+    import Clock from '@lucide/svelte/icons/clock';
+    import Cloud from '@lucide/svelte/icons/cloud';
+    import IdCard from '@lucide/svelte/icons/id-card';
+    import KeyRound from '@lucide/svelte/icons/key-round';
+    import Mail from '@lucide/svelte/icons/mail';
     import Pencil from '@lucide/svelte/icons/pencil';
-    import Trash2 from '@lucide/svelte/icons/trash-2';
+    import ShieldCheck from '@lucide/svelte/icons/shield-check';
     import AppHead from '@/components/AppHead.svelte';
-    import * as AlertDialog from '@/components/ui/alert-dialog';
     import { Badge } from '@/components/ui/badge';
-    import { Button, buttonVariants } from '@/components/ui/button';
-    import { Separator } from '@/components/ui/separator';
-    import { destroy, edit, index } from '@/routes/erp/employees';
+    import { edit, index } from '@/routes/erp/employees';
     import StatusBadge from './StatusBadge.svelte';
     import type { EmployeeProfile } from './profile';
 
     /**
-     * Ein Mitarbeiter. Gleiche Bildsprache wie Firmen und Artikel.
+     * Ein Mitarbeiter.
+     *
+     * Eine durchgehende Liste statt Abschnitten: die acht Angaben sind alle
+     * gleichrangig, und zwei Überschriften darüber zwingen nur dazu, zweimal
+     * zu suchen. Die Beschriftungen tragen Symbole, damit man die gesuchte
+     * Zeile ohne Lesen findet.
      */
     let { employee }: { employee: EmployeeProfile } = $props();
 
-    let loeschenOffen = $state(false);
+    // Löschen sitzt im Bearbeiten-Formular, nicht hier — eine zerstörende
+    // Aktion gehört nicht neben eine reine Ansicht.
+    $effect(() => {
+        setLayoutProps({
+            actions: [{ label: 'Bearbeiten', icon: Pencil, href: edit(employee.id).url }],
+        });
+    });
 
-    function loeschen(): void {
-        router.delete(destroy(employee.id).url);
-    }
+    type Zeile = { icon: Component; label: string; value: string };
+
+    const zeilen: Zeile[] = $derived([
+        { icon: Mail, label: 'E-Mail', value: employee.email },
+        { icon: IdCard, label: 'Rolle', value: employee.role.name },
+        {
+            icon: KeyRound,
+            label: 'Passwort',
+            value: employee.anmeldung.hasPassword ? 'gesetzt' : 'nicht gesetzt',
+        },
+        {
+            icon: ShieldCheck,
+            label: 'Zwei Faktoren',
+            value: employee.anmeldung.twoFactorConfirmedAt
+                ? `bestätigt am ${employee.anmeldung.twoFactorConfirmedAt}`
+                : 'nicht eingerichtet',
+        },
+        {
+            icon: Cloud,
+            label: 'Microsoft-Konto',
+            value: employee.anmeldung.entraOid ?? 'noch nicht verknüpft',
+        },
+        {
+            icon: Clock,
+            label: 'Zuletzt angemeldet',
+            value: employee.anmeldung.lastLoginAt ?? 'noch nie',
+        },
+        {
+            icon: CalendarPlus,
+            label: 'Angelegt',
+            value: employee.angelegtAm ?? '—',
+        },
+    ]);
 </script>
 
 <AppHead title={employee.name} />
@@ -36,110 +81,39 @@
     </Link>
 
     <header class="flex flex-wrap items-start justify-between gap-4">
-        <div>
-            <h2 class="text-xl font-semibold tracking-tight">{employee.name}</h2>
-            <p class="text-sm text-muted-foreground">{employee.email}</p>
-            <div class="flex flex-wrap items-center gap-2 pt-2">
-                <Badge variant="secondary">{employee.role.name}</Badge>
-                <StatusBadge
-                    active={employee.flags.active}
-                    hasPassword={employee.anmeldung.hasPassword}
-                />
-                {#if employee.flags.admin}
-                    <!-- Bootstrap-/IT-Bypass (D-028), kein Ersatz für eine Rolle. -->
-                    <Badge variant="outline" class="text-muted-foreground">Bypass</Badge>
-                {/if}
-            </div>
-        </div>
+        <h2 class="text-xl font-semibold tracking-tight">{employee.name}</h2>
 
-        <div class="flex shrink-0 gap-2">
-            <Link
-                href={edit(employee.id).url}
-                class={buttonVariants({ variant: 'outline', size: 'sm' })}
-            >
-                <Pencil class="size-4" />
-                Bearbeiten
-            </Link>
-            <Button variant="outline" size="sm" onclick={() => (loeschenOffen = true)}>
-                <Trash2 class="size-4" />
-                Löschen
-            </Button>
+        <div class="flex shrink-0 flex-wrap items-center gap-2">
+            <Badge variant="secondary">{employee.role.name}</Badge>
+            <StatusBadge
+                active={employee.flags.active}
+                hasPassword={employee.anmeldung.hasPassword}
+            />
+            {#if employee.flags.admin}
+                <!-- Bootstrap-/IT-Bypass (D-028), kein Ersatz für eine Rolle. -->
+                <Badge variant="outline" class="text-muted-foreground">Bypass</Badge>
+            {/if}
         </div>
     </header>
 
-    <Separator />
+    <dl class="space-y-2.5 text-sm">
+        {#each zeilen as zeile (zeile.label)}
+            <div class="flex items-baseline gap-3">
+                <dt
+                    class="flex w-48 shrink-0 items-baseline gap-2 text-muted-foreground"
+                >
+                    <zeile.icon class="size-4 shrink-0 translate-y-0.5" />
+                    {zeile.label}
+                </dt>
+                <dd>{zeile.value}</dd>
+            </div>
+        {/each}
+    </dl>
 
-    <div class="grid gap-x-10 gap-y-6 sm:grid-cols-2">
-        <section class="space-y-2">
-            <h3 class="text-xs tracking-wide text-muted-foreground uppercase">
-                Anmeldung
-            </h3>
-            <dl class="space-y-1 text-sm">
-                <div class="flex gap-3">
-                    <dt class="w-36 shrink-0 text-muted-foreground">Passwort</dt>
-                    <dd>
-                        {employee.anmeldung.hasPassword ? 'gesetzt' : 'nicht gesetzt'}
-                    </dd>
-                </div>
-                <div class="flex gap-3">
-                    <dt class="w-36 shrink-0 text-muted-foreground">Zwei Faktoren</dt>
-                    <dd>
-                        {employee.anmeldung.twoFactorConfirmedAt
-                            ? `bestätigt am ${employee.anmeldung.twoFactorConfirmedAt}`
-                            : 'nicht eingerichtet'}
-                    </dd>
-                </div>
-                <div class="flex gap-3">
-                    <dt class="w-36 shrink-0 text-muted-foreground">Microsoft-Konto</dt>
-                    <dd>{employee.anmeldung.entraOid ?? 'noch nicht verknüpft'}</dd>
-                </div>
-                <div class="flex gap-3">
-                    <dt class="w-36 shrink-0 text-muted-foreground">Zuletzt</dt>
-                    <dd>{employee.anmeldung.lastLoginAt ?? 'noch nie angemeldet'}</dd>
-                </div>
-            </dl>
-            <!--
-                Der Passwort-Login ist die Übergangslösung. Ziel ist
-                Microsoft-Entra-SSO (D-029) — danach ist „Passwort nicht gesetzt"
-                der Normalfall und kein Mangel.
-            -->
-        </section>
-
-        <section class="space-y-2">
-            <h3 class="text-xs tracking-wide text-muted-foreground uppercase">
-                Zuordnung
-            </h3>
-            <dl class="space-y-1 text-sm">
-                <div class="flex gap-3">
-                    <dt class="w-36 shrink-0 text-muted-foreground">Rolle</dt>
-                    <dd>{employee.role.name}</dd>
-                </div>
-                <div class="flex gap-3">
-                    <dt class="w-36 shrink-0 text-muted-foreground">Angelegt</dt>
-                    <dd>{employee.angelegtAm ?? '—'}</dd>
-                </div>
-            </dl>
-            <p class="pt-1 text-xs text-muted-foreground">
-                Genau eine Rolle je Mitarbeiter (D-124). Was sie erlaubt, entscheidet
-                der Berechtigungskatalog — der ist noch nicht gebaut.
-            </p>
-        </section>
-    </div>
+    <!--
+        Der Passwort-Login ist die Übergangslösung. Ziel ist Microsoft-Entra-SSO
+        (D-029) — danach ist „Passwort nicht gesetzt" der Normalfall und kein
+        Mangel. Was die Rolle erlaubt, entscheidet der Berechtigungskatalog; der
+        ist noch nicht gebaut.
+    -->
 </div>
-
-<AlertDialog.Root bind:open={loeschenOffen}>
-    <AlertDialog.Content>
-        <AlertDialog.Header>
-            <AlertDialog.Title>{employee.name} löschen?</AlertDialog.Title>
-            <AlertDialog.Description>
-                Der Datensatz bleibt erhalten und wird nur ausgeblendet (D-018) —
-                Spuren in anderen Datensätzen laufen dadurch nicht ins Leere. Der
-                Zugang ist danach gesperrt.
-            </AlertDialog.Description>
-        </AlertDialog.Header>
-        <AlertDialog.Footer>
-            <AlertDialog.Cancel>Abbrechen</AlertDialog.Cancel>
-            <AlertDialog.Action onclick={loeschen}>Löschen</AlertDialog.Action>
-        </AlertDialog.Footer>
-    </AlertDialog.Content>
-</AlertDialog.Root>
