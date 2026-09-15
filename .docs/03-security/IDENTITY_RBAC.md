@@ -39,8 +39,16 @@ Navigations-/Cockpit-Wirkung: [`../09-ui/NAVIGATION.md`](../09-ui/NAVIGATION.md)
 | `is_active` | boolean | – | default `true` — inaktiv ⇒ kein Login, aus `responsible_*` ausgeblendet |
 | `role_id` | FK → `roles` | – | **NOT NULL (D-124)** — genau eine Rolle je Mitarbeiter |
 | `last_login_at` | datetime | ✓ | |
+| `photo_path` | string | ✓ | Ablageschlüssel des Mitarbeiterfotos im Object Storage (ADR-045), z. B. `employees/A.Draheim.jpg`. Nur der Schlüssel, nie eine vollständige Adresse — die baut `Storage::url()`. **Nicht `$fillable`**: wird nicht über die Mitarbeitermaske gepflegt |
 
-`SoftDeletes` (D-018). **Kein** Personalnummer/Kostenstelle/HR-Datum (D-033). **Kein**
+`SoftDeletes` (D-018). **Kein** Personalnummer/Kostenstelle/HR-Datum (D-033).
+
+> **`photo_path` ist kein Widerspruch zu D-033** (ergänzt 2026-09-15). Gestrichen
+> sind dort Personalnummer, Kostenstelle und Ein-/Austrittsdatum — also
+> HR-Verwaltung. Das Foto dient dem Wiedererkennen in Listen und Zuordnungen und
+> ist damit Bedienung, keine Personalakte. Es ist bewusst **nicht** über die
+> Mitarbeitermaske änderbar; ein eigener Vorgang mit eigener Ability (D-136) kommt
+> später. **Kein**
 `name`-Feld — `getNameAttribute()`-Accessor (`first_name . ' ' . last_name`), keine
 Spalte (D-093; ursprünglicher Breeze-Kompat-Grund entfällt mit ADR-023/Fortify).
 

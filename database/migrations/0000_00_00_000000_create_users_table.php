@@ -50,6 +50,19 @@ return new class extends Migration
             // `role_user` und `is_primary` sind ersatzlos entfallen.
             $table->foreignUuid('role_id')->constrained('roles')->restrictOnDelete();
 
+            /*
+             * Der Ablagepfad des Mitarbeiterfotos im Object Storage (ADR-045),
+             * z. B. `employees/A.Draheim.jpg`. Nur der Schluessel, nie eine
+             * vollstaendige Adresse — die baut `Storage::url()` aus `AWS_URL`,
+             * und ein Wechsel des Hostnamens bliebe sonst in jeder Zeile stehen.
+             *
+             * Kein Widerspruch zu D-033: gestrichen sind dort Personalnummer,
+             * Kostenstelle und Ein-/Austrittsdatum, also HR-Verwaltung. Das Foto
+             * dient dem Wiedererkennen in Listen und Zuordnungen und ist damit
+             * Bedienung, keine Personalakte.
+             */
+            $table->string('photo_path')->nullable();
+
             $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

@@ -6,6 +6,7 @@ use App\Modules\Core\Models\Role;
 use App\Modules\Core\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function (): void {
@@ -205,4 +206,37 @@ test('die Detailansicht trennt die drei Anmeldewege', function (): void {
             // Bis SSO uebernimmt, bleibt die Verknuepfung leer (D-029).
             ->where('employee.anmeldung.entraOid', null)
         );
+});
+
+test('das Foto kommt aus dem Object Storage und ist nicht ueber die Maske setzbar', function (): void {
+    /*
+     * `photo_path` ist nicht `$fillable`: ein untergeschobenes Formularfeld
+     * kann es nicht setzen. Gepflegt wird es aus dem Seed, spaeter aus einem
+     * eigenen Vorgang mit eigener Ability.
+     */
+    $kollege = User::factory()->create();
+    $kollege->photo_path = 'employees/A.Draheim.jpg';
+    $kollege->save();
+
+    $this->actingAs($this->ich, 'staff')
+        ->get(erp('/'.$kollege->id))
+        ->assertInertia(fn (Assert $page) => $page
+            // Die Adresse baut `Storage::url()` aus `AWS_URL` — die Anwendung
+            // steht nicht im Abrufweg (ADR-045).
+            ->where('employee.photoUrl', Storage::disk('s3')->url('employees/A.Draheim.jpg'))
+        );
+
+    $this->actingAs($this->ich, 'staff')
+        ->patch(erp('/'.$kollege->id), [
+            'first_name' => $kollege->first_name,
+            'last_name' => $kollege->last_name,
+            'email' => $kollege->email,
+            'role_id' => $kollege->role_id,
+            'is_active' => true,
+            'is_admin' => false,
+            'photo_path' => 'employees/jemand-anderes.jpg',
+        ])
+        ->assertRedirect();
+
+    expect($kollege->fresh()->photo_path)->toBe('employees/A.Draheim.jpg');
 });

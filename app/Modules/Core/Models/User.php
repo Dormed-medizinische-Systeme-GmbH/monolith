@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
@@ -34,6 +35,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property bool $is_admin
  * @property bool $is_active
  * @property string $role_id
+ * @property string|null $photo_path
+ * @property-read string|null $photo_url
  */
 final class User extends Authenticatable
 {
@@ -52,6 +55,12 @@ final class User extends Authenticatable
         return UserFactory::new();
     }
 
+    /**
+     * `photo_path` steht bewusst NICHT hier. Das Foto wird nicht ueber die
+     * Mitarbeitermaske gepflegt — es kommt aus dem Seed, spaeter aus einem
+     * eigenen Vorgang mit eigener Ability. Ausserhalb von `$fillable` kann es
+     * kein Formularfeld setzen, auch kein untergeschobenes.
+     */
     protected $fillable = [
         'first_name', 'last_name', 'email', 'password',
         'entra_oid', 'is_admin', 'is_active', 'role_id',
@@ -76,6 +85,21 @@ final class User extends Authenticatable
     protected function name(): Attribute
     {
         return Attribute::get(fn (): string => trim("{$this->first_name} {$this->last_name}"));
+    }
+
+    /**
+     * Die Adresse des Mitarbeiterfotos, oder `null`.
+     *
+     * `Storage::url()` baut nur eine Zeichenkette — die Anwendung steht nicht
+     * im Abrufweg, der Browser holt die Datei direkt beim Speicher (ADR-045).
+     *
+     * @return Attribute<string|null, never>
+     */
+    protected function photoUrl(): Attribute
+    {
+        return Attribute::get(fn (): ?string => $this->photo_path === null
+            ? null
+            : Storage::disk('s3')->url($this->photo_path));
     }
 
     protected function casts(): array

@@ -54,49 +54,119 @@ final class DevelopmentAccountSeeder extends Seeder
     }
 
     /**
-     * Weitere Mitarbeiter, je Rolle mindestens einer (D-125).
+     * Weitere Mitarbeiter — abgeleitet aus `database/seeders/employees/`.
      *
-     * Bewusst mit allen Zustaenden, die „ich komme nicht rein" ausloesen
-     * koennen — sie haben verschiedene Ursachen und sehen in der Liste
-     * verschieden aus: stillgelegt (D-032), ohne Passwort (der Normalfall,
-     * sobald Entra-SSO uebernimmt, D-029), mit zweitem Faktor (ADR-043).
+     * Das Verzeichnis ist die Quelle, nicht eine Liste in dieser Datei: die
+     * Fotos heissen `Initial.Nachname.jpg`, daraus entstehen Name, Mailadresse
+     * und die Verknuepfung zum Bild. Kommt ein Foto dazu, kommt der Mitarbeiter
+     * mit — dieselbe Ueberlegung wie im `ObjectStorageSeeder`, wo eine
+     * gepflegte Ordnerliste driften wuerde.
+     *
+     * > **Der Vorname ist nur die Initiale**, weil mehr in den Dateinamen nicht
+     * > steht. „A. Draheim" ist damit unvollstaendig, aber nicht erfunden — und
+     * > das ist die bessere der beiden Moeglichkeiten.
+     *
+     * > **Die Rollenzuordnung ist Platzhalter.** Wer welcher Abteilung
+     * > angehoert, geht aus den Dateien nicht hervor; verteilt wird der Reihe
+     * > nach, damit die Listenansicht Abwechslung zeigt. Vor dem ersten echten
+     * > Einsatz gehoert das ersetzt.
      */
     private function furtherEmployees(): void
     {
-        /** @var list<array{string, string, string, string, bool, bool, ?int}> */
-        $mitarbeiter = [
-            // Vorname, Nachname, Rolle, Mail-Praefix, aktiv, Passwort gesetzt, Tage seit Anmeldung
-            ['Marlene', 'Krause', 'management', 'm.krause', true, true, 1],
-            ['Sven', 'Ortmann', 'backoffice', 's.ortmann', true, true, 3],
-            ['Jasmin', 'Delacroix', 'sales', 'j.delacroix', true, true, 12],
-            ['Rüdiger', 'Falk', 'service', 'r.falk', true, true, 0],
-            // Neu angelegt, noch nicht freigeschaltet: kein Passwort, nie angemeldet.
-            ['Tim', 'Weber', 'service', 't.weber', true, false, null],
-            // Ausgeschieden: Datensatz bleibt, Zugang zu.
-            ['Beate', 'Hoffmann', 'backoffice', 'b.hoffmann', false, true, 240],
-        ];
+        $rollen = Role::query()->where('is_active', true)->orderBy('key')->pluck('id', 'key');
 
-        foreach ($mitarbeiter as [$vorname, $nachname, $rolle, $praefix, $aktiv, $mitPasswort, $tage]) {
-            User::query()->updateOrCreate(
-                ['email' => $praefix.'@dormed.de'],
+        foreach ($this->employeePhotos() as $index => [$initiale, $nachname, $pfad]) {
+            $email = mb_strtolower($initiale.'.'.$nachname).'@dormed.de';
+
+            // Der eigene Zugang ist schon da und traegt einen vollen Vornamen.
+            if ($email === 'l.everding@dormed.de') {
+                continue;
+            }
+
+            $user = User::query()->updateOrCreate(
+                ['email' => $email],
                 [
-                    'first_name' => $vorname,
+                    'first_name' => mb_strtoupper($initiale).'.',
                     'last_name' => $nachname,
-                    'password' => $mitPasswort ? 'password' : null,
+                    'password' => 'password',
                     'email_verified_at' => now(),
                     'is_admin' => false,
-                    'is_active' => $aktiv,
-                    'role_id' => Role::query()->where('key', $rolle)->value('id'),
-                    'last_login_at' => $tage === null ? null : now()->subDays($tage),
+                    'is_active' => true,
+                    'role_id' => $rollen->values()[$index % $rollen->count()],
+                    'last_login_at' => now()->subDays($index * 3),
                 ],
             );
+
+            // `photo_path` ist nicht `$fillable` — es gehoert nicht in eine
+            // Maske und wird deshalb ausdruecklich gesetzt.
+            $user->photo_path = $pfad;
+            $user->save();
         }
 
-        // Ein zweiter Faktor, damit die Detailansicht ihn auch mal zeigt.
-        User::query()->where('email', 'm.krause@dormed.de')->update([
+        $this->besondereZustaende();
+    }
+
+    /**
+     * Die Fotos aus `database/seeders/employees/`, je Person eines.
+     *
+     * Liegt ein Bild doppelt vor (`.jpg` und `.png`), gewinnt das erste nach
+     * Dateiname — eine Person, ein Foto, ohne dass die Auswahl vom Zufall der
+     * Verzeichnisreihenfolge abhaengt.
+     *
+     * @return list<array{string, string, string}> Initiale, Nachname, Ablagepfad
+     */
+    private function employeePhotos(): array
+    {
+        $verzeichnis = database_path('seeders/employees');
+
+        if (! is_dir($verzeichnis)) {
+            return [];
+        }
+
+        $dateien = array_values(array_filter(
+            scandir($verzeichnis) ?: [],
+            fn (string $name): bool => (bool) preg_match('/^([A-Za-z])\.([A-Za-zÄÖÜäöüß-]+)\.(jpe?g|png)$/u', $name),
+        ));
+
+        sort($dateien);
+
+        $gefunden = [];
+
+        foreach ($dateien as $datei) {
+            preg_match('/^([A-Za-z])\.([A-Za-zÄÖÜäöüß-]+)\./u', $datei, $treffer);
+            $schluessel = mb_strtolower($treffer[1].'.'.$treffer[2]);
+
+            $gefunden[$schluessel] ??= [$treffer[1], $treffer[2], 'employees/'.$datei];
+        }
+
+        return array_values($gefunden);
+    }
+
+    /**
+     * Zustaende, die es in der Liste zu sehen geben soll.
+     *
+     * „Ich komme nicht rein" hat drei Ursachen und sieht dreimal verschieden
+     * aus: stillgelegt (D-032), ohne Passwort (der Normalfall, sobald
+     * Entra-SSO uebernimmt, D-029), mit zweitem Faktor (ADR-043). Ohne je einen
+     * Vertreter liesse sich die Unterscheidung nicht pruefen.
+     */
+    private function besondereZustaende(): void
+    {
+        $ohneZugang = User::query()->where('email', '!=', 'l.everding@dormed.de')
+            ->orderBy('email')->skip(1)->first();
+
+        $stillgelegt = User::query()->where('email', '!=', 'l.everding@dormed.de')
+            ->orderBy('email')->skip(2)->first();
+
+        $mitZweitemFaktor = User::query()->where('email', '!=', 'l.everding@dormed.de')
+            ->orderBy('email')->first();
+
+        $ohneZugang?->forceFill(['password' => null, 'last_login_at' => null])->save();
+        $stillgelegt?->forceFill(['is_active' => false])->save();
+        $mitZweitemFaktor?->forceFill([
             'two_factor_secret' => encrypt('DEVSECRETDEVSECRET'),
             'two_factor_confirmed_at' => now()->subMonths(2),
-        ]);
+        ])->save();
     }
 
     /**

@@ -11,6 +11,7 @@
     import Pencil from '@lucide/svelte/icons/pencil';
     import ShieldCheck from '@lucide/svelte/icons/shield-check';
     import AppHead from '@/components/AppHead.svelte';
+    import * as Avatar from '@/components/ui/avatar';
     import { Badge } from '@/components/ui/badge';
     import { edit, index } from '@/routes/erp/employees';
     import StatusBadge from './StatusBadge.svelte';
@@ -33,6 +34,10 @@
             actions: [{ label: 'Bearbeiten', icon: Pencil, href: edit(employee.id).url }],
         });
     });
+
+    const initialen = $derived(
+        `${employee.firstName[0] ?? ''}${employee.lastName[0] ?? ''}`.toUpperCase(),
+    );
 
     type Zeile = { icon: Component; label: string; value: string };
 
@@ -80,11 +85,24 @@
         Alle Mitarbeiter
     </Link>
 
-    <header class="flex flex-wrap items-start justify-between gap-4">
-        <h2 class="text-xl font-semibold tracking-tight">{employee.name}</h2>
+    <header class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <!--
+                Das Foto kommt aus dem Object Storage und wird nicht hier
+                gepflegt (`photo_path` ist nicht `$fillable`). Die Initialen
+                tragen den Fall, dass keines hinterlegt ist.
+            -->
+            <Avatar.Root class="size-12">
+                {#if employee.photoUrl}
+                    <Avatar.Image src={employee.photoUrl} alt={employee.name} />
+                {/if}
+                <Avatar.Fallback>{initialen}</Avatar.Fallback>
+            </Avatar.Root>
+
+            <h2 class="text-xl font-semibold tracking-tight">{employee.name}</h2>
+        </div>
 
         <div class="flex shrink-0 flex-wrap items-center gap-2">
-            <Badge variant="secondary">{employee.role.name}</Badge>
             <StatusBadge
                 active={employee.flags.active}
                 hasPassword={employee.anmeldung.hasPassword}

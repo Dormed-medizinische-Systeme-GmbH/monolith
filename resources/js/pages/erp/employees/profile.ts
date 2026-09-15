@@ -7,6 +7,7 @@ export type EmployeeProfile = {
     lastName: string;
     name: string;
     email: string;
+    photoUrl: string | null;
     role: { id: string; key: string; name: string };
     flags: { active: boolean; admin: boolean };
     anmeldung: {

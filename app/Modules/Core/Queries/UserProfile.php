@@ -24,6 +24,7 @@ final class UserProfile
             'lastName' => $user->last_name,
             'name' => $user->name,
             'email' => $user->email,
+            'photoUrl' => $user->photo_url,
 
             'role' => [
                 'id' => $user->role->id,
