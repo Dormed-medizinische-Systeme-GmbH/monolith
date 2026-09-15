@@ -48,8 +48,55 @@ final class DevelopmentAccountSeeder extends Seeder
         }
 
         $this->staffAccount();
+        $this->furtherEmployees();
         $this->customerAccount();
         $this->furtherContacts();
+    }
+
+    /**
+     * Weitere Mitarbeiter, je Rolle mindestens einer (D-125).
+     *
+     * Bewusst mit allen Zustaenden, die „ich komme nicht rein" ausloesen
+     * koennen — sie haben verschiedene Ursachen und sehen in der Liste
+     * verschieden aus: stillgelegt (D-032), ohne Passwort (der Normalfall,
+     * sobald Entra-SSO uebernimmt, D-029), mit zweitem Faktor (ADR-043).
+     */
+    private function furtherEmployees(): void
+    {
+        /** @var list<array{string, string, string, string, bool, bool, ?int}> */
+        $mitarbeiter = [
+            // Vorname, Nachname, Rolle, Mail-Praefix, aktiv, Passwort gesetzt, Tage seit Anmeldung
+            ['Marlene', 'Krause', 'management', 'm.krause', true, true, 1],
+            ['Sven', 'Ortmann', 'backoffice', 's.ortmann', true, true, 3],
+            ['Jasmin', 'Delacroix', 'sales', 'j.delacroix', true, true, 12],
+            ['Rüdiger', 'Falk', 'service', 'r.falk', true, true, 0],
+            // Neu angelegt, noch nicht freigeschaltet: kein Passwort, nie angemeldet.
+            ['Tim', 'Weber', 'service', 't.weber', true, false, null],
+            // Ausgeschieden: Datensatz bleibt, Zugang zu.
+            ['Beate', 'Hoffmann', 'backoffice', 'b.hoffmann', false, true, 240],
+        ];
+
+        foreach ($mitarbeiter as [$vorname, $nachname, $rolle, $praefix, $aktiv, $mitPasswort, $tage]) {
+            User::query()->updateOrCreate(
+                ['email' => $praefix.'@dormed.de'],
+                [
+                    'first_name' => $vorname,
+                    'last_name' => $nachname,
+                    'password' => $mitPasswort ? 'password' : null,
+                    'email_verified_at' => now(),
+                    'is_admin' => false,
+                    'is_active' => $aktiv,
+                    'role_id' => Role::query()->where('key', $rolle)->value('id'),
+                    'last_login_at' => $tage === null ? null : now()->subDays($tage),
+                ],
+            );
+        }
+
+        // Ein zweiter Faktor, damit die Detailansicht ihn auch mal zeigt.
+        User::query()->where('email', 'm.krause@dormed.de')->update([
+            'two_factor_secret' => encrypt('DEVSECRETDEVSECRET'),
+            'two_factor_confirmed_at' => now()->subMonths(2),
+        ]);
     }
 
     /**
