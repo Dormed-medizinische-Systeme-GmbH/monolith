@@ -116,22 +116,22 @@ final class CompanyController extends Controller
     /**
      * Die Auswahllisten der Firmenmaske.
      *
-     * Zustaendige nur unter den AKTIVEN Mitarbeitern: ein stillgelegter Zugang
-     * gehoert nicht mehr ins Haus und wird aus den `responsible_*`-Feldern
-     * ausgeblendet (IDENTITY_RBAC.md). Die Zuordnung bleibt informativ, sie ist
-     * keine Berechtigung (D-016).
+     * Die Zustaendigen kommen je aus IHRER Abteilung — Vertrieb aus `sales`,
+     * Service aus `service`. Die Rolle ist die einzige Quelle dafuer, wer wozu
+     * gehoert (D-124); eine zweite Liste daneben liefe unweigerlich
+     * auseinander. Der bisherige Zustaendige bleibt in der Liste, auch wenn er
+     * die Abteilung gewechselt hat — sonst verschwaende er beim naechsten
+     * Speichern stillschweigend.
+     *
+     * Die Zuordnung bleibt informativ, sie ist keine Berechtigung (D-016).
      *
      * @return array<string, mixed>
      */
     private static function auswahlfelder(?Company $company): array
     {
         return [
-            'employees' => User::query()
-                ->where('is_active', true)
-                ->orderBy('last_name')
-                ->get()
-                ->map(fn (User $user): array => ['id' => $user->id, 'name' => $user->name])
-                ->all(),
+            'salesEmployees' => self::abteilung('sales', $company?->responsible_sales_id),
+            'serviceEmployees' => self::abteilung('service', $company?->responsible_service_id),
 
             'specialties' => MedicalSpecialty::query()
                 ->where('is_active', true)
@@ -154,6 +154,30 @@ final class CompanyController extends Controller
                 ])
                 ->all(),
         ];
+    }
+
+    /**
+     * Die aktiven Mitarbeiter einer Abteilung, plus den bisherigen Zustaendigen.
+     *
+     * Die Freigabeliste ist dieselbe, gegen die `CompanyRequest` prueft —
+     * einmal definiert, damit Maske und Pruefung nicht auseinanderlaufen.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function abteilung(string $rolle, ?string $bisher): array
+    {
+        return User::query()
+            ->whereIn('id', CompanyRequest::auswaehlbar($rolle, $bisher))
+            ->with('role')
+            ->orderBy('last_name')
+            ->get()
+            ->map(fn (User $user): array => [
+                'id' => $user->id,
+                'name' => $user->name,
+                // Kennzeichnet den Sonderfall, statt ihn zu verstecken.
+                'foreign' => $user->role?->key !== $rolle || ! $user->is_active,
+            ])
+            ->all();
     }
 
     /**

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Core\Models\Role;
 use App\Modules\Core\Models\User;
 use App\Modules\Crm\Models\Company;
 use Database\Seeders\RoleSeeder;
@@ -46,8 +47,8 @@ test('eine neue Firma bekommt automatisch einen Hauptstandort', function (): voi
 });
 
 test('die Zustaendigen lassen sich setzen', function (): void {
-    $vertrieb = User::factory()->create();
-    $service = User::factory()->create();
+    $vertrieb = User::factory()->role('sales')->create();
+    $service = User::factory()->role('service')->create();
 
     $this->actingAs($this->ich, 'staff')
         ->patch(firmen('/'.$this->company->id), [
@@ -67,7 +68,7 @@ test('die Zustaendigen lassen sich setzen', function (): void {
 test('ein stillgelegter Mitarbeiter laesst sich nicht als zustaendig setzen', function (): void {
     // Ein stillgelegter Zugang gehoert nicht mehr ins Haus und wird aus den
     // `responsible_*`-Feldern ausgeblendet (IDENTITY_RBAC.md).
-    $ausgeschieden = User::factory()->inactive()->create();
+    $ausgeschieden = User::factory()->role('sales')->inactive()->create();
 
     $this->actingAs($this->ich, 'staff')
         ->patch(firmen('/'.$this->company->id), [
@@ -76,6 +77,53 @@ test('ein stillgelegter Mitarbeiter laesst sich nicht als zustaendig setzen', fu
             'responsible_sales_id' => $ausgeschieden->id,
         ])
         ->assertSessionHasErrors('responsible_sales_id');
+});
+
+test('nur die eigene Abteilung steht zur Auswahl', function (): void {
+    /*
+     * Die Rolle ist die einzige Quelle dafuer, wer wozu gehoert (D-124). Wer im
+     * Service sitzt, taucht im Vertriebsfeld nicht auf — und umgekehrt.
+     */
+    $techniker = User::factory()->role('service')->create();
+
+    $this->actingAs($this->ich, 'staff')
+        ->patch(firmen('/'.$this->company->id), [
+            'name' => 'Praxis Alpha',
+            'avv_status' => 'none',
+            'responsible_sales_id' => $techniker->id,
+        ])
+        ->assertSessionHasErrors('responsible_sales_id');
+});
+
+test('der bisherige Zustaendige bleibt waehlbar, auch nach Abteilungswechsel', function (): void {
+    /*
+     * Sonst schluege jedes Speichern fehl, solange niemand den Nachfolger
+     * benannt hat — man koennte an der Firma nicht einmal die Anschrift
+     * aendern, ohne zuerst eine Personalfrage zu klaeren.
+     */
+    $vertrieb = User::factory()->role('sales')->create();
+    $this->company->update(['responsible_sales_id' => $vertrieb->id]);
+
+    // Wechselt in den Service.
+    $vertrieb->update(['role_id' => Role::query()->where('key', 'service')->value('id')]);
+
+    $this->actingAs($this->ich, 'staff')
+        ->get(firmen('/'.$this->company->id.'/bearbeiten'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('salesEmployees', 1)
+            // Gekennzeichnet statt versteckt.
+            ->where('salesEmployees.0.foreign', true)
+        );
+
+    $this->actingAs($this->ich, 'staff')
+        ->patch(firmen('/'.$this->company->id), [
+            'name' => 'Praxis Umbenannt',
+            'avv_status' => 'none',
+            'responsible_sales_id' => $vertrieb->id,
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($this->company->fresh()->name)->toBe('Praxis Umbenannt');
 });
 
 test('eine Firma kann nicht ihr eigener Rechnungsempfaenger sein', function (): void {
@@ -89,7 +137,7 @@ test('eine Firma kann nicht ihr eigener Rechnungsempfaenger sein', function (): 
         ->assertSessionHasErrors('billing_company_id');
 });
 
-test('die Maske bietet nur aktive Mitarbeiter und nicht die Firma selbst an', function (): void {
+test('die Maske bietet nicht die Firma selbst als Rechnungsempfaenger an', function (): void {
     User::factory()->inactive()->create();
     Company::query()->create(['name' => 'Praxis Beta']);
 
@@ -99,8 +147,10 @@ test('die Maske bietet nur aktive Mitarbeiter und nicht die Firma selbst an', fu
         ->assertInertia(fn (Assert $page) => $page
             ->component('erp/companies/Form')
             ->where('company.fields.name', 'Praxis Alpha')
-            // Nur der angemeldete Mitarbeiter ist aktiv.
-            ->has('employees', 1)
+            // Der angemeldete Mitarbeiter gehoert keiner der beiden
+            // Abteilungen an — beide Listen sind leer.
+            ->has('salesEmployees', 0)
+            ->has('serviceEmployees', 0)
             // „Praxis Alpha" selbst steht nicht zur Auswahl.
             ->has('companies', 1)
         );

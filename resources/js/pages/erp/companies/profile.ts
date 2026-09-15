@@ -68,3 +68,12 @@ export type CompanyProfile = {
 };
 
 export type Option = { id: string; name: string };
+
+/**
+ * Ein Mitarbeiter in einer Zuständigkeitsliste.
+ *
+ * `foreign` heißt: steht nur noch drin, weil er es aktuell IST — Abteilung
+ * gewechselt oder ausgeschieden. Wird gekennzeichnet statt versteckt, sonst
+ * verschwände die Zuordnung beim nächsten Speichern stillschweigend.
+ */
+export type EmployeeOption = Option & { foreign: boolean };

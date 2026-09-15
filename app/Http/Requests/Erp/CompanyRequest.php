@@ -25,8 +25,9 @@ final class CompanyRequest extends FormRequest
      */
     public function rules(): array
     {
-        $company = $this->route('company');
-        $id = $company instanceof Company ? $company->id : null;
+        /** @var Company|null $company */
+        $company = $this->route('company') instanceof Company ? $this->route('company') : null;
+        $id = $company?->id;
 
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -38,20 +39,24 @@ final class CompanyRequest extends FormRequest
             'debitor_number' => ['nullable', 'string', 'max:255'],
 
             /*
-             * Zustaendige Mitarbeiter. Nur AKTIVE: ein stillgelegter Zugang
-             * gehoert nicht mehr ins Haus, und die Spec blendet ihn
-             * ausdruecklich aus den `responsible_*`-Feldern aus
+             * Zustaendige Mitarbeiter, je aus IHRER Abteilung: fuer den
+             * Vertrieb nur `sales`, fuer den Service nur `service`. Die Rolle
+             * ist die einzige Quelle dafuer, wer wozu gehoert (D-124) — eine
+             * zweite Liste daneben liefe unweigerlich auseinander.
+             *
+             * Nur AKTIVE: ein stillgelegter Zugang gehoert nicht mehr ins Haus
+             * und wird aus den `responsible_*`-Feldern ausgeblendet
              * (IDENTITY_RBAC.md).
              *
              * Informativ, KEINE Berechtigung (D-016).
              */
             'responsible_sales_id' => [
                 'nullable',
-                Rule::exists(User::class, 'id')->where('is_active', true),
+                Rule::in(self::auswaehlbar('sales', $company?->responsible_sales_id)),
             ],
             'responsible_service_id' => [
                 'nullable',
-                Rule::exists(User::class, 'id')->where('is_active', true),
+                Rule::in(self::auswaehlbar('service', $company?->responsible_service_id)),
             ],
 
             // Abweichender Rechnungsempfaenger, nie die Firma selbst (D-004/D-066).
@@ -83,6 +88,28 @@ final class CompanyRequest extends FormRequest
     }
 
     /**
+     * Wer fuer diese Abteilung in Frage kommt.
+     *
+     * Der BISHERIGE Zustaendige bleibt zulaessig, auch wenn er die Abteilung
+     * gewechselt hat oder ausgeschieden ist. Sonst schluege jedes Speichern
+     * fehl, solange niemand den Nachfolger benannt hat — und man koennte an der
+     * Firma nicht einmal die Anschrift aendern, ohne zuerst eine Personalfrage
+     * zu klaeren.
+     *
+     * @return list<string>
+     */
+    public static function auswaehlbar(string $rolle, ?string $bisher = null): array
+    {
+        $ids = User::query()
+            ->where('is_active', true)
+            ->whereRelation('role', 'key', $rolle)
+            ->pluck('id')
+            ->all();
+
+        return array_values(array_unique(array_filter([...$ids, $bisher])));
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function companyAttributes(): array
@@ -108,8 +135,8 @@ final class CompanyRequest extends FormRequest
             'name_addition' => 'Namenszusatz',
             'medical_specialty_id' => 'Fachrichtung',
             'debitor_number' => 'Kundennummer',
-            'responsible_sales_id' => 'Zuständig Vertrieb',
-            'responsible_service_id' => 'Zuständig Service',
+            'responsible_sales_id' => 'Verantwortlicher (Vertrieb)',
+            'responsible_service_id' => 'Verantwortlicher (Service)',
             'billing_company_id' => 'Rechnungsempfänger',
             'avv_status' => 'AVV',
         ];

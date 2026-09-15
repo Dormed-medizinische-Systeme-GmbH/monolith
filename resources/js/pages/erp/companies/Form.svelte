@@ -12,7 +12,7 @@
     import { Separator } from '@/components/ui/separator';
     import { Textarea } from '@/components/ui/textarea';
     import { destroy, index, show, store, update } from '@/routes/erp/companies';
-    import type { CompanyProfile, Option } from './profile';
+    import type { CompanyProfile, EmployeeOption, Option } from './profile';
 
     /**
      * Anlegen und Bearbeiten einer Firma.
@@ -23,12 +23,14 @@
      */
     let {
         company = null,
-        employees,
+        salesEmployees,
+        serviceEmployees,
         specialties,
         companies,
     }: {
         company?: CompanyProfile | null;
-        employees: Option[];
+        salesEmployees: EmployeeOption[];
+        serviceEmployees: EmployeeOption[];
         specialties: Option[];
         companies: Option[];
     } = $props();
@@ -137,7 +139,9 @@
 
                 <div class="grid gap-4 sm:grid-cols-2">
                     <Field>
-                        <FieldLabel for="responsible_sales_id">Zuständig Vertrieb</FieldLabel>
+                        <FieldLabel for="responsible_sales_id">
+                            Verantwortlicher (Vertrieb)
+                        </FieldLabel>
                         <NativeSelect
                             id="responsible_sales_id"
                             name="responsible_sales_id"
@@ -145,15 +149,21 @@
                             value={f.responsible_sales_id ?? ''}
                         >
                             <option value="">— niemand —</option>
-                            {#each employees as person (person.id)}
-                                <option value={person.id}>{person.name}</option>
+                            {#each salesEmployees as person (person.id)}
+                                <option value={person.id}>
+                                    {person.name}{person.foreign
+                                        ? ' (nicht mehr im Vertrieb)'
+                                        : ''}
+                                </option>
                             {/each}
                         </NativeSelect>
                         <InputError message={errors.responsible_sales_id} />
                     </Field>
 
                     <Field>
-                        <FieldLabel for="responsible_service_id">Zuständig Service</FieldLabel>
+                        <FieldLabel for="responsible_service_id">
+                            Verantwortlicher (Service)
+                        </FieldLabel>
                         <NativeSelect
                             id="responsible_service_id"
                             name="responsible_service_id"
@@ -161,8 +171,12 @@
                             value={f.responsible_service_id ?? ''}
                         >
                             <option value="">— niemand —</option>
-                            {#each employees as person (person.id)}
-                                <option value={person.id}>{person.name}</option>
+                            {#each serviceEmployees as person (person.id)}
+                                <option value={person.id}>
+                                    {person.name}{person.foreign
+                                        ? ' (nicht mehr im Service)'
+                                        : ''}
+                                </option>
                             {/each}
                         </NativeSelect>
                         <InputError message={errors.responsible_service_id} />
@@ -170,8 +184,9 @@
                 </div>
 
                 <FieldDescription>
-                    Nur aktive Mitarbeiter. Die Zuordnung ist informativ — wer was
-                    darf, entscheidet die Rolle (D-016/D-030).
+                    Je aus der eigenen Abteilung, abgeleitet aus der Rolle (D-124).
+                    Die Zuordnung ist informativ — wer was darf, entscheidet
+                    ebenfalls die Rolle, nicht dieses Feld (D-016/D-030).
                 </FieldDescription>
 
                 <Separator />

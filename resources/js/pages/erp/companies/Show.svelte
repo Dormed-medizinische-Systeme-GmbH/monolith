@@ -200,11 +200,15 @@
                     </h3>
                     <dl class="space-y-1 text-sm">
                         <div class="flex gap-3">
-                            <dt class="w-36 shrink-0 text-muted-foreground">Vertrieb</dt>
+                            <dt class="w-36 shrink-0 text-muted-foreground">
+                                Verantwortlicher (Vertrieb)
+                            </dt>
                             <dd>{company.responsible.sales ?? '—'}</dd>
                         </div>
                         <div class="flex gap-3">
-                            <dt class="w-36 shrink-0 text-muted-foreground">Service</dt>
+                            <dt class="w-36 shrink-0 text-muted-foreground">
+                                Verantwortlicher (Service)
+                            </dt>
                             <dd>{company.responsible.service ?? '—'}</dd>
                         </div>
                         {#if company.billingCompany}
