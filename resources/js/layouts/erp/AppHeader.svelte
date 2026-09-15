@@ -2,6 +2,7 @@
     import { Link } from '@inertiajs/svelte';
     import { Button, buttonVariants } from '@/components/ui/button';
     import { Separator } from '@/components/ui/separator';
+    import { cn } from '@/lib/utils';
     import * as Sidebar from '@/components/ui/sidebar';
     import type { PageAction } from './page-actions';
 
@@ -44,13 +45,19 @@
                 {:else}
                     <Button
                         variant={action.variant ?? 'outline'}
-                        size="sm"
+                        size={action.iconOnly ? 'icon-sm' : 'sm'}
+                        class={cn(
+                            action.destructive && 'text-destructive hover:text-destructive',
+                        )}
+                        aria-label={action.iconOnly ? action.label : undefined}
                         onclick={action.onSelect}
                     >
                         {#if action.icon}
                             <action.icon class="size-4" />
                         {/if}
-                        {action.label}
+                        {#if !action.iconOnly}
+                            {action.label}
+                        {/if}
                     </Button>
                 {/if}
             {/each}

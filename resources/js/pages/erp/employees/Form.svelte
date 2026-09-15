@@ -1,16 +1,15 @@
 <script lang="ts">
-    import { Form, Link, router } from '@inertiajs/svelte';
+    import { Form, Link, router, setLayoutProps } from '@inertiajs/svelte';
     import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+    import Save from '@lucide/svelte/icons/save';
     import Trash from '@lucide/svelte/icons/trash';
     import AppHead from '@/components/AppHead.svelte';
     import * as AlertDialog from '@/components/ui/alert-dialog';
     import Heading from '@/components/Heading.svelte';
     import InputError from '@/components/InputError.svelte';
-    import { Button, buttonVariants } from '@/components/ui/button';
     import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
     import { Input } from '@/components/ui/input';
     import { NativeSelect } from '@/components/ui/native-select';
-    import { Spinner } from '@/components/ui/spinner';
     import { Switch } from '@/components/ui/switch';
     import { destroy, index, show, store, update } from '@/routes/erp/employees';
     import type { EmployeeProfile, RoleOption } from './profile';
@@ -35,9 +34,41 @@
      */
     let loeschenOffen = $state(false);
 
+    /*
+     * Die Instanz des Formulars. „Speichern" sitzt in der App-Kopfzeile und
+     * damit ausserhalb des `<form>` — abgeschickt wird deshalb von hier aus,
+     * statt sich auf einen Submit-Button im Baum zu verlassen.
+     */
+    let formular: ReturnType<typeof Form> | undefined = $state();
+
     function loeschen(): void {
         router.delete(destroy(employee!.id).url);
     }
+
+    $effect(() => {
+        setLayoutProps({
+            actions: [
+                ...(neu
+                    ? []
+                    : [
+                          {
+                              label: 'Löschen',
+                              icon: Trash,
+                              variant: 'ghost' as const,
+                              iconOnly: true,
+                              destructive: true,
+                              onSelect: () => (loeschenOffen = true),
+                          },
+                      ]),
+                {
+                    label: neu ? 'Anlegen' : 'Speichern',
+                    icon: Save,
+                    variant: 'default' as const,
+                    onSelect: () => formular?.submit(),
+                },
+            ],
+        });
+    });
 
     let aktivGewaehlt = $state<boolean | null>(null);
     let bypassGewaehlt = $state<boolean | null>(null);
@@ -63,11 +94,12 @@
     />
 
     <Form
+        bind:this={formular}
         {...(neu ? store.form() : update.form(employee!.id))}
         class="max-w-xl"
         resetOnSuccess={['password']}
     >
-        {#snippet children({ errors, processing })}
+        {#snippet children({ errors })}
             <FieldGroup>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <Field>
@@ -181,37 +213,6 @@
                     <InputError message={errors.is_admin} />
                 </Field>
 
-                <div class="flex items-center gap-2">
-                    <Button type="submit" disabled={processing}>
-                        {#if processing}
-                            <Spinner />
-                        {/if}
-                        {neu ? 'Anlegen' : 'Speichern'}
-                    </Button>
-                    <Link
-                        href={neu ? index().url : show(employee!.id).url}
-                        class={buttonVariants({ variant: 'ghost' })}
-                    >
-                        Abbrechen
-                    </Link>
-
-                    {#if !neu}
-                        <!--
-                            Abgesetzt nach rechts und nur beim Bearbeiten: eine
-                            zerstörende Aktion gehört nicht neben „Speichern",
-                            und in der reinen Ansicht hat sie gar nichts verloren.
-                        -->
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            class="ms-auto text-destructive hover:text-destructive"
-                            onclick={() => (loeschenOffen = true)}
-                        >
-                            <Trash class="size-4" />
-                            Löschen
-                        </Button>
-                    {/if}
-                </div>
             </FieldGroup>
         {/snippet}
     </Form>

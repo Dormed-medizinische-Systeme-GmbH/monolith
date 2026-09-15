@@ -18,6 +18,10 @@ export type PageAction = {
     href?: string;
     onSelect?: () => void;
     variant?: 'default' | 'outline' | 'ghost' | 'destructive';
+    /** Nur das Symbol. Die Beschriftung bleibt als `aria-label` erhalten. */
+    iconOnly?: boolean;
+    /** Zerstörend — wird rot dargestellt, ohne die Fläche zu füllen. */
+    destructive?: boolean;
 };
 
 export type ErpLayoutProps = {
