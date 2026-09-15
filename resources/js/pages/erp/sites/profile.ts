@@ -4,13 +4,10 @@
 export type SiteProfile = {
     id: string;
     name: string;
-    shortName: string | null;
-    isActive: boolean;
     notes: string | null;
     photoUrl: string | null;
     address: {
         street: string | null;
-        houseNumber: string | null;
         postalCode: string | null;
         city: string | null;
         line: string | null;

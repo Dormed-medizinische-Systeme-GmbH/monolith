@@ -1,6 +1,5 @@
 <script lang="ts">
     import AppHead from '@/components/AppHead.svelte';
-    import Heading from '@/components/Heading.svelte';
     import { DataTable, type DataTableMeta } from '@/components/data-table';
     import { show } from '@/routes/erp/articles';
     import { articleColumns, type ArticleRow } from './columns';
@@ -13,11 +12,6 @@
 </script>
 
 <AppHead title="Artikel" />
-
-<Heading
-    title="Artikel"
-    description="Der Katalog. Bestand und Exemplare kommen mit dem Lager."
-/>
 
 <DataTable
     bind:this={table}

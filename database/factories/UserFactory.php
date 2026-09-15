@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Modules\Core\Models\Role;
+use App\Modules\Core\Models\Site;
 use App\Modules\Core\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -34,6 +35,10 @@ final class UserFactory extends Factory
             // Mitarbeiter. Die Fabrik nimmt die erste vorhandene, damit Tests
             // nicht jedes Mal eine anlegen muessen.
             'role_id' => Role::query()->value('id') ?? Role::factory(),
+            // `site_id` ist NOT NULL: jeder Mitarbeiter gehoert zu einer
+            // Betriebsstaette. Die Fabrik nimmt die erste vorhandene, damit
+            // Tests nicht jedes Mal eine anlegen muessen.
+            'site_id' => Site::query()->value('id') ?? Site::factory(),
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,

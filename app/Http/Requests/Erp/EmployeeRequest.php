@@ -59,15 +59,11 @@ final class EmployeeRequest extends FormRequest
             ],
 
             /*
-             * Nullable, aber nur ein AKTIVER Standort: einen stillgelegten
-             * zuzuweisen hiesse, jemanden dorthin zu setzen, wo niemand mehr
-             * sitzt. Leer ist dagegen ein gueltiger Zustand — Aussendienst,
-             * oder noch nicht entschieden.
+             * PFLICHT (Nutzer): jeder Mitarbeiter gehoert zu einer
+             * Betriebsstaette, auch wer ueberwiegend unterwegs ist. Ein
+             * Standort ohne Zuordnung waere eine Liste, die nie vollstaendig ist.
              */
-            'site_id' => [
-                'nullable',
-                Rule::exists(Site::class, 'id')->where('is_active', true),
-            ],
+            'site_id' => ['required', Rule::exists(Site::class, 'id')],
 
             'is_active' => ['required', 'boolean'],
 

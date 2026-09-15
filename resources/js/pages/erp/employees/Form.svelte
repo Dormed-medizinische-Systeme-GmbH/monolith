@@ -189,16 +189,16 @@
                     <NativeSelect
                         id="site_id"
                         name="site_id"
+                        required
                         class="w-full"
-                        value={employee?.site?.id ?? ''}
+                        value={employee?.site.id ?? ''}
                     >
                         <!--
-                            Anders als die Rolle darf der Standort leer bleiben:
-                            Außendienst oder noch nicht entschieden sind gültige
-                            Zustände. Deshalb kein `required` und ein echter
-                            Leereintrag statt eines gesperrten Platzhalters.
+                            Pflicht wie die Rolle: jeder Mitarbeiter gehört zu
+                            einer Betriebsstätte, auch wer überwiegend unterwegs
+                            ist.
                         -->
-                        <option value="">— kein Standort —</option>
+                        <option value="" disabled>Bitte wählen</option>
                         {#each sites as site (site.id)}
                             <option value={site.id}>{site.name}</option>
                         {/each}

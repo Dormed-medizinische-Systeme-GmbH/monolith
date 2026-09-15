@@ -46,9 +46,9 @@
         {
             icon: MapPin,
             label: 'Standort',
-            value: employee.site
-                ? [employee.site.name, employee.site.addressLine].filter(Boolean).join(' · ')
-                : 'keinem zugeordnet',
+            value: [employee.site.name, employee.site.addressLine]
+                .filter(Boolean)
+                .join(' · '),
         },
         {
             icon: KeyRound,

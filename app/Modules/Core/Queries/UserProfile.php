@@ -26,7 +26,7 @@ final class UserProfile
             'email' => $user->email,
             'photoUrl' => $user->photo_url,
 
-            'site' => $user->site === null ? null : [
+            'site' => [
                 'id' => $user->site->id,
                 'name' => $user->site->name,
                 'addressLine' => $user->site->address_line,

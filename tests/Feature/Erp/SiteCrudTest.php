@@ -10,12 +10,18 @@ use Inertia\Testing\AssertableInertia as Assert;
 beforeEach(function (): void {
     (new RoleSeeder)->run();
 
-    $this->ich = User::factory()->create();
+    /*
+     * Der angemeldete Mitarbeiter sitzt anderswo: `site_id` ist NOT NULL, und
+     * die Fabrik nimmt den ERSTEN vorhandenen Standort. Ohne diese Trennung
+     * waere der gepruefte Standort nie leer — und „loeschen nur, was leer ist"
+     * liesse sich nicht pruefen.
+     */
+    $this->anderswo = Site::query()->create(['name' => 'Anderswo']);
+    $this->ich = User::factory()->create(['site_id' => $this->anderswo->id]);
+
     $this->standort = Site::query()->create([
         'name' => 'Buchholz',
-        'short_name' => 'BUC',
-        'street' => 'Musterstraße',
-        'house_number' => '1',
+        'street' => 'Musterstraße 1',
         'postal_code' => '21244',
         'city' => 'Buchholz in der Nordheide',
     ]);
@@ -37,12 +43,13 @@ test('sie zeigt Standort, Anschrift und die Zahl der Mitarbeiter', function (): 
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('erp/sites/Index')
-            ->where('rows.0.name', 'Buchholz')
-            ->where('rows.0.addressLine', 'Musterstraße 1, 21244 Buchholz in der Nordheide')
+            ->where('rows.0.name', 'Anderswo')
+            ->where('rows.1.name', 'Buchholz')
+            ->where('rows.1.addressLine', 'Musterstraße 1, 21244 Buchholz in der Nordheide')
             // Gezaehlt, nicht gejoint — sonst waeren aus einem Standort mit zwei
             // Mitarbeitern zwei Zeilen geworden.
-            ->where('rows.0.userCount', 2)
-            ->has('rows', 1)
+            ->where('rows.1.userCount', 2)
+            ->has('rows', 2)
         );
 });
 
@@ -50,10 +57,9 @@ test('ein Standort laesst sich anlegen', function (): void {
     $this->actingAs($this->ich, 'staff')
         ->post(betrieb(), [
             'name' => 'Holzwickede',
-            'short_name' => 'HOL',
+            'street' => 'Musterweg 2',
             'postal_code' => '59439',
             'city' => 'Holzwickede',
-            'is_active' => true,
         ])
         ->assertRedirect();
 
@@ -62,14 +68,14 @@ test('ein Standort laesst sich anlegen', function (): void {
 
 test('ein doppelter Name wird abgewiesen', function (): void {
     $this->actingAs($this->ich, 'staff')
-        ->post(betrieb(), ['name' => 'Buchholz', 'is_active' => true])
+        ->post(betrieb(), ['name' => 'Buchholz'])
         ->assertSessionHasErrors('name');
 });
 
 test('ein Standort ohne Anschrift ist zulaessig', function (): void {
     // Ein Standort entsteht manchmal, bevor die Adresse feststeht.
     $this->actingAs($this->ich, 'staff')
-        ->post(betrieb(), ['name' => 'Noch ohne Adresse', 'is_active' => true])
+        ->post(betrieb(), ['name' => 'Noch ohne Adresse'])
         ->assertRedirect()
         ->assertSessionHasNoErrors();
 });

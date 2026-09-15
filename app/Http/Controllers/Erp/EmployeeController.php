@@ -100,14 +100,14 @@ final class EmployeeController extends Controller
     }
 
     /**
-     * Nur aktive Standorte zur Auswahl — derselbe Grund wie bei den Rollen.
+     * Alle Standorte. Es gibt kein Stilllegen — ein Standort ist in Betrieb
+     * oder er wird geloescht.
      *
      * @return list<array<string, string>>
      */
     private static function sites(): array
     {
         return Site::query()
-            ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (Site $site): array => ['id' => $site->id, 'name' => $site->name])

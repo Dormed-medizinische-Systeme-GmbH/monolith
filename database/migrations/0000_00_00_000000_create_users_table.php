@@ -64,13 +64,14 @@ return new class extends Migration
             $table->string('photo_path')->nullable();
 
             /*
-             * Der Dormed-Standort, an dem dieser Mitarbeiter sitzt. Der
-             * Fremdschluessel folgt in `create_sites_table` — diese Migration
-             * laeuft zuerst, `sites` gibt es hier noch nicht.
+             * Der Dormed-Standort, an dem dieser Mitarbeiter sitzt. PFLICHT:
+             * jeder Mitarbeiter gehoert zu einer Betriebsstaette, auch wer
+             * ueberwiegend unterwegs ist.
              *
-             * Nullable: wer im Aussendienst sitzt oder neu ist, hat noch keinen.
+             * Der Fremdschluessel folgt in `create_sites_table` — diese
+             * Migration laeuft zuerst, `sites` gibt es hier noch nicht.
              */
-            $table->uuid('site_id')->nullable()->index();
+            $table->uuid('site_id')->index();
 
             $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();

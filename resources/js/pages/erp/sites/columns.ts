@@ -10,16 +10,13 @@ import {
     type DataTableMeta,
 } from '@/components/data-table';
 import { show } from '@/routes/erp/sites';
-import ActiveBadge from './ActiveBadge.svelte';
 
 export type SiteRow = {
     id: string;
     name: string;
-    shortName: string | null;
     addressLine: string | null;
     city: string | null;
     userCount: number;
-    isActive: boolean;
     photoUrl: string | null;
 };
 
@@ -51,12 +48,6 @@ export function siteColumns(
         helper.accessor('userCount', {
             header: () => sortable('users', 'Mitarbeiter'),
             cell: ({ row }) => String(row.original.userCount),
-        }),
-        helper.display({
-            id: 'status',
-            header: () => 'Status',
-            cell: ({ row }) =>
-                renderComponent(ActiveBadge, { active: row.original.isActive }),
         }),
     ]);
 }

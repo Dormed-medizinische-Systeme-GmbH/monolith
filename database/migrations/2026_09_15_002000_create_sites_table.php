@@ -31,10 +31,14 @@ return new class extends Migration
         Schema::create('sites', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->string('name');
-            $table->string('short_name', 32)->nullable();
 
+            /*
+             * Strasse und Hausnummer in EINEM Feld — anders als bei den
+             * Kundenadressen, wo sie getrennt stehen, weil daran Geokodierung
+             * und Fahrtzone haengen (D-024). Hier sind es vier Standorte, die
+             * niemand auswertet.
+             */
             $table->string('street')->nullable();
-            $table->string('house_number', 32)->nullable();
             $table->string('postal_code', 20)->nullable();
             $table->string('city')->nullable();
 
@@ -45,8 +49,12 @@ return new class extends Migration
              */
             $table->string('photo_path')->nullable();
 
+            /*
+             * KEIN `is_active`. Ein eigener Standort ist entweder in Betrieb
+             * oder er wird geloescht — ein stillgelegter, der weiter in Listen
+             * steht, waere ein Zustand ohne Bedeutung (Nutzer).
+             */
             $table->text('notes')->nullable();
-            $table->boolean('is_active')->default(true);
 
             Columns::blame($table);
             $table->timestamps();
@@ -61,7 +69,13 @@ return new class extends Migration
          * Spalte selbst wird dort angelegt, damit `users` vollstaendig bleibt.
          */
         Schema::table('users', function (Blueprint $table): void {
-            $table->foreign('site_id')->references('id')->on('sites')->nullOnDelete();
+            /*
+             * `restrictOnDelete`, nicht `nullOnDelete`: die Spalte ist NOT NULL.
+             * Einen Standort mit Mitarbeitern zu loeschen lehnt ausserdem schon
+             * `Core\Services\Sites` ab, mit einer Meldung statt eines
+             * Datenbankfehlers.
+             */
+            $table->foreign('site_id')->references('id')->on('sites')->restrictOnDelete();
         });
     }
 

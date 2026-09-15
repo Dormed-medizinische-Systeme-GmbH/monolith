@@ -1,6 +1,5 @@
 <script lang="ts">
     import AppHead from '@/components/AppHead.svelte';
-    import Heading from '@/components/Heading.svelte';
     import { DataTable, type DataTableMeta } from '@/components/data-table';
     import { show } from '@/routes/erp/companies';
     import { companyColumns, type CompanyRow } from './columns';
@@ -13,11 +12,6 @@
 </script>
 
 <AppHead title="Firmen" />
-
-<Heading
-    title="Firmen"
-    description="Der Kundenstamm. Eine Zeile ist eine Firma — die Ansprechpartner stehen in der Firma."
-/>
 
 <DataTable
     bind:this={table}

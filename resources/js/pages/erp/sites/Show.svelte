@@ -9,7 +9,6 @@
     import { Separator } from '@/components/ui/separator';
     import { show as employeeShow } from '@/routes/erp/employees';
     import { edit, index } from '@/routes/erp/sites';
-    import ActiveBadge from './ActiveBadge.svelte';
     import type { SiteProfile } from './profile';
 
     let { site }: { site: SiteProfile } = $props();
@@ -41,15 +40,11 @@
         Alle Betriebsstätten
     </Link>
 
-    <header class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <h2 class="text-xl font-semibold tracking-tight">{site.name}</h2>
-            {#if site.shortName}
-                <p class="text-sm text-muted-foreground">{site.shortName}</p>
-            {/if}
-        </div>
-
-        <ActiveBadge active={site.isActive} />
+    <header>
+        <h2 class="text-xl font-semibold tracking-tight">{site.name}</h2>
+        {#if site.address.line}
+            <p class="text-sm text-muted-foreground">{site.address.line}</p>
+        {/if}
     </header>
 
     {#if site.photoUrl}
@@ -64,17 +59,12 @@
         />
     {/if}
 
-    <div class="flex gap-3 text-sm">
-        <MapPin class="size-4 shrink-0 translate-y-0.5 text-muted-foreground" />
-        {#if site.address.line}
-            <address class="leading-relaxed not-italic">
-                {[site.address.street, site.address.houseNumber].filter(Boolean).join(' ')}<br />
-                {[site.address.postalCode, site.address.city].filter(Boolean).join(' ')}
-            </address>
-        {:else}
+    {#if !site.address.line}
+        <div class="flex gap-3 text-sm">
+            <MapPin class="size-4 shrink-0 translate-y-0.5 text-muted-foreground" />
             <span class="text-muted-foreground">Keine Anschrift hinterlegt.</span>
-        {/if}
-    </div>
+        </div>
+    {/if}
 
     {#if site.notes}
         <p class="max-w-prose text-sm whitespace-pre-line">{site.notes}</p>

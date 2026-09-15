@@ -26,28 +26,21 @@ final class SiteSeeder extends Seeder
     /**
      * Anschriften je Standort. Platzhalter — die echten stehen noch aus.
      *
-     * @var array<string, array{string, string, string, string}>
+     * @var array<string, array{string, string, string}>
      */
     private const ANSCHRIFTEN = [
-        'Buchholz' => ['Musterstraße', '1', '21244', 'Buchholz in der Nordheide'],
-        'Holzwickede' => ['Musterweg', '2', '59439', 'Holzwickede'],
+        'Buchholz' => ['Musterstraße 1', '21244', 'Buchholz in der Nordheide'],
+        'Holzwickede' => ['Musterweg 2', '59439', 'Holzwickede'],
     ];
 
     public function run(): void
     {
         foreach ($this->photos() as [$name, $pfad]) {
-            [$strasse, $hausnummer, $plz, $ort] = self::ANSCHRIFTEN[$name]
-                ?? [null, null, null, null];
+            [$strasse, $plz, $ort] = self::ANSCHRIFTEN[$name] ?? [null, null, null];
 
             $site = Site::query()->firstOrCreate(
                 ['name' => $name],
-                [
-                    'short_name' => mb_substr($name, 0, 3),
-                    'street' => $strasse,
-                    'house_number' => $hausnummer,
-                    'postal_code' => $plz,
-                    'city' => $ort,
-                ],
+                ['street' => $strasse, 'postal_code' => $plz, 'city' => $ort],
             );
 
             // Nicht `$fillable` — das Bild kommt aus dem Seed, nicht aus einer Maske.

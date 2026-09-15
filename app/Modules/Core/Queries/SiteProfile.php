@@ -22,14 +22,11 @@ final class SiteProfile
         return [
             'id' => $site->id,
             'name' => $site->name,
-            'shortName' => $site->short_name,
-            'isActive' => $site->is_active,
             'notes' => $site->notes,
             'photoUrl' => $site->photo_url,
 
             'address' => [
                 'street' => $site->street,
-                'houseNumber' => $site->house_number,
                 'postalCode' => $site->postal_code,
                 'city' => $site->city,
                 'line' => $site->address_line,

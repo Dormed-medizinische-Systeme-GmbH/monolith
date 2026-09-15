@@ -76,7 +76,7 @@ final class DevelopmentAccountSeeder extends Seeder
     {
         $rollen = Role::query()->where('is_active', true)->orderBy('key')->pluck('id', 'key');
         // Standorte wechseln sich ab — auch das ist Platzhalter, siehe oben.
-        $standorte = Site::query()->where('is_active', true)->orderBy('name')->pluck('id');
+        $standorte = Site::query()->orderBy('name')->pluck('id');
 
         foreach ($this->employeePhotos() as $index => [$initiale, $nachname, $pfad]) {
             $email = mb_strtolower($initiale.'.'.$nachname).'@dormed.de';
@@ -96,7 +96,7 @@ final class DevelopmentAccountSeeder extends Seeder
                     'is_admin' => false,
                     'is_active' => true,
                     'role_id' => $rollen->values()[$index % $rollen->count()],
-                    'site_id' => $standorte->isEmpty() ? null : $standorte[$index % $standorte->count()],
+                    'site_id' => $standorte[$index % $standorte->count()],
                     'last_login_at' => now()->subDays($index * 3),
                 ],
             );
@@ -312,6 +312,8 @@ final class DevelopmentAccountSeeder extends Seeder
                 // Vollzugriff ueber den Katalog (D-125) — nicht ueber
                 // `is_admin`; der ist nur der Bootstrap-Bypass (D-028).
                 'role_id' => Role::query()->where('key', 'geschaeftsfuehrung')->value('id'),
+                // NOT NULL: jeder Mitarbeiter gehoert zu einer Betriebsstaette.
+                'site_id' => Site::query()->orderBy('name')->value('id'),
             ],
         );
     }

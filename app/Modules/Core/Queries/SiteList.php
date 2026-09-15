@@ -30,7 +30,6 @@ final class SiteList
      */
     public const SEARCHABLE = [
         'sites.name',
-        'sites.short_name',
         'sites.street',
         'sites.postal_code',
         'sites.city',
@@ -52,11 +51,9 @@ final class SiteList
         return [
             'id' => $site->id,
             'name' => $site->name,
-            'shortName' => $site->short_name,
             'addressLine' => $site->address_line,
             'city' => $site->city,
             'userCount' => (int) $site->getAttribute('users_count'),
-            'isActive' => $site->is_active,
             'photoUrl' => $site->photo_url,
         ];
     }

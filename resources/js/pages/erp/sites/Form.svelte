@@ -7,9 +7,8 @@
     import Heading from '@/components/Heading.svelte';
     import InputError from '@/components/InputError.svelte';
     import * as AlertDialog from '@/components/ui/alert-dialog';
-    import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
+    import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
     import { Input } from '@/components/ui/input';
-    import { Switch } from '@/components/ui/switch';
     import { Textarea } from '@/components/ui/textarea';
     import { destroy, index, show, store, update } from '@/routes/erp/sites';
     import type { SiteProfile } from './profile';
@@ -26,9 +25,6 @@
 
     let loeschenOffen = $state(false);
     let formular: ReturnType<typeof Form> | undefined = $state();
-
-    let aktivGewaehlt = $state<boolean | null>(null);
-    const aktiv = $derived(aktivGewaehlt ?? site?.isActive ?? true);
 
     function loeschen(): void {
         router.delete(destroy(site!.id).url);
@@ -83,43 +79,22 @@
     >
         {#snippet children({ errors })}
             <FieldGroup>
-                <div class="grid gap-4 sm:grid-cols-[1fr_auto]">
-                    <Field>
-                        <FieldLabel for="name">Name</FieldLabel>
-                        <Input id="name" name="name" required autofocus value={site?.name ?? ''} />
-                        <InputError message={errors.name} />
-                    </Field>
+                <Field>
+                    <FieldLabel for="name">Name</FieldLabel>
+                    <Input id="name" name="name" required autofocus value={site?.name ?? ''} />
+                    <InputError message={errors.name} />
+                </Field>
 
-                    <Field>
-                        <FieldLabel for="short_name">Kürzel</FieldLabel>
-                        <Input
-                            id="short_name"
-                            name="short_name"
-                            class="w-28"
-                            value={site?.shortName ?? ''}
-                        />
-                        <InputError message={errors.short_name} />
-                    </Field>
-                </div>
-
-                <div class="grid gap-4 sm:grid-cols-[1fr_auto]">
-                    <Field>
-                        <FieldLabel for="street">Straße</FieldLabel>
-                        <Input id="street" name="street" value={site?.address.street ?? ''} />
-                        <InputError message={errors.street} />
-                    </Field>
-
-                    <Field>
-                        <FieldLabel for="house_number">Nr.</FieldLabel>
-                        <Input
-                            id="house_number"
-                            name="house_number"
-                            class="w-24"
-                            value={site?.address.houseNumber ?? ''}
-                        />
-                        <InputError message={errors.house_number} />
-                    </Field>
-                </div>
+                <Field>
+                    <FieldLabel for="street">Straße und Hausnummer</FieldLabel>
+                    <!--
+                        Ein Feld, anders als bei den Kundenadressen: dort hängen
+                        Geokodierung und Fahrtzone daran (D-024), hier sind es
+                        vier Standorte, die niemand auswertet.
+                    -->
+                    <Input id="street" name="street" value={site?.address.street ?? ''} />
+                    <InputError message={errors.street} />
+                </Field>
 
                 <div class="grid gap-4 sm:grid-cols-[auto_1fr]">
                     <Field>
@@ -146,22 +121,6 @@
                     <InputError message={errors.notes} />
                 </Field>
 
-                <Field orientation="horizontal">
-                    <Switch
-                        id="is_active"
-                        checked={aktiv}
-                        onCheckedChange={(v) => (aktivGewaehlt = Boolean(v))}
-                    />
-                    <input type="hidden" name="is_active" value={aktiv ? '1' : '0'} />
-                    <div>
-                        <FieldLabel for="is_active">Standort aktiv</FieldLabel>
-                        <FieldDescription>
-                            Stillgelegt heißt: steht bei Mitarbeitern nicht mehr zur
-                            Auswahl. Bestehende Zuordnungen bleiben.
-                        </FieldDescription>
-                    </div>
-                    <InputError message={errors.is_active} />
-                </Field>
             </FieldGroup>
         {/snippet}
     </Form>

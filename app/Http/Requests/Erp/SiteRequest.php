@@ -33,17 +33,14 @@ final class SiteRequest extends FormRequest
                 'required', 'string', 'max:255',
                 Rule::unique(Site::class, 'name')->ignore($site instanceof Site ? $site->id : null),
             ],
-            'short_name' => ['nullable', 'string', 'max:32'],
-
             // Die Anschrift darf vorerst fehlen: ein Standort entsteht manchmal,
-            // bevor die Adresse feststeht.
+            // bevor die Adresse feststeht. Strasse und Hausnummer stehen in EINEM
+            // Feld — es sind vier Standorte, die niemand auswertet.
             'street' => ['nullable', 'string', 'max:255'],
-            'house_number' => ['nullable', 'string', 'max:32'],
             'postal_code' => ['nullable', 'string', 'max:20'],
             'city' => ['nullable', 'string', 'max:255'],
 
             'notes' => ['nullable', 'string'],
-            'is_active' => ['required', 'boolean'],
         ];
     }
 
@@ -54,9 +51,7 @@ final class SiteRequest extends FormRequest
     {
         return [
             'name' => 'Name',
-            'short_name' => 'Kürzel',
             'street' => 'Straße',
-            'house_number' => 'Hausnummer',
             'postal_code' => 'Postleitzahl',
             'city' => 'Ort',
         ];

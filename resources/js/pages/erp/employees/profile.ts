@@ -8,7 +8,7 @@ export type EmployeeProfile = {
     name: string;
     email: string;
     photoUrl: string | null;
-    site: { id: string; name: string; addressLine: string | null } | null;
+    site: { id: string; name: string; addressLine: string | null };
     role: { id: string; key: string; name: string };
     flags: { active: boolean; admin: boolean };
     anmeldung: {

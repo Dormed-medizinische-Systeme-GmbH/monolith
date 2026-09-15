@@ -38,6 +38,7 @@ Navigations-/Cockpit-Wirkung: [`../09-ui/NAVIGATION.md`](../09-ui/NAVIGATION.md)
 | `is_admin` | boolean | – | default `false` — Bootstrap/IT-Bypass (D-028) |
 | `is_active` | boolean | – | default `true` — inaktiv ⇒ kein Login, aus `responsible_*` ausgeblendet |
 | `role_id` | FK → `roles` | – | **NOT NULL (D-124)** — genau eine Rolle je Mitarbeiter |
+| `site_id` | FK → `sites` | – | **NOT NULL** — jeder Mitarbeiter gehört zu einer Betriebsstätte, auch wer überwiegend unterwegs ist |
 | `last_login_at` | datetime | ✓ | |
 | `photo_path` | string | ✓ | Ablageschlüssel des Mitarbeiterfotos im Object Storage (ADR-045), z. B. `employees/A.Draheim.jpg`. Nur der Schlüssel, nie eine vollständige Adresse — die baut `Storage::url()`. **Nicht `$fillable`**: wird nicht über die Mitarbeitermaske gepflegt |
 
@@ -52,7 +53,15 @@ Navigations-/Cockpit-Wirkung: [`../09-ui/NAVIGATION.md`](../09-ui/NAVIGATION.md)
 `name`-Feld — `getNameAttribute()`-Accessor (`first_name . ' ' . last_name`), keine
 Spalte (D-093; ursprünglicher Breeze-Kompat-Grund entfällt mit ADR-023/Fortify).
 
-**Beziehungen:** `role()` `belongsTo` (D-124, war `belongsToMany`).
+**Beziehungen:** `role()` `belongsTo` (D-124, war `belongsToMany`), `site()` `belongsTo`.
+
+> **`sites` sind Dormeds EIGENE Standorte** (ergänzt 2026-09-15) — Buchholz,
+> Holzwickede. Nicht `locations`: die sind Kundenstandorte und hängen an einer
+> Company (D-002/D-007); ein Mitarbeiter mit FK dorthin wäre einer Kundenpraxis
+> zugeordnet. Die Anschrift steht als eigene Spalten in `sites` statt in der
+> polymorphen `addresses` — die liegt in `Modules\Crm`, und `Core` hängt von
+> nichts ab (ADR-005). **Kein `is_active`:** ein eigener Standort ist in Betrieb
+> oder er wird gelöscht; gelöscht wird nur, was keine Mitarbeiter mehr hat.
 
 ## `roles`
 
