@@ -7,6 +7,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 | `app/**`, `tests/**` | [architecture.md](architecture.md) |
 | `routes/**`, `bootstrap/app.php`, `app/Http/Middleware/**`, `config/database.php` | [routing.md](routing.md) |
 | `database/migrations/**`, `app/Modules/**/Models/**` | [database.md](database.md) |
+| überall | [language.md](language.md) — Bezeichner Englisch, Oberfläche Deutsch |
 | `docker-compose*.yaml`, `docker/**`, `phpunit.xml`, `.env.example` | [local-stack.md](local-stack.md) |
 
 > **Struktur (ADR-033).** **Eine** Laravel-Anwendung im Repo-Wurzelverzeichnis, **eine**
