@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Erp;
 
 use App\Modules\Core\Models\Role;
+use App\Modules\Core\Models\Site;
 use App\Modules\Core\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -57,6 +58,17 @@ final class EmployeeRequest extends FormRequest
                 Rule::exists(Role::class, 'id')->where('is_active', true),
             ],
 
+            /*
+             * Nullable, aber nur ein AKTIVER Standort: einen stillgelegten
+             * zuzuweisen hiesse, jemanden dorthin zu setzen, wo niemand mehr
+             * sitzt. Leer ist dagegen ein gueltiger Zustand — Aussendienst,
+             * oder noch nicht entschieden.
+             */
+            'site_id' => [
+                'nullable',
+                Rule::exists(Site::class, 'id')->where('is_active', true),
+            ],
+
             'is_active' => ['required', 'boolean'],
 
             // Bootstrap-/IT-Bypass (D-028), kein Ersatz fuer eine Rolle.
@@ -75,6 +87,7 @@ final class EmployeeRequest extends FormRequest
             'email' => 'E-Mail-Adresse',
             'password' => 'Passwort',
             'role_id' => 'Rolle',
+            'site_id' => 'Standort',
         ];
     }
 }

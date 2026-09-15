@@ -28,6 +28,8 @@ final class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             // Ohne Fachrichtungen kein Fachgebiet-Feld im Kontaktformular (D-133).
             MedicalSpecialtySeeder::class,
+            // Die eigenen Standorte — Grundbestand, kein Beispiel.
+            SiteSeeder::class,
             // Dateibestand in den Object Storage (ADR-045).
             ObjectStorageSeeder::class,
             // Zwei Anmeldedaten zum Ausprobieren — ueberspringt sich in Produktion.

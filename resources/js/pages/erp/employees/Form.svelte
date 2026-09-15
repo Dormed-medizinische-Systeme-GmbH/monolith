@@ -12,7 +12,7 @@
     import { NativeSelect } from '@/components/ui/native-select';
     import { Switch } from '@/components/ui/switch';
     import { destroy, index, show, store, update } from '@/routes/erp/employees';
-    import type { EmployeeProfile, RoleOption } from './profile';
+    import type { EmployeeProfile, RoleOption, SiteOption } from './profile';
 
     /**
      * Anlegen und Bearbeiten in einer Maske — die Felder sind dieselben, nur
@@ -22,7 +22,12 @@
     let {
         employee = null,
         roles,
-    }: { employee?: EmployeeProfile | null; roles: RoleOption[] } = $props();
+        sites,
+    }: {
+        employee?: EmployeeProfile | null;
+        roles: RoleOption[];
+        sites: SiteOption[];
+    } = $props();
 
     const neu = $derived(employee === null);
 
@@ -177,6 +182,31 @@
                         Genau eine Rolle je Mitarbeiter (D-124).
                     </FieldDescription>
                     <InputError message={errors.role_id} />
+                </Field>
+
+                <Field>
+                    <FieldLabel for="site_id">Standort</FieldLabel>
+                    <NativeSelect
+                        id="site_id"
+                        name="site_id"
+                        class="w-full"
+                        value={employee?.site?.id ?? ''}
+                    >
+                        <!--
+                            Anders als die Rolle darf der Standort leer bleiben:
+                            Außendienst oder noch nicht entschieden sind gültige
+                            Zustände. Deshalb kein `required` und ein echter
+                            Leereintrag statt eines gesperrten Platzhalters.
+                        -->
+                        <option value="">— kein Standort —</option>
+                        {#each sites as site (site.id)}
+                            <option value={site.id}>{site.name}</option>
+                        {/each}
+                    </NativeSelect>
+                    <FieldDescription>
+                        Eigener Standort von Dormed, nicht der eines Kunden.
+                    </FieldDescription>
+                    <InputError message={errors.site_id} />
                 </Field>
 
                 <Field orientation="horizontal">

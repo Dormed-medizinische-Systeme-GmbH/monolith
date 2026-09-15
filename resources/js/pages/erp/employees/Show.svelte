@@ -7,6 +7,7 @@
     import Cloud from '@lucide/svelte/icons/cloud';
     import KeyRound from '@lucide/svelte/icons/key-round';
     import Mail from '@lucide/svelte/icons/mail';
+    import MapPin from '@lucide/svelte/icons/map-pin';
     import Pencil from '@lucide/svelte/icons/pencil';
     import ShieldCheck from '@lucide/svelte/icons/shield-check';
     import AppHead from '@/components/AppHead.svelte';
@@ -42,6 +43,13 @@
 
     const zeilen: Zeile[] = $derived([
         { icon: Mail, label: 'E-Mail', value: employee.email },
+        {
+            icon: MapPin,
+            label: 'Standort',
+            value: employee.site
+                ? [employee.site.name, employee.site.addressLine].filter(Boolean).join(' · ')
+                : 'keinem zugeordnet',
+        },
         {
             icon: KeyRound,
             label: 'Passwort',

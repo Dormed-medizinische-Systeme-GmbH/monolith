@@ -63,6 +63,15 @@ return new class extends Migration
              */
             $table->string('photo_path')->nullable();
 
+            /*
+             * Der Dormed-Standort, an dem dieser Mitarbeiter sitzt. Der
+             * Fremdschluessel folgt in `create_sites_table` — diese Migration
+             * laeuft zuerst, `sites` gibt es hier noch nicht.
+             *
+             * Nullable: wer im Aussendienst sitzt oder neu ist, hat noch keinen.
+             */
+            $table->uuid('site_id')->nullable()->index();
+
             $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

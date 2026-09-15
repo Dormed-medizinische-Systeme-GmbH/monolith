@@ -16,7 +16,7 @@ final class UserProfile
      */
     public static function for(User $user): array
     {
-        $user->load('role');
+        $user->load(['role', 'site']);
 
         return [
             'id' => $user->id,
@@ -25,6 +25,12 @@ final class UserProfile
             'name' => $user->name,
             'email' => $user->email,
             'photoUrl' => $user->photo_url,
+
+            'site' => $user->site === null ? null : [
+                'id' => $user->site->id,
+                'name' => $user->site->name,
+                'addressLine' => $user->site->address_line,
+            ],
 
             'role' => [
                 'id' => $user->role->id,

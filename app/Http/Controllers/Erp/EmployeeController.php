@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Erp;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Erp\EmployeeRequest;
 use App\Modules\Core\Models\Role;
+use App\Modules\Core\Models\Site;
 use App\Modules\Core\Models\User;
 use App\Modules\Core\Queries\UserList;
 use App\Modules\Core\Queries\UserProfile;
@@ -53,6 +54,7 @@ final class EmployeeController extends Controller
         return Inertia::render('erp/employees/Form', [
             'employee' => null,
             'roles' => self::roles(),
+            'sites' => self::sites(),
         ]);
     }
 
@@ -69,6 +71,7 @@ final class EmployeeController extends Controller
         return Inertia::render('erp/employees/Form', [
             'employee' => UserProfile::for($user),
             'roles' => self::roles(),
+            'sites' => self::sites(),
         ]);
     }
 
@@ -109,6 +112,21 @@ final class EmployeeController extends Controller
         Inertia::flash('toast', ['type' => $type, 'message' => $message]);
 
         return redirect();
+    }
+
+    /**
+     * Nur aktive Standorte zur Auswahl — derselbe Grund wie bei den Rollen.
+     *
+     * @return list<array<string, string>>
+     */
+    private static function sites(): array
+    {
+        return Site::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Site $site): array => ['id' => $site->id, 'name' => $site->name])
+            ->all();
     }
 
     /**

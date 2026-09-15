@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Modules\Core\Models\Role;
+use App\Modules\Core\Models\Site;
 use App\Modules\Core\Models\User;
 use App\Modules\Crm\Enums\ChannelLabel;
 use App\Modules\Crm\Enums\ChannelType;
@@ -66,14 +67,16 @@ final class DevelopmentAccountSeeder extends Seeder
      * > steht. „A. Draheim" ist damit unvollstaendig, aber nicht erfunden — und
      * > das ist die bessere der beiden Moeglichkeiten.
      *
-     * > **Die Rollenzuordnung ist Platzhalter.** Wer welcher Abteilung
-     * > angehoert, geht aus den Dateien nicht hervor; verteilt wird der Reihe
-     * > nach, damit die Listenansicht Abwechslung zeigt. Vor dem ersten echten
-     * > Einsatz gehoert das ersetzt.
+     * > **Rollen- UND Standortzuordnung sind Platzhalter.** Wer welcher
+     * > Abteilung angehoert und an welchem Standort sitzt, geht aus den Dateien
+     * > nicht hervor; verteilt wird der Reihe nach, damit die Listenansicht
+     * > Abwechslung zeigt. Vor dem ersten echten Einsatz gehoert das ersetzt.
      */
     private function furtherEmployees(): void
     {
         $rollen = Role::query()->where('is_active', true)->orderBy('key')->pluck('id', 'key');
+        // Standorte wechseln sich ab — auch das ist Platzhalter, siehe oben.
+        $standorte = Site::query()->where('is_active', true)->orderBy('name')->pluck('id');
 
         foreach ($this->employeePhotos() as $index => [$initiale, $nachname, $pfad]) {
             $email = mb_strtolower($initiale.'.'.$nachname).'@dormed.de';
@@ -93,6 +96,7 @@ final class DevelopmentAccountSeeder extends Seeder
                     'is_admin' => false,
                     'is_active' => true,
                     'role_id' => $rollen->values()[$index % $rollen->count()],
+                    'site_id' => $standorte->isEmpty() ? null : $standorte[$index % $standorte->count()],
                     'last_login_at' => now()->subDays($index * 3),
                 ],
             );

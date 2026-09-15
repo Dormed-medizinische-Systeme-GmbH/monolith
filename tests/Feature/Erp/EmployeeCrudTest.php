@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Core\Models\Role;
+use App\Modules\Core\Models\Site;
 use App\Modules\Core\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Hash;
@@ -239,4 +240,57 @@ test('das Foto kommt aus dem Object Storage und ist nicht ueber die Maske setzba
         ->assertRedirect();
 
     expect($kollege->fresh()->photo_path)->toBe('employees/A.Draheim.jpg');
+});
+
+test('ein Mitarbeiter laesst sich einem Dormed-Standort zuordnen', function (): void {
+    $standort = Site::query()->create(['name' => 'Buchholz', 'city' => 'Buchholz']);
+
+    $this->actingAs($this->ich, 'staff')
+        ->patch(erp('/'.$this->ich->id), [
+            'first_name' => $this->ich->first_name,
+            'last_name' => $this->ich->last_name,
+            'email' => $this->ich->email,
+            'role_id' => $this->ich->role_id,
+            'site_id' => $standort->id,
+            'is_active' => true,
+            'is_admin' => false,
+        ])
+        ->assertRedirect();
+
+    expect($this->ich->fresh()->site_id)->toBe($standort->id);
+});
+
+test('kein Standort ist ein gueltiger Zustand', function (): void {
+    // Aussendienst oder noch nicht entschieden — anders als die Rolle, die
+    // NOT NULL ist (D-124).
+    $this->actingAs($this->ich, 'staff')
+        ->patch(erp('/'.$this->ich->id), [
+            'first_name' => $this->ich->first_name,
+            'last_name' => $this->ich->last_name,
+            'email' => $this->ich->email,
+            'role_id' => $this->ich->role_id,
+            'site_id' => '',
+            'is_active' => true,
+            'is_admin' => false,
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect($this->ich->fresh()->site_id)->toBeNull();
+});
+
+test('ein stillgelegter Standort laesst sich nicht zuweisen', function (): void {
+    $standort = Site::query()->create(['name' => 'Aufgegeben', 'is_active' => false]);
+
+    $this->actingAs($this->ich, 'staff')
+        ->patch(erp('/'.$this->ich->id), [
+            'first_name' => $this->ich->first_name,
+            'last_name' => $this->ich->last_name,
+            'email' => $this->ich->email,
+            'role_id' => $this->ich->role_id,
+            'site_id' => $standort->id,
+            'is_active' => true,
+            'is_admin' => false,
+        ])
+        ->assertSessionHasErrors('site_id');
 });

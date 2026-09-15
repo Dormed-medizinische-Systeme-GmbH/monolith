@@ -29,6 +29,7 @@ final class UserList
         'name' => 'users.last_name',
         'email' => 'users.email',
         'role' => 'roles.name',
+        'site' => 'sites.name',
         'lastLogin' => 'users.last_login_at',
     ];
 
@@ -39,6 +40,7 @@ final class UserList
         "users.first_name || ' ' || users.last_name",
         'users.email',
         'roles.name',
+        'sites.name',
     ];
 
     /**
@@ -48,9 +50,13 @@ final class UserList
     {
         return User::query()
             ->select('users.*')
-            ->addSelect(['roles.name as role_name'])
+            ->addSelect(['roles.name as role_name', 'sites.name as site_name'])
             ->leftJoin('roles', function (JoinClause $join): void {
                 $join->on('roles.id', '=', 'users.role_id');
+            })
+            ->leftJoin('sites', function (JoinClause $join): void {
+                $join->on('sites.id', '=', 'users.site_id')
+                    ->whereNull('sites.deleted_at');
             });
     }
 
@@ -64,6 +70,7 @@ final class UserList
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->getAttribute('role_name'),
+            'site' => $user->getAttribute('site_name'),
             'isActive' => $user->is_active,
             'isAdmin' => $user->is_admin,
             'hasPassword' => $user->password !== null,

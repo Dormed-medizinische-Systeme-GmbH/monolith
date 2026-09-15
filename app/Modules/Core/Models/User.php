@@ -35,6 +35,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property bool $is_admin
  * @property bool $is_active
  * @property string $role_id
+ * @property string|null $site_id
  * @property string|null $photo_path
  * @property-read string|null $photo_url
  */
@@ -63,7 +64,7 @@ final class User extends Authenticatable
      */
     protected $fillable = [
         'first_name', 'last_name', 'email', 'password',
-        'entra_oid', 'is_admin', 'is_active', 'role_id',
+        'entra_oid', 'is_admin', 'is_active', 'role_id', 'site_id',
     ];
 
     protected $hidden = [
@@ -85,6 +86,16 @@ final class User extends Authenticatable
     protected function name(): Attribute
     {
         return Attribute::get(fn (): string => trim("{$this->first_name} {$this->last_name}"));
+    }
+
+    /**
+     * Der Dormed-Standort, an dem dieser Mitarbeiter sitzt.
+     *
+     * @return BelongsTo<Site, $this>
+     */
+    public function site(): BelongsTo
+    {
+        return $this->belongsTo(Site::class);
     }
 
     /**
