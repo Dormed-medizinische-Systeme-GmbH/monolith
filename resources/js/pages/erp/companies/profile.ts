@@ -49,8 +49,16 @@ export type CompanyProfile = {
     locations: {
         id: string;
         name: string;
+        notes: string | null;
         isPrimary: boolean;
         address: Address | null;
+        /** Einzeln für die Maske — dort wird die Anschrift in Feldern bearbeitet. */
+        addressFields: {
+            street: string | null;
+            houseNumber: string | null;
+            postalCode: string | null;
+            city: string | null;
+        };
         /** Deckungsgleich mit der Sitzadresse — dann wird sie nicht wiederholt. */
         sameAsCompanyAddress: boolean;
     }[];

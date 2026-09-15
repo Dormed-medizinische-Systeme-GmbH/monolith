@@ -48,6 +48,24 @@ Route::middleware('auth:staff')->group(function (): void {
         ->scopeBindings()
         ->name('erp.companies.contacts.show');
 
+    /*
+     * Standorte liegen UNTER der Firma, auch in der Adresse: ein Kundenstandort
+     * kann ohne sie nicht existieren (`company_id` NOT NULL, D-007). Die
+     * verschachtelte Bindung sorgt dafuer, dass sich kein Standort einer
+     * fremden Praxis ueber diesen Pfad aendern laesst.
+     *
+     * Kein `create`/`edit`: die Maske ist ein Dialog in der Firmenakte, es gibt
+     * also keine eigene Seite dafuer.
+     */
+    Route::post('/firmen/{company}/standorte', [CompanyController::class, 'storeLocation'])
+        ->name('erp.companies.locations.store');
+    Route::patch('/firmen/{company}/standorte/{location}', [CompanyController::class, 'updateLocation'])
+        ->scopeBindings()
+        ->name('erp.companies.locations.update');
+    Route::delete('/firmen/{company}/standorte/{location}', [CompanyController::class, 'destroyLocation'])
+        ->scopeBindings()
+        ->name('erp.companies.locations.destroy');
+
     // Katalog, kein Bestand — der kommt mit dem Ledger (D-102).
     Route::get('/artikel', [ArticleController::class, 'index'])->name('erp.articles.index');
     Route::get('/artikel/{article}', [ArticleController::class, 'show'])->name('erp.articles.show');

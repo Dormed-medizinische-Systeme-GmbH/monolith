@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Link } from '@inertiajs/svelte';
+    import { Link, router } from '@inertiajs/svelte';
     import ArrowLeft from '@lucide/svelte/icons/arrow-left';
     import Boxes from '@lucide/svelte/icons/boxes';
     import Building from '@lucide/svelte/icons/building';
@@ -7,19 +7,26 @@
     import FileText from '@lucide/svelte/icons/file-text';
     import HardDrive from '@lucide/svelte/icons/hard-drive';
     import MapPin from '@lucide/svelte/icons/map-pin';
+    import Pencil from '@lucide/svelte/icons/pencil';
+    import Plus from '@lucide/svelte/icons/plus';
+    import Trash from '@lucide/svelte/icons/trash';
     import ReceiptText from '@lucide/svelte/icons/receipt-text';
     import TrendingUp from '@lucide/svelte/icons/trending-up';
     import Wrench from '@lucide/svelte/icons/wrench';
     import AppHead from '@/components/AppHead.svelte';
+    import * as AlertDialog from '@/components/ui/alert-dialog';
     import { Badge } from '@/components/ui/badge';
+    import { Button } from '@/components/ui/button';
     import * as Empty from '@/components/ui/empty';
     import { Separator } from '@/components/ui/separator';
     import * as Table from '@/components/ui/table';
     import * as Tabs from '@/components/ui/tabs';
     import { index } from '@/routes/erp/companies';
+    import { destroy as locationDestroy } from '@/routes/erp/companies/locations';
     import { show as contactShow } from '@/routes/erp/companies/contacts';
     import AccessBadge from './AccessBadge.svelte';
     import ChannelList from './ChannelList.svelte';
+    import LocationDialog from './LocationDialog.svelte';
     import type { CompanyProfile } from './profile';
 
     /**
@@ -35,6 +42,28 @@
      * ist für den Adressstamm gebaut, nicht für sechs Zeilen.
      */
     let { company }: { company: CompanyProfile } = $props();
+
+    type Standort = CompanyProfile['locations'][number];
+
+    let standortDialog = $state(false);
+    let standortInArbeit = $state<Standort | null>(null);
+    let zuLoeschen = $state<Standort | null>(null);
+
+    function standortBearbeiten(location: Standort | null): void {
+        standortInArbeit = location;
+        standortDialog = true;
+    }
+
+    function standortLoeschen(): void {
+        const location = zuLoeschen;
+        zuLoeschen = null;
+
+        if (location) {
+            router.delete(
+                locationDestroy({ company: company.id, location: location.id }).url,
+            );
+        }
+    }
 
     const weitereAngaben = $derived(Object.entries(company.stammdaten));
     const bank = $derived(Object.entries(company.bank));
@@ -121,45 +150,6 @@
 
         <ChannelList channels={company.channels} />
     </div>
-
-    <Separator />
-
-    <section class="space-y-2">
-        <h3 class="text-xs tracking-wide text-muted-foreground uppercase">
-            Standorte
-        </h3>
-        <!--
-            Geräte und Serviceverträge hängen später am Standort, nicht an der
-            Firma (D-007) — deshalb stehen sie hier, auch wenn der Hauptstandort
-            meist die Sitzadresse ist.
-        -->
-        <ul class="space-y-2">
-            {#each company.locations as location (location.id)}
-                <li class="flex gap-2.5 text-sm">
-                    <Building class="size-4 shrink-0 translate-y-0.5 text-muted-foreground" />
-                    <div>
-                        <span class="font-medium">{location.name}</span>
-                        {#if location.isPrimary}
-                            <span class="ms-2 text-xs text-muted-foreground">
-                                Hauptstandort
-                            </span>
-                        {/if}
-                        <div class="text-muted-foreground">
-                            {#if location.sameAsCompanyAddress}
-                                wie Sitzadresse
-                            {:else if location.address}
-                                {location.address.street}, {location.address.city}
-                            {:else}
-                                keine Adresse hinterlegt
-                            {/if}
-                        </div>
-                    </div>
-                </li>
-            {:else}
-                <li class="text-sm text-muted-foreground">Kein Standort hinterlegt.</li>
-            {/each}
-        </ul>
-    </section>
 
     {#if weitereAngaben.length > 0 || bank.length > 0 || hatZustaendige || company.billingCompany || company.notes}
         <Separator />
@@ -251,6 +241,7 @@
             <Tabs.List>
                 <Tabs.Trigger value="gesamt">Gesamt</Tabs.Trigger>
                 <Tabs.Trigger value="ansprechpartner">Ansprechpartner</Tabs.Trigger>
+                <Tabs.Trigger value="standorte">Standorte</Tabs.Trigger>
                 {#each akten as akte (akte.value)}
                     <Tabs.Trigger value={akte.value}>{akte.label}</Tabs.Trigger>
                 {/each}
@@ -272,6 +263,21 @@
                 anderen Praxis eine andere Rolle haben (D-005).
             </p>
             {@render ansprechpartner()}
+            {@render standorte()}
+        </Tabs.Content>
+
+        <Tabs.Content value="standorte" class="space-y-3 pt-4">
+            <div class="flex items-start justify-between gap-4">
+                <p class="text-sm text-muted-foreground">
+                    Geräte und Serviceverträge hängen später am Standort, nicht an
+                    der Firma (D-007).
+                </p>
+                <Button size="sm" onclick={() => standortBearbeiten(null)}>
+                    <Plus class="size-4" />
+                    Standort
+                </Button>
+            </div>
+            {@render standorte()}
         </Tabs.Content>
 
         {#each akten as akte (akte.value)}
@@ -291,6 +297,64 @@
         {/each}
     </Tabs.Root>
 </div>
+
+{#snippet standorte()}
+    <ul class="divide-y rounded-md border">
+        {#each company.locations as location (location.id)}
+            <li class="flex items-start gap-3 p-3 text-sm">
+                <Building class="size-4 shrink-0 translate-y-0.5 text-muted-foreground" />
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="font-medium">{location.name}</span>
+                        {#if location.isPrimary}
+                            <Badge variant="outline" class="text-muted-foreground">
+                                Hauptstandort
+                            </Badge>
+                        {/if}
+                    </div>
+                    <div class="text-muted-foreground">
+                        {#if location.sameAsCompanyAddress}
+                            wie Sitzadresse
+                        {:else if location.address}
+                            {location.address.street}, {location.address.city}
+                        {:else}
+                            keine Adresse hinterlegt
+                        {/if}
+                    </div>
+                    {#if location.notes}
+                        <p class="pt-1 text-xs whitespace-pre-line text-muted-foreground">
+                            {location.notes}
+                        </p>
+                    {/if}
+                </div>
+
+                <div class="flex shrink-0 gap-1">
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Standort bearbeiten"
+                        onclick={() => standortBearbeiten(location)}
+                    >
+                        <Pencil class="size-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        class="text-destructive hover:text-destructive"
+                        aria-label="Standort löschen"
+                        onclick={() => (zuLoeschen = location)}
+                    >
+                        <Trash class="size-4" />
+                    </Button>
+                </div>
+            </li>
+        {:else}
+            <li class="p-6 text-center text-sm text-muted-foreground">
+                Kein Standort hinterlegt.
+            </li>
+        {/each}
+    </ul>
+{/snippet}
 
 {#snippet ansprechpartner()}
     <div class="overflow-x-auto rounded-md border">
@@ -353,3 +417,28 @@
         </Table.Root>
     </div>
 {/snippet}
+
+<LocationDialog
+    bind:open={standortDialog}
+    companyId={company.id}
+    location={standortInArbeit}
+/>
+
+<AlertDialog.Root open={zuLoeschen !== null} onOpenChange={(o) => !o && (zuLoeschen = null)}>
+    <AlertDialog.Content>
+        <AlertDialog.Header>
+            <AlertDialog.Title>{zuLoeschen?.name} löschen?</AlertDialog.Title>
+            <AlertDialog.Description>
+                Der Datensatz bleibt erhalten und wird nur ausgeblendet (D-018). Der
+                letzte Standort einer Firma lässt sich nicht löschen; war es der
+                Hauptstandort, rückt ein anderer nach.
+            </AlertDialog.Description>
+        </AlertDialog.Header>
+        <AlertDialog.Footer>
+            <AlertDialog.Cancel>Abbrechen</AlertDialog.Cancel>
+            <AlertDialog.Action variant="destructive" onclick={standortLoeschen}>
+                Löschen
+            </AlertDialog.Action>
+        </AlertDialog.Footer>
+    </AlertDialog.Content>
+</AlertDialog.Root>

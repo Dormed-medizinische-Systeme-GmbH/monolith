@@ -97,8 +97,17 @@ final class CompanyProfile
                 ->map(fn (Location $location): array => [
                     'id' => $location->id,
                     'name' => $location->name,
+                    'notes' => $location->notes,
                     'isPrimary' => $location->is_primary,
                     'address' => self::address($location->address),
+                    // Getrennt fuer die Maske: die Anschrift wird dort in
+                    // einzelnen Feldern bearbeitet, nicht als fertige Zeile.
+                    'addressFields' => [
+                        'street' => $location->address?->street,
+                        'houseNumber' => $location->address?->house_number,
+                        'postalCode' => $location->address?->postal_code,
+                        'city' => $location->address?->city,
+                    ],
                     /*
                      * Der Hauptstandort liegt meistens an der Sitzadresse. Sie
                      * dort noch einmal auszuschreiben sieht aus wie ein
