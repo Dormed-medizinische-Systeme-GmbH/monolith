@@ -9,6 +9,7 @@
     import Columns3 from '@lucide/svelte/icons/columns-3';
     import List from '@lucide/svelte/icons/list';
     import MapPin from '@lucide/svelte/icons/map-pin';
+    import Text from '@lucide/svelte/icons/text';
     import User from '@lucide/svelte/icons/user';
     import AppHead from '@/components/AppHead.svelte';
     import * as Avatar from '@/components/ui/avatar';
@@ -17,6 +18,7 @@
     import * as Dialog from '@/components/ui/dialog';
     import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
     import { Input } from '@/components/ui/input';
+    import { Checkbox } from '@/components/ui/checkbox';
     import * as Select from '@/components/ui/select';
     import { Textarea } from '@/components/ui/textarea';
     import * as DropdownMenu from '@/components/ui/dropdown-menu';
@@ -54,6 +56,8 @@
         title: string;
         location: string;
         description: string;
+        /** Außer Haus. Ergibt sich später aus der verknüpften Adresse. */
+        offsite: boolean;
         employeeId: string | null;
         assignee: string;
         color: 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'orange' | 'gray';
@@ -351,10 +355,9 @@
         id: string | null;
         title: string;
         employeeId: string;
-        location: string;
         description: string;
-        color: CalendarEvent['color'];
         allDay: boolean;
+        offsite: boolean;
         startDate: string;
         startTime: string;
         endDate: string;
@@ -392,10 +395,9 @@
             id: t.id,
             title: t.title,
             employeeId: t.employeeId ?? '',
-            location: t.location,
             description: t.description,
-            color: t.color,
             allDay: t.allDay,
+            offsite: t.offsite,
             startDate: alsDatum(t.von),
             startTime: alsUhrzeit(t.von),
             endDate: alsDatum(t.bis),
@@ -414,10 +416,9 @@
             id: null,
             title: '',
             employeeId: employees[0]?.id ?? '',
-            location: '',
             description: '',
-            color: 'blue',
             allDay: false,
+            offsite: false,
             startDate: alsDatum(start),
             startTime: alsUhrzeit(start),
             endDate: alsDatum(ende),
@@ -448,10 +449,9 @@
             title: form.title.trim(),
             employeeId: form.employeeId || null,
             assignee: employees.find((e) => e.id === form!.employeeId)?.name ?? '—',
-            location: form.location,
             description: form.description,
-            color: form.color,
             allDay: form.allDay,
+            offsite: form.offsite,
             start: start.toISOString(),
             end: ende.toISOString(),
         };
@@ -459,23 +459,17 @@
         if (form.id) {
             aendere(form.id, werte);
         } else {
+            // Die Farbe kommt später aus der Terminart; bis dahin eine Vorgabe.
             // Der Schluessel ist lokal und bewusst erkennbar: nichts davon
             // erreicht je einen Server.
-            angelegt = [...angelegt, { id: `lokal-${Date.now()}`, ...werte }];
+            angelegt = [
+                ...angelegt,
+                { id: `lokal-${Date.now()}`, location: '', color: 'blue', ...werte },
+            ];
         }
 
         form = null;
     }
-
-    const farbnamen: { wert: CalendarEvent['color']; label: string }[] = [
-        { wert: 'blue', label: 'Blau' },
-        { wert: 'green', label: 'Grün' },
-        { wert: 'red', label: 'Rot' },
-        { wert: 'yellow', label: 'Gelb' },
-        { wert: 'purple', label: 'Violett' },
-        { wert: 'orange', label: 'Orange' },
-        { wert: 'gray', label: 'Grau' },
-    ];
 
     /* ------------------------------------------------------------------ */
     /* Zeitraster                                                          */
@@ -1096,12 +1090,26 @@
                     </div>
                 </div>
 
-                {#if offen.location && offen.location !== '—'}
-                    <div class="flex items-start gap-3">
-                        <MapPin class="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                        <div>
-                            <dt class="font-medium">Ort</dt>
+                <div class="flex items-start gap-3">
+                    <MapPin class="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <div>
+                        <dt class="font-medium">
+                            {offen.offsite ? 'Außer Haus' : 'Im Haus'}
+                        </dt>
+                        {#if offen.location && offen.location !== '—'}
                             <dd class="text-muted-foreground">{offen.location}</dd>
+                        {/if}
+                    </div>
+                </div>
+
+                {#if offen.description}
+                    <div class="flex items-start gap-3">
+                        <Text class="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                        <div>
+                            <dt class="font-medium">Beschreibung</dt>
+                            <dd class="whitespace-pre-line text-muted-foreground">
+                                {offen.description}
+                            </dd>
                         </div>
                     </div>
                 {/if}
@@ -1264,50 +1272,25 @@
                     </Field>
                 </div>
 
-                <Field orientation="horizontal">
-                    <input
-                        id="termin_all_day"
-                        type="checkbox"
-                        class="size-4 accent-primary"
-                        bind:checked={form.allDay}
-                    />
-                    <FieldLabel for="termin_all_day">Ganztägig</FieldLabel>
-                </Field>
-
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <Field>
-                        <FieldLabel for="termin_color">Farbe</FieldLabel>
-                        <!-- Gleicher Grund wie oben: der Punkt sagt mehr als das Wort. -->
-                        <Select.Root type="single" bind:value={form.color}>
-                            <Select.Trigger id="termin_color" class="w-full">
-                                <span class="flex items-center gap-2">
-                                    <span
-                                        class="size-2.5 rounded-full {punkte[form.color]}"
-                                    ></span>
-                                    {farbnamen.find((f) => f.wert === form!.color)?.label}
-                                </span>
-                            </Select.Trigger>
-
-                            <Select.Content>
-                                {#each farbnamen as f (f.wert)}
-                                    <Select.Item value={f.wert} label={f.label}>
-                                        <span class="flex items-center gap-2">
-                                            <span
-                                                class="size-2.5 rounded-full {punkte[f.wert]}"
-                                            ></span>
-                                            {f.label}
-                                        </span>
-                                    </Select.Item>
-                                {/each}
-                            </Select.Content>
-                        </Select.Root>
+                <div class="flex flex-wrap items-center gap-6">
+                    <Field orientation="horizontal" class="w-auto">
+                        <Checkbox id="termin_all_day" bind:checked={form.allDay} />
+                        <FieldLabel for="termin_all_day">Ganztägig</FieldLabel>
                     </Field>
 
-                    <Field>
-                        <FieldLabel for="termin_location">Ort</FieldLabel>
-                        <Input id="termin_location" bind:value={form.location} />
+                    <!--
+                        Vorgabe ist IM Haus. Später ergibt sich das aus der
+                        verknüpften Adresse — ein Termin bei einer Praxis ist
+                        außer Haus, einer ohne ist es nicht; bis dahin ist es
+                        ein Haken.
+                    -->
+                    <Field orientation="horizontal" class="w-auto">
+                        <Checkbox id="termin_offsite" bind:checked={form.offsite} />
+                        <FieldLabel for="termin_offsite">Außer Haus</FieldLabel>
                     </Field>
                 </div>
+
+                <Separator />
 
                 <Field>
                     <FieldLabel for="termin_description">Beschreibung</FieldLabel>

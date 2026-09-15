@@ -96,6 +96,13 @@ final class CalendarController extends Controller
                 'title' => $titel,
                 'location' => $ort,
                 'description' => 'Platzhalter aus dem Entwurf — hier stünde später, worum es geht.',
+                /*
+                 * Aussentermin oder nicht. Spaeter faellt das weg: es ergibt
+                 * sich aus der verknuepften Adresse — ein Termin bei einer
+                 * Praxis ist ausser Haus, einer ohne ist es nicht. Bis dahin
+                 * ist es ein Haken.
+                 */
+                'offsite' => ! in_array($ort, ['—', '', 'Buchholz'], true),
                 'employeeId' => $wer['id'] ?? null,
                 'assignee' => $wer['name'] ?? '—',
                 'color' => $farbe,
@@ -112,6 +119,7 @@ final class CalendarController extends Controller
             'title' => 'Urlaub',
             'location' => '',
             'description' => 'Genehmigt.',
+            'offsite' => false,
             'employeeId' => $employees[0]['id'] ?? null,
             'assignee' => $employees[0]['name'] ?? '—',
             'color' => 'yellow',
@@ -125,6 +133,7 @@ final class CalendarController extends Controller
             'title' => 'MEDICA Düsseldorf',
             'location' => 'Messe',
             'description' => 'Standbetreuung, Anreise am Vorabend.',
+            'offsite' => true,
             'employeeId' => $employees[1]['id'] ?? null,
             'assignee' => $employees[1]['name'] ?? '—',
             'color' => 'orange',
