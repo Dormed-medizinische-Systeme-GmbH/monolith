@@ -688,16 +688,33 @@
                         style="grid-template-columns: repeat({tage.length}, minmax(0, 1fr))"
                     >
                         {#each tage as tag (tag.getTime())}
-                            <div class="min-h-8 space-y-1 border-l p-1 first:border-l-0">
+                            <!--
+                                Auch hier wird abgelegt — auf den TAG, wie im
+                                Monat. Eine Stunde gibt es nicht, an der man
+                                einen ganztägigen Eintrag festmachen könnte.
+                            -->
+                            <div
+                                class="min-h-8 space-y-1 border-l p-1 first:border-l-0"
+                                class:bg-accent={zieht !== null}
+                                role="presentation"
+                                ondragover={ablegenErlauben}
+                                ondrop={(e) => ablegenAmTag(e, tag)}
+                            >
                                 {#each anTag(mehrtaegig, tag) as t (t.id)}
-                                    <div
-                                        class="truncate rounded border px-1.5 py-0.5 text-xs {farben[
+                                    <button
+                                        type="button"
+                                        draggable="true"
+                                        ondragstart={(e) => aufnehmen(e, t)}
+                                        ondragend={() => (zieht = null)}
+                                        onclick={() => (offen = t)}
+                                        class="block w-full cursor-grab truncate rounded border px-1.5 py-0.5 text-left text-xs active:cursor-grabbing {farben[
                                             t.color
                                         ]}"
+                                        class:opacity-40={zieht === t.id}
                                         title={t.title}
                                     >
                                         {t.title}
-                                    </div>
+                                    </button>
                                 {/each}
                             </div>
                         {/each}
