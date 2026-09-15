@@ -131,12 +131,16 @@
             .toUpperCase();
     }
 
-    /** Die Ansichtsumschaltung sitzt in der App-Kopfzeile, wie auf jeder Fläche. */
+    /**
+     * Die Ansichtsumschaltung sitzt in der App-Kopfzeile, wie auf jeder Fläche
+     * — als EINE Schaltergruppe, denn genau eine Ansicht gilt.
+     */
     $effect(() => {
         setLayoutProps({
             actions: ansichten.map((a) => ({
                 label: a.label,
                 icon: a.icon,
+                group: 'ansicht',
                 variant: view === a.key ? ('default' as const) : ('outline' as const),
                 onSelect: () => (view = a.key),
             })),

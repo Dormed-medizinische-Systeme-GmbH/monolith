@@ -18,6 +18,13 @@ export type PageAction = {
     href?: string;
     onSelect?: () => void;
     variant?: 'default' | 'outline' | 'ghost' | 'destructive';
+    /**
+     * Aufeinanderfolgende Aktionen mit demselben Gruppennamen werden in der
+     * Kopfzeile zu EINER Schaltergruppe zusammengezogen — ohne Abstand, mit
+     * geraden Kanten dazwischen. Gedacht für Umschalter, bei denen genau eine
+     * Möglichkeit gilt (Tag/Woche/Monat/Agenda).
+     */
+    group?: string;
     /** Nur das Symbol. Die Beschriftung bleibt als `aria-label` erhalten. */
     iconOnly?: boolean;
     /**
