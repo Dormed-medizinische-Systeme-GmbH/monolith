@@ -54,7 +54,7 @@
                           {
                               label: 'Löschen',
                               icon: Trash,
-                              variant: 'ghost' as const,
+                              variant: 'outline' as const,
                               iconOnly: true,
                               destructive: true,
                               onSelect: () => (loeschenOffen = true),
@@ -231,7 +231,9 @@
             </AlertDialog.Header>
             <AlertDialog.Footer>
                 <AlertDialog.Cancel>Abbrechen</AlertDialog.Cancel>
-                <AlertDialog.Action onclick={loeschen}>Löschen</AlertDialog.Action>
+                <AlertDialog.Action variant="destructive" onclick={loeschen}>
+                    Löschen
+                </AlertDialog.Action>
             </AlertDialog.Footer>
         </AlertDialog.Content>
     </AlertDialog.Root>

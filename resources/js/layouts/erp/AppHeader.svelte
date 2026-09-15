@@ -47,7 +47,8 @@
                         variant={action.variant ?? 'outline'}
                         size={action.iconOnly ? 'icon-sm' : 'sm'}
                         class={cn(
-                            action.destructive && 'text-destructive hover:text-destructive',
+                            action.destructive &&
+                                'border-destructive text-destructive hover:border-destructive hover:bg-destructive/10 hover:text-destructive',
                         )}
                         aria-label={action.iconOnly ? action.label : undefined}
                         onclick={action.onSelect}

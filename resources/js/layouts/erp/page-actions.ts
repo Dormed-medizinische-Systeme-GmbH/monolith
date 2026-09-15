@@ -20,7 +20,11 @@ export type PageAction = {
     variant?: 'default' | 'outline' | 'ghost' | 'destructive';
     /** Nur das Symbol. Die Beschriftung bleibt als `aria-label` erhalten. */
     iconOnly?: boolean;
-    /** Zerstörend — wird rot dargestellt, ohne die Fläche zu füllen. */
+    /**
+     * Zerstörend — roter Rand und rote Schrift, aber keine gefüllte Fläche.
+     * Gefüllt ist erst die Bestätigung im Dialog: dort ist es die einzige
+     * Aktion, hier steht „Speichern" daneben und soll den Blick behalten.
+     */
     destructive?: boolean;
 };
 
