@@ -421,7 +421,7 @@
 <LocationDialog
     bind:open={standortDialog}
     companyId={company.id}
-    location={standortInArbeit}
+    standort={standortInArbeit}
 />
 
 <AlertDialog.Root open={zuLoeschen !== null} onOpenChange={(o) => !o && (zuLoeschen = null)}>

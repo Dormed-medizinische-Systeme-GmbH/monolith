@@ -529,22 +529,43 @@
     /* Zeitraster                                                          */
     /* ------------------------------------------------------------------ */
 
-    const STUNDE_VON = 7;
-    const STUNDE_BIS = 20;
+    const REGEL_VON = 7;
+    const REGEL_BIS = 20;
     const STUNDEN_HOEHE = 56;
 
-    const stunden = Array.from(
-        { length: STUNDE_BIS - STUNDE_VON },
-        (_, i) => i + STUNDE_VON,
+    /**
+     * Der sichtbare Ausschnitt — 7 bis 20 Uhr, ABER weit genug für alles, was
+     * an Terminen da ist.
+     *
+     * Ohne diese Ausweitung wäre ein Termin um 6 oder um 22 Uhr schlicht
+     * unsichtbar: er bekäme einen Wert außerhalb von 0–100 % und läge damit
+     * außerhalb des Rasters. Kein Fehler, keine Meldung — er wäre einfach weg.
+     */
+    const ausschnitt = $derived.by(() => {
+        let von = REGEL_VON;
+        let bis = REGEL_BIS;
+
+        for (const t of eintaegig) {
+            von = Math.min(von, t.von.getHours());
+
+            const endeStunde = t.bis.getHours() + (t.bis.getMinutes() > 0 ? 1 : 0);
+            bis = Math.max(bis, Math.min(endeStunde, 24));
+        }
+
+        return { von, bis };
+    });
+
+    const stunden = $derived(
+        Array.from({ length: ausschnitt.bis - ausschnitt.von }, (_, i) => i + ausschnitt.von),
     );
 
     /** Anteil des Tages, gemessen am sichtbaren Ausschnitt. */
     function anteil(d: Date): number {
         const minuten = d.getHours() * 60 + d.getMinutes();
-        const sichtbarVon = STUNDE_VON * 60;
-        const sichtbarBis = STUNDE_BIS * 60;
+        const von = ausschnitt.von * 60;
+        const bis = ausschnitt.bis * 60;
 
-        return ((minuten - sichtbarVon) / (sichtbarBis - sichtbarVon)) * 100;
+        return ((minuten - von) / (bis - von)) * 100;
     }
 
     function blockStil(t: Termin, tag: Date, spalte: number, von: number): string {
@@ -561,9 +582,24 @@
         return `top:${oben}%;height:${Math.max(unten - oben, 2)}%;left:${spalte * breite}%;width:calc(${breite}% - 2px)`;
     }
 
-    /** Wo die Jetzt-Linie liegt — oder `null`, wenn sie außerhalb liegt. */
+    /**
+     * Wo die Jetzt-Linie liegt — oder `null`, wenn sie außerhalb liegt.
+     *
+     * `new Date()` ist nichts, worauf Svelte hören kann; ohne die Uhr unten
+     * bliebe die Linie auf dem Stand des Seitenaufrufs stehen. Bei einem
+     * Kalender, den jemand den halben Tag offen hat, ist das die längste Zeit
+     * eine Lüge.
+     */
+    let jetzt = $state(new Date());
+
+    $effect(() => {
+        const takt = setInterval(() => (jetzt = new Date()), 60_000);
+
+        return () => clearInterval(takt);
+    });
+
     const jetztAnteil = $derived.by(() => {
-        const a = anteil(new Date());
+        const a = anteil(jetzt);
         return a >= 0 && a <= 100 ? a : null;
     });
 

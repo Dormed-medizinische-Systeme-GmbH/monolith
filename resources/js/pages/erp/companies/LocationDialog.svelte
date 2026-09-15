@@ -25,18 +25,23 @@
     let {
         open = $bindable(false),
         companyId,
-        location = null,
-    }: { open?: boolean; companyId: string; location?: Standort | null } = $props();
+        // NICHT `location`: das verdeckt das gleichnamige Browser-Global, und
+        // ein Tippfehler im Namen fällt dann nicht auf, sondern liest
+        // `window.location`.
+        standort = null,
+    }: { open?: boolean; companyId: string; standort?: Standort | null } = $props();
 
-    const neu = $derived(location === null);
+    const neu = $derived(standort === null);
 
     let hauptGewaehlt = $state<boolean | null>(null);
-    const haupt = $derived(hauptGewaehlt ?? location?.isPrimary ?? false);
+    const haupt = $derived(hauptGewaehlt ?? standort?.isPrimary ?? false);
 
     // Beim Wechsel zwischen „neu" und „bearbeiten" darf die vorige Wahl nicht
-    // stehen bleiben.
+    // stehen bleiben. Der Schlüssel ist die Abhängigkeit, nicht das Objekt.
+    const bearbeiteteId = $derived(standort?.id ?? null);
+
     $effect(() => {
-        location;
+        void bearbeiteteId;
         hauptGewaehlt = null;
     });
 </script>
@@ -45,7 +50,7 @@
     <Dialog.Content class="sm:max-w-lg">
         <Dialog.Header>
             <Dialog.Title>
-                {neu ? 'Standort anlegen' : `${location?.name} bearbeiten`}
+                {neu ? 'Standort anlegen' : `${standort?.name} bearbeiten`}
             </Dialog.Title>
             <Dialog.Description>
                 Ein realer Betriebs- oder Servicestandort dieser Praxis. Geräte und
@@ -56,7 +61,7 @@
         <Form
             {...(neu
                 ? store.form(companyId)
-                : update.form({ company: companyId, location: location!.id }))}
+                : update.form({ company: companyId, location: standort!.id }))}
             onSuccess={() => (open = false)}
         >
             {#snippet children({ errors, processing })}
@@ -69,7 +74,7 @@
                             required
                             autofocus
                             placeholder="Hauptstandort"
-                            value={location?.name ?? ''}
+                            value={standort?.name ?? ''}
                         />
                         <InputError message={errors.name} />
                     </Field>
@@ -80,7 +85,7 @@
                             <Input
                                 id="location_street"
                                 name="street"
-                                value={location?.addressFields.street ?? ''}
+                                value={standort?.addressFields.street ?? ''}
                             />
                             <InputError message={errors.street} />
                         </Field>
@@ -91,7 +96,7 @@
                                 id="location_house_number"
                                 name="house_number"
                                 class="w-24"
-                                value={location?.addressFields.houseNumber ?? ''}
+                                value={standort?.addressFields.houseNumber ?? ''}
                             />
                         </Field>
                     </div>
@@ -103,7 +108,7 @@
                                 id="location_postal_code"
                                 name="postal_code"
                                 class="w-28"
-                                value={location?.addressFields.postalCode ?? ''}
+                                value={standort?.addressFields.postalCode ?? ''}
                             />
                             <InputError message={errors.postal_code} />
                         </Field>
@@ -113,7 +118,7 @@
                             <Input
                                 id="location_city"
                                 name="city"
-                                value={location?.addressFields.city ?? ''}
+                                value={standort?.addressFields.city ?? ''}
                             />
                             <InputError message={errors.city} />
                         </Field>
@@ -125,7 +130,7 @@
                             id="location_notes"
                             name="notes"
                             rows={2}
-                            value={location?.notes ?? ''}
+                            value={standort?.notes ?? ''}
                         />
                     </Field>
 
