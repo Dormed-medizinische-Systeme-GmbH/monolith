@@ -1,10 +1,12 @@
 <script lang="ts">
     import { Link } from '@inertiajs/svelte';
+    import * as Avatar from '@/components/ui/avatar';
     import { Button, buttonVariants } from '@/components/ui/button';
+    import * as Select from '@/components/ui/select';
     import { Separator } from '@/components/ui/separator';
     import * as Sidebar from '@/components/ui/sidebar';
     import { cn } from '@/lib/utils';
-    import type { PageAction } from './page-actions';
+    import type { PageAction, PagePicker } from './page-actions';
 
     /**
      * Die Kopfzeile über dem Inhalt: Umschalter für die Seitenleiste, der Name
@@ -14,7 +16,22 @@
      * derselben Stelle sitzen — unabhängig davon, wie weit man gescrollt hat
      * und wie die Fläche darunter aufgebaut ist.
      */
-    let { title, actions = [] }: { title?: string; actions?: PageAction[] } = $props();
+    let {
+        title,
+        actions = [],
+        picker,
+    }: { title?: string; actions?: PageAction[]; picker?: PagePicker } = $props();
+
+    const gewaehlt = $derived(picker?.options.find((o) => o.value === picker?.value) ?? null);
+
+    function initialen(label: string): string {
+        return label
+            .split(' ')
+            .map((teil) => teil[0] ?? '')
+            .slice(0, 2)
+            .join('')
+            .toUpperCase();
+    }
 
     /**
      * Aufeinanderfolgende Aktionen mit demselben Gruppennamen bilden eine
@@ -67,8 +84,61 @@
         <span class="text-sm font-medium">{title}</span>
     {/if}
 
-    {#if actions.length > 0}
-        <div class="ms-auto flex items-center gap-2">
+    <div class="ms-auto flex items-center gap-2">
+        {#if picker}
+            <Select.Root
+                type="single"
+                value={picker.value}
+                onValueChange={(v) => picker?.onSelect(v ?? '')}
+            >
+                <Select.Trigger size="sm" class="w-52">
+                    {#if gewaehlt}
+                        <span class="flex items-center gap-2">
+                            <Avatar.Root class="size-5">
+                                {#if gewaehlt.imageUrl}
+                                    <Avatar.Image
+                                        src={gewaehlt.imageUrl}
+                                        alt={gewaehlt.label}
+                                    />
+                                {/if}
+                                <Avatar.Fallback class="text-[9px]">
+                                    {initialen(gewaehlt.label)}
+                                </Avatar.Fallback>
+                            </Avatar.Root>
+                            {gewaehlt.label}
+                        </span>
+                    {:else}
+                        <span class="text-muted-foreground">{picker.placeholder}</span>
+                    {/if}
+                </Select.Trigger>
+
+                <Select.Content align="end">
+                    <Select.Item value="" label={picker.placeholder}>
+                        {picker.placeholder}
+                    </Select.Item>
+                    {#each picker.options as option (option.value)}
+                        <Select.Item value={option.value} label={option.label}>
+                            <span class="flex items-center gap-2">
+                                <Avatar.Root class="size-6">
+                                    {#if option.imageUrl}
+                                        <Avatar.Image
+                                            src={option.imageUrl}
+                                            alt={option.label}
+                                        />
+                                    {/if}
+                                    <Avatar.Fallback class="text-[10px]">
+                                        {initialen(option.label)}
+                                    </Avatar.Fallback>
+                                </Avatar.Root>
+                                {option.label}
+                            </span>
+                        </Select.Item>
+                    {/each}
+                </Select.Content>
+            </Select.Root>
+        {/if}
+
+        {#if actions.length > 0}
             {#each segmente as segment, s (segment.gruppe ?? s)}
                 <div class="flex items-center">
                     {#each segment.eintraege as action, i (action.label)}
@@ -117,6 +187,6 @@
                     {/each}
                 </div>
             {/each}
-        </div>
-    {/if}
+        {/if}
+    </div>
 </header>

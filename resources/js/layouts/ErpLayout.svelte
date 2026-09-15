@@ -7,7 +7,7 @@
     import AppSidebar from './erp/AppSidebar.svelte';
     import CommandPalette from './erp/CommandPalette.svelte';
     import { isCurrent, navigation } from './erp/navigation';
-    import type { PageAction } from './erp/page-actions';
+    import type { PageAction, PagePicker } from './erp/page-actions';
 
     /**
      * Die Hülle aller ERP-Flächen: Seitenleiste, Kopfzeile, Inhalt.
@@ -18,9 +18,10 @@
      */
     let {
         children,
-        // Kommt aus der Seite über `setLayoutProps` (siehe `erp/page-actions.ts`).
+        // Kommen aus der Seite über `setLayoutProps` (siehe `erp/page-actions.ts`).
         actions = [],
-    }: { children?: Snippet; actions?: PageAction[] } = $props();
+        picker,
+    }: { children?: Snippet; actions?: PageAction[]; picker?: PagePicker } = $props();
 
     let searchOpen = $state(false);
 
@@ -58,7 +59,7 @@
     <AppSidebar onOpenSearch={() => (searchOpen = true)} />
 
     <Sidebar.Inset>
-        <AppHeader title={section} {actions} />
+        <AppHeader title={section} {actions} {picker} />
 
         <div class="flex flex-1 flex-col gap-4 p-4 md:p-6">
             {@render children?.()}

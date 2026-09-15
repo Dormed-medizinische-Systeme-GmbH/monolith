@@ -35,6 +35,22 @@ export type PageAction = {
     destructive?: boolean;
 };
 
+/**
+ * Eine Auswahl in der Kopfzeile — dieselbe Überlegung wie bei `PageAction`:
+ * die Seite sagt, was zur Wahl steht, die Kopfzeile bestimmt das Aussehen.
+ *
+ * `imageUrl` ist für Personen gedacht: zwölf Namen liest man, zwölf Gesichter
+ * erkennt man. Fehlt es, stehen die Initialen dort.
+ */
+export type PagePicker = {
+    /** Leerer String = die Vorgabe, also `placeholder`. */
+    value: string;
+    placeholder: string;
+    options: { value: string; label: string; imageUrl?: string | null }[];
+    onSelect: (value: string) => void;
+};
+
 export type ErpLayoutProps = {
     actions?: PageAction[];
+    picker?: PagePicker;
 };
