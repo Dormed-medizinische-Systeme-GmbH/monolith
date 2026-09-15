@@ -44,6 +44,11 @@
      * Die Woche beginnt am MONTAG. Das Original beginnt am Sonntag; hier wäre
      * das schlicht falsch.
      *
+     * **Ein Termin hat keinen Betreff.** Was im Kalender steht, wird aus Typ,
+     * Status, „außer Haus" und der verknüpften Firma zusammengesetzt und
+     * nirgends gespeichert. Die Farbe folgt dem Typ und ist ebenfalls keine
+     * Eingabe — die Legende unter dem Kalender sagt, welche Farbe was meint.
+     *
      * **Anlegen, Bearbeiten und Verschieben wirken nur im Browser.** Es gibt
      * keine Terminverwaltung, gegen die man speichern könnte; alles ist beim
      * nächsten Laden weg. Das ist kein Mangel des Entwurfs, sondern sein Zweck
@@ -51,16 +56,34 @@
      */
     type Employee = { id: string; name: string; photoUrl: string | null };
 
+    type Company = {
+        id: string;
+        name: string;
+        postalCode: string | null;
+        city: string | null;
+    };
+
+    type Typ = 'wartung' | 'service' | 'besprechung' | 'privat';
+    type Status = 'vorlaeufig' | 'bestaetigt' | 'storniert';
+
+    /**
+     * Ein Termin hat KEINEN Betreff.
+     *
+     * Was im Kalender steht, entsteht aus Typ, Status, „außer Haus" und der
+     * verknüpften Firma — siehe `bezeichnung()`. Gespeichert wird es nirgends;
+     * ein eingetippter Betreff wäre eine zweite Wahrheit neben Feldern, die
+     * dasselbe schon sagen.
+     */
     type CalendarEvent = {
         id: string;
-        title: string;
-        location: string;
-        description: string;
+        type: Typ;
+        status: Status | null;
         /** Außer Haus. Ergibt sich später aus der verknüpften Adresse. */
         offsite: boolean;
+        companyId: string | null;
+        description: string;
         employeeId: string | null;
         assignee: string;
-        color: 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'orange' | 'gray';
         allDay: boolean;
         start: string;
         end: string;
@@ -71,7 +94,12 @@
     let {
         events = [],
         employees = [],
-    }: { events?: CalendarEvent[]; employees?: Employee[] } = $props();
+        companies = [],
+    }: {
+        events?: CalendarEvent[];
+        employees?: Employee[];
+        companies?: Company[];
+    } = $props();
 
     const ansichten: { key: View; label: string; icon: typeof List }[] = [
         { key: 'day', label: 'Tag', icon: List },
@@ -353,7 +381,9 @@
 
     type FormWerte = {
         id: string | null;
-        title: string;
+        type: Typ;
+        status: Status | null;
+        companyId: string;
         employeeId: string;
         description: string;
         allDay: boolean;
@@ -393,7 +423,9 @@
 
         form = {
             id: t.id,
-            title: t.title,
+            type: t.type,
+            status: t.status,
+            companyId: t.companyId ?? '',
             employeeId: t.employeeId ?? '',
             description: t.description,
             allDay: t.allDay,
@@ -414,7 +446,9 @@
 
         form = {
             id: null,
-            title: '',
+            type: 'wartung',
+            status: 'vorlaeufig',
+            companyId: '',
             employeeId: employees[0]?.id ?? '',
             description: '',
             allDay: false,
@@ -426,9 +460,31 @@
         };
     }
 
+    /** Die Status, die zum gewählten Typ gehören. */
+    const moeglicheStatus = $derived(form ? typInfo(form.type).statusse : []);
+
+    /*
+     * Ein Typwechsel kann den Status ungültig machen — „Wartung, bestätigt" zu
+     * „Privat" gemacht, und der Status gehört dort nicht hin. Statt ihn stehen
+     * zu lassen und beim Speichern stillschweigend zu verwerfen, wird er hier
+     * mitgeführt.
+     */
+    $effect(() => {
+        if (!form) {
+            return;
+        }
+
+        const erlaubt = typInfo(form.type).statusse;
+
+        if (erlaubt.length === 0 && form.status !== null) {
+            form.status = null;
+        } else if (erlaubt.length > 0 && (form.status === null || !erlaubt.includes(form.status))) {
+            form.status = erlaubt[0];
+        }
+    });
+
     const formularGueltig = $derived(
         form !== null &&
-            form.title.trim() !== '' &&
             ausFeldern(form.endDate, form.endTime) > ausFeldern(form.startDate, form.startTime),
     );
 
@@ -446,7 +502,9 @@
             : ausFeldern(form.endDate, form.endTime);
 
         const werte = {
-            title: form.title.trim(),
+            type: form.type,
+            status: form.status,
+            companyId: form.offsite ? form.companyId || null : null,
             employeeId: form.employeeId || null,
             assignee: employees.find((e) => e.id === form!.employeeId)?.name ?? '—',
             description: form.description,
@@ -459,13 +517,9 @@
         if (form.id) {
             aendere(form.id, werte);
         } else {
-            // Die Farbe kommt später aus der Terminart; bis dahin eine Vorgabe.
             // Der Schluessel ist lokal und bewusst erkennbar: nichts davon
             // erreicht je einen Server.
-            angelegt = [
-                ...angelegt,
-                { id: `lokal-${Date.now()}`, location: '', color: 'blue', ...werte },
-            ];
+            angelegt = [...angelegt, { id: `lokal-${Date.now()}`, ...werte }];
         }
 
         form = null;
@@ -579,32 +633,119 @@
     }
 
     /* ------------------------------------------------------------------ */
-    /* Farben                                                              */
+    /* Typ, Status und die daraus gebaute Bezeichnung                      */
     /* ------------------------------------------------------------------ */
 
     /*
-     * Ohne Dark-Varianten (ADR-044). Die Palette des Projekts kennt bisher nur
-     * `destructive`; sobald sie steht, ist das diese eine Tabelle.
+     * Die Farbe hängt am TYP und ist keine Eingabe — ein frei wählbares
+     * Farbfeld hieße, dass zwei Wartungen verschieden aussehen können. Ohne
+     * Dark-Varianten (ADR-044); sobald die Palette steht, ist das diese eine
+     * Tabelle.
+     *
+     * Welche Status es gibt, hängt ebenfalls am Typ: Privat und Besprechung
+     * haben keinen, Wartung und Service haben drei (Nutzer).
      */
-    const farben: Record<CalendarEvent['color'], string> = {
-        blue: 'border-blue-200 bg-blue-50 text-blue-800',
-        green: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-        red: 'border-red-200 bg-red-50 text-red-800',
-        yellow: 'border-amber-200 bg-amber-50 text-amber-800',
-        purple: 'border-violet-200 bg-violet-50 text-violet-800',
-        orange: 'border-orange-200 bg-orange-50 text-orange-800',
-        gray: 'border-neutral-200 bg-neutral-100 text-neutral-800',
+    const typen: {
+        wert: Typ;
+        label: string;
+        statusse: Status[];
+        farbe: string;
+        punkt: string;
+    }[] = [
+        {
+            wert: 'wartung',
+            label: 'Wartung',
+            statusse: ['vorlaeufig', 'bestaetigt', 'storniert'],
+            farbe: 'border-blue-200 bg-blue-50 text-blue-800',
+            punkt: 'bg-blue-500',
+        },
+        {
+            wert: 'service',
+            label: 'Service',
+            statusse: ['vorlaeufig', 'bestaetigt', 'storniert'],
+            farbe: 'border-red-200 bg-red-50 text-red-800',
+            punkt: 'bg-red-500',
+        },
+        {
+            wert: 'besprechung',
+            label: 'Besprechung',
+            statusse: [],
+            farbe: 'border-neutral-200 bg-neutral-100 text-neutral-800',
+            punkt: 'bg-neutral-400',
+        },
+        {
+            wert: 'privat',
+            label: 'Privat',
+            statusse: [],
+            farbe: 'border-violet-200 bg-violet-50 text-violet-800',
+            punkt: 'bg-violet-500',
+        },
+    ];
+
+    const statusnamen: Record<Status, string> = {
+        vorlaeufig: 'vorläufig',
+        bestaetigt: 'bestätigt',
+        storniert: 'storniert',
     };
 
-    const punkte: Record<CalendarEvent['color'], string> = {
-        blue: 'bg-blue-500',
-        green: 'bg-emerald-500',
-        red: 'bg-red-500',
-        yellow: 'bg-amber-500',
-        purple: 'bg-violet-500',
-        orange: 'bg-orange-500',
-        gray: 'bg-neutral-400',
-    };
+    function typInfo(typ: Typ) {
+        return typen.find((t) => t.wert === typ) ?? typen[0];
+    }
+
+    function farbe(t: { type: Typ; status: Status | null }): string {
+        // Storniert tritt zurück, unabhängig vom Typ — es soll nicht mehr nach
+        // einem Termin aussehen, den jemand wahrnimmt.
+        return t.status === 'storniert'
+            ? 'border-neutral-200 bg-neutral-50 text-neutral-500 line-through'
+            : typInfo(t.type).farbe;
+    }
+
+    /**
+     * Die Bezeichnung eines Termins — zusammengesetzt, nirgends gespeichert.
+     *
+     * ```
+     * Wartung · bestätigt · außer Haus · Musterpraxis
+     *   → „Wartung bei Musterpraxis Dr. Muster, 21244 Buchholz"
+     * dieselbe im Haus     → „Wartung im Haus"
+     * dieselbe vorläufig   → „[BLOCKED] Wartung bei …"
+     * dieselbe storniert   → „[STORNO] Wartung bei …"
+     * ```
+     *
+     * > **Die Matrix ist noch nicht entschieden** (Nutzer). Was hier steht, ist
+     * > die Regel aus dem ersten Durchgang; Sonderfälle je Typ kommen dazu.
+     * > Wenn es so weit ist, gehört sie auf den Server — sie wird auch für
+     * > Listen, Mails und PDFs gebraucht, und zweimal gepflegt läuft sie
+     * > auseinander.
+     */
+    function bezeichnung(t: {
+        type: Typ;
+        status: Status | null;
+        offsite: boolean;
+        companyId: string | null;
+    }): string {
+        const kopf =
+            t.status === 'vorlaeufig'
+                ? '[BLOCKED] '
+                : t.status === 'storniert'
+                  ? '[STORNO] '
+                  : '';
+
+        const typ = typInfo(t.type).label;
+
+        if (!t.offsite) {
+            return `${kopf}${typ} im Haus`;
+        }
+
+        const firma = companies.find((c) => c.id === t.companyId);
+
+        if (!firma) {
+            return `${kopf}${typ} auswärts`;
+        }
+
+        const ort = [firma.postalCode, firma.city].filter(Boolean).join(' ');
+
+        return `${kopf}${typ} bei ${firma.name}${ort ? `, ${ort}` : ''}`;
+    }
 
 </script>
 
@@ -760,19 +901,19 @@
                                     e.stopPropagation();
                                     offen = t;
                                 }}
-                                class="flex cursor-grab items-center gap-1.5 truncate rounded border px-1.5 py-0.5 text-left text-xs active:cursor-grabbing {farben[
-                                    t.color
-                                ]}"
+                                class="flex cursor-grab items-center gap-1.5 truncate rounded border px-1.5 py-0.5 text-left text-xs active:cursor-grabbing {farbe(
+                                    t,
+                                )}"
                                 class:opacity-50={!zelle.imMonat}
                                 class:opacity-40={zieht === t.id}
-                                title="{t.title} · {t.location}"
+                                title={bezeichnung(t)}
                             >
                                 {#if !t.mehrtaegig}
                                     <span class="shrink-0 tabular-nums opacity-70">
                                         {zeit.format(t.von)}
                                     </span>
                                 {/if}
-                                <span class="truncate">{t.title}</span>
+                                <span class="truncate">{bezeichnung(t)}</span>
                             </button>
                         {/each}
 
@@ -861,13 +1002,13 @@
                                         ondragstart={(e) => aufnehmen(e, t)}
                                         ondragend={() => (zieht = null)}
                                         onclick={() => (offen = t)}
-                                        class="block w-full cursor-grab truncate rounded border px-1.5 py-0.5 text-left text-xs active:cursor-grabbing {farben[
-                                            t.color
-                                        ]}"
+                                        class="block w-full cursor-grab truncate rounded border px-1.5 py-0.5 text-left text-xs active:cursor-grabbing {farbe(
+                                            t,
+                                        )}"
                                         class:opacity-40={zieht === t.id}
-                                        title={t.title}
+                                        title={bezeichnung(t)}
                                     >
-                                        {t.title}
+                                        {bezeichnung(t)}
                                     </button>
                                 {/each}
                             </div>
@@ -928,15 +1069,15 @@
                                         ondragstart={(e) => aufnehmen(e, termin)}
                                         ondragend={() => (zieht = null)}
                                         onclick={() => (offen = termin)}
-                                        class="absolute cursor-grab overflow-hidden rounded border px-1.5 py-0.5 text-left text-xs active:cursor-grabbing {farben[
-                                            termin.color
-                                        ]}"
+                                        class="absolute cursor-grab overflow-hidden rounded border px-1.5 py-0.5 text-left text-xs active:cursor-grabbing {farbe(
+                                            termin,
+                                        )}"
                                         class:opacity-40={zieht === termin.id}
                                         style={blockStil(termin, tag, spalte, von)}
-                                        title="{termin.title} · {termin.location} · {termin.assignee}"
+                                        title="{bezeichnung(termin)} · {termin.assignee}"
                                     >
                                         <span class="block truncate font-medium">
-                                            {termin.title}
+                                            {bezeichnung(termin)}
                                         </span>
                                         <span class="block truncate opacity-75 tabular-nums">
                                             {zeit.format(termin.von)}–{zeit.format(termin.bis)}
@@ -991,7 +1132,7 @@
                                     onclick={() => (offen = t)}
                                 >
                                 <span
-                                    class="mt-1.5 size-2 shrink-0 rounded-full {punkte[t.color]}"
+                                    class="mt-1.5 size-2 shrink-0 rounded-full {typInfo(t.type).punkt}"
                                 ></span>
                                 <span class="w-28 shrink-0 tabular-nums text-muted-foreground">
                                     {t.mehrtaegig
@@ -999,13 +1140,10 @@
                                         : `${zeit.format(t.von)}–${zeit.format(t.bis)}`}
                                 </span>
                                 <span class="min-w-0 flex-1">
-                                    <span class="font-medium">{t.title}</span>
-                                    {#if t.location && t.location !== '—'}
-                                        <span
-                                            class="flex items-center gap-1 text-xs text-muted-foreground"
-                                        >
-                                            <MapPin class="size-3" />
-                                            {t.location}
+                                    <span class="font-medium">{bezeichnung(t)}</span>
+                                    {#if t.description}
+                                        <span class="block truncate text-xs text-muted-foreground">
+                                            {t.description}
                                         </span>
                                     {/if}
                                 </span>
@@ -1027,6 +1165,28 @@
             {/each}
         </div>
     {/if}
+
+    <!--
+        Legende. Die Farbe wird nicht gewählt, sie folgt dem Typ — dann muss
+        irgendwo stehen, welche Farbe welchen Typ meint.
+    -->
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-2 border-t pt-3 text-xs">
+        {#each typen as t (t.wert)}
+            <span class="flex items-center gap-1.5">
+                <span class="size-2.5 rounded-full {t.punkt}"></span>
+                {t.label}
+            </span>
+        {/each}
+
+        <span class="flex items-center gap-1.5 text-muted-foreground">
+            <span class="size-2.5 rounded-full bg-neutral-300"></span>
+            <span class="line-through">storniert</span>
+        </span>
+
+        <span class="text-muted-foreground">
+            [BLOCKED] vorläufig · [STORNO] storniert
+        </span>
+    </div>
 
     <p class="text-xs text-muted-foreground">
         Entwurf. Die Termine sind erfunden — es gibt weder eine Terminverwaltung
@@ -1058,8 +1218,10 @@
         {#if offen}
             <Dialog.Header>
                 <Dialog.Title class="flex items-center gap-2">
-                    <span class="size-2.5 shrink-0 rounded-full {punkte[offen.color]}"></span>
-                    {offen.title}
+                    <span
+                        class="size-2.5 shrink-0 rounded-full {typInfo(offen.type).punkt}"
+                    ></span>
+                    {bezeichnung(offen)}
                 </Dialog.Title>
             </Dialog.Header>
 
@@ -1094,11 +1256,13 @@
                     <MapPin class="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                     <div>
                         <dt class="font-medium">
-                            {offen.offsite ? 'Außer Haus' : 'Im Haus'}
+                            {typInfo(offen.type).label}{offen.status
+                                ? `, ${statusnamen[offen.status]}`
+                                : ''}
                         </dt>
-                        {#if offen.location && offen.location !== '—'}
-                            <dd class="text-muted-foreground">{offen.location}</dd>
-                        {/if}
+                        <dd class="text-muted-foreground">
+                            {offen.offsite ? 'außer Haus' : 'im Haus'}
+                        </dd>
                     </div>
                 </div>
 
@@ -1179,10 +1343,64 @@
             </Dialog.Header>
 
             <FieldGroup>
-                <Field>
-                    <FieldLabel for="termin_title">Betreff</FieldLabel>
-                    <Input id="termin_title" bind:value={form.title} autofocus />
-                </Field>
+                <!--
+                    Kein Betreff. Was im Kalender steht, entsteht aus diesen
+                    Feldern — siehe `bezeichnung()`. Die Vorschau darunter zeigt
+                    beim Tippen, was dabei herauskommt.
+                -->
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <Field>
+                        <FieldLabel for="termin_type">Typ</FieldLabel>
+                        <Select.Root type="single" bind:value={form.type}>
+                            <Select.Trigger id="termin_type" class="w-full">
+                                <span class="flex items-center gap-2">
+                                    <span
+                                        class="size-2.5 rounded-full {typInfo(form.type).punkt}"
+                                    ></span>
+                                    {typInfo(form.type).label}
+                                </span>
+                            </Select.Trigger>
+                            <Select.Content>
+                                {#each typen as t (t.wert)}
+                                    <Select.Item value={t.wert} label={t.label}>
+                                        <span class="flex items-center gap-2">
+                                            <span class="size-2.5 rounded-full {t.punkt}"></span>
+                                            {t.label}
+                                        </span>
+                                    </Select.Item>
+                                {/each}
+                            </Select.Content>
+                        </Select.Root>
+                    </Field>
+
+                    <!--
+                        Welche Status es gibt, hängt am Typ. Privat und
+                        Besprechung haben keinen — dort steht das Feld gar nicht
+                        erst, statt leer und gesperrt herumzustehen.
+                    -->
+                    {#if moeglicheStatus.length > 0 && form.status}
+                        <Field>
+                            <FieldLabel for="termin_status">Status</FieldLabel>
+                            <Select.Root type="single" bind:value={form.status}>
+                                <Select.Trigger id="termin_status" class="w-full">
+                                    {statusnamen[form.status]}
+                                </Select.Trigger>
+                                <Select.Content>
+                                    {#each moeglicheStatus as st (st)}
+                                        <Select.Item value={st} label={statusnamen[st]}>
+                                            {statusnamen[st]}
+                                        </Select.Item>
+                                    {/each}
+                                </Select.Content>
+                            </Select.Root>
+                        </Field>
+                    {/if}
+                </div>
+
+                <p class="rounded-md bg-muted/50 px-3 py-2 text-sm">
+                    <span class="text-muted-foreground">Erscheint als</span>
+                    <span class="font-medium">{bezeichnung(form)}</span>
+                </p>
 
                 <Field>
                     <FieldLabel for="termin_employee">Verantwortlich</FieldLabel>
@@ -1289,6 +1507,30 @@
                         <FieldLabel for="termin_offsite">Außer Haus</FieldLabel>
                     </Field>
                 </div>
+
+                {#if form.offsite}
+                    <!--
+                        Die Firma liefert Name, PLZ und Ort für die Bezeichnung.
+                        Später kommt daraus auch der Ort selbst — dann ist „außer
+                        Haus" keine Eingabe mehr, sondern eine Folge.
+                    -->
+                    <Field>
+                        <FieldLabel for="termin_company">Firma</FieldLabel>
+                        <Select.Root type="single" bind:value={form.companyId}>
+                            <Select.Trigger id="termin_company" class="w-full">
+                                {companies.find((c) => c.id === form!.companyId)?.name ??
+                                    'keine — erscheint als „auswärts"'}
+                            </Select.Trigger>
+                            <Select.Content>
+                                {#each companies as c (c.id)}
+                                    <Select.Item value={c.id} label={c.name}>
+                                        {c.name}
+                                    </Select.Item>
+                                {/each}
+                            </Select.Content>
+                        </Select.Root>
+                    </Field>
+                {/if}
 
                 <Separator />
 

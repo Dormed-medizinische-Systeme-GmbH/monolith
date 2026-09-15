@@ -57,5 +57,22 @@ test('er liefert Platzhaltertermine rund um heute', function (): void {
             // Mehrtaegige sind der Grund, warum eine Monatszelle Positionen
             // vergeben muss und nicht einfach stapelt.
             expect($events->where('allDay', true))->not->toBeEmpty();
+
+            /*
+             * KEIN Betreff: was im Kalender steht, wird aus Typ, Status,
+             * „ausser Haus" und der verknuepften Firma zusammengesetzt und
+             * nirgends gespeichert.
+             */
+            expect($events->first())->not->toHaveKey('title');
+            expect($events->first())->toHaveKeys(['type', 'status', 'offsite', 'companyId']);
+
+            // Typen ohne Status muessen einen leeren tragen, nicht irgendeinen.
+            expect($events->where('type', 'besprechung')->pluck('status')->filter())
+                ->toBeEmpty();
+
+            // Alle drei Status kommen im Entwurf vor, damit sich die
+            // Praefixe [BLOCKED] und [STORNO] beurteilen lassen.
+            expect($events->pluck('status')->filter()->unique()->sort()->values()->all())
+                ->toBe(['bestaetigt', 'storniert', 'vorlaeufig']);
         });
 });
