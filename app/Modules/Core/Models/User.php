@@ -83,6 +83,10 @@ final class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            // Fehlte: Fortify prueft die Spalte nur auf „gesetzt" und kommt
+            // deshalb ohne Cast aus. Wer sie anzeigen will, bekam eine
+            // Zeichenkette und `->format()` darauf einen Fehler.
+            'two_factor_confirmed_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'is_active' => 'boolean',
