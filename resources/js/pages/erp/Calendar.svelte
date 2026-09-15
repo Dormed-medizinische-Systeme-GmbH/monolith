@@ -17,7 +17,7 @@
     import * as Dialog from '@/components/ui/dialog';
     import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
     import { Input } from '@/components/ui/input';
-    import { NativeSelect } from '@/components/ui/native-select';
+    import * as Select from '@/components/ui/select';
     import { Textarea } from '@/components/ui/textarea';
     import * as DropdownMenu from '@/components/ui/dropdown-menu';
     import { ScrollArea } from '@/components/ui/scroll-area';
@@ -362,6 +362,10 @@
     };
 
     let form = $state<FormWerte | null>(null);
+
+    const gewaehlterMitarbeiter = $derived(
+        employees.find((e) => e.id === form?.employeeId) ?? null,
+    );
 
     /** `yyyy-mm-dd` — was ein `<input type="date">` erwartet, in ORTSZEIT. */
     function alsDatum(d: Date): string {
@@ -1174,15 +1178,52 @@
 
                 <Field>
                     <FieldLabel for="termin_employee">Verantwortlich</FieldLabel>
-                    <NativeSelect
-                        id="termin_employee"
-                        class="w-full"
-                        bind:value={form.employeeId}
-                    >
-                        {#each employees as e (e.id)}
-                            <option value={e.id}>{e.name}</option>
-                        {/each}
-                    </NativeSelect>
+                    <!--
+                        Kein `<select>`: ein natives Auswahlfeld kann in seinen
+                        Einträgen kein Bild tragen, und das Gesicht ist hier die
+                        schnellste Unterscheidung — zwölf Namen liest man, zwölf
+                        Gesichter erkennt man.
+                    -->
+                    <Select.Root type="single" bind:value={form.employeeId}>
+                        <Select.Trigger id="termin_employee" class="w-full">
+                            {#if gewaehlterMitarbeiter}
+                                <span class="flex items-center gap-2">
+                                    <Avatar.Root class="size-6">
+                                        {#if gewaehlterMitarbeiter.photoUrl}
+                                            <Avatar.Image
+                                                src={gewaehlterMitarbeiter.photoUrl}
+                                                alt={gewaehlterMitarbeiter.name}
+                                            />
+                                        {/if}
+                                        <Avatar.Fallback class="text-[10px]">
+                                            {initialen(gewaehlterMitarbeiter.name)}
+                                        </Avatar.Fallback>
+                                    </Avatar.Root>
+                                    {gewaehlterMitarbeiter.name}
+                                </span>
+                            {:else}
+                                <span class="text-muted-foreground">Bitte wählen</span>
+                            {/if}
+                        </Select.Trigger>
+
+                        <Select.Content>
+                            {#each employees as e (e.id)}
+                                <Select.Item value={e.id} label={e.name}>
+                                    <span class="flex items-center gap-2">
+                                        <Avatar.Root class="size-6">
+                                            {#if e.photoUrl}
+                                                <Avatar.Image src={e.photoUrl} alt={e.name} />
+                                            {/if}
+                                            <Avatar.Fallback class="text-[10px]">
+                                                {initialen(e.name)}
+                                            </Avatar.Fallback>
+                                        </Avatar.Root>
+                                        {e.name}
+                                    </span>
+                                </Select.Item>
+                            {/each}
+                        </Select.Content>
+                    </Select.Root>
                 </Field>
 
                 <div class="grid gap-4 sm:grid-cols-2">
@@ -1236,11 +1277,30 @@
                 <div class="grid gap-4 sm:grid-cols-2">
                     <Field>
                         <FieldLabel for="termin_color">Farbe</FieldLabel>
-                        <NativeSelect id="termin_color" class="w-full" bind:value={form.color}>
-                            {#each farbnamen as f (f.wert)}
-                                <option value={f.wert}>{f.label}</option>
-                            {/each}
-                        </NativeSelect>
+                        <!-- Gleicher Grund wie oben: der Punkt sagt mehr als das Wort. -->
+                        <Select.Root type="single" bind:value={form.color}>
+                            <Select.Trigger id="termin_color" class="w-full">
+                                <span class="flex items-center gap-2">
+                                    <span
+                                        class="size-2.5 rounded-full {punkte[form.color]}"
+                                    ></span>
+                                    {farbnamen.find((f) => f.wert === form!.color)?.label}
+                                </span>
+                            </Select.Trigger>
+
+                            <Select.Content>
+                                {#each farbnamen as f (f.wert)}
+                                    <Select.Item value={f.wert} label={f.label}>
+                                        <span class="flex items-center gap-2">
+                                            <span
+                                                class="size-2.5 rounded-full {punkte[f.wert]}"
+                                            ></span>
+                                            {f.label}
+                                        </span>
+                                    </Select.Item>
+                                {/each}
+                            </Select.Content>
+                        </Select.Root>
                     </Field>
 
                     <Field>
